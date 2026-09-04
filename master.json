@@ -1,0 +1,1594 @@
+{
+  "sourceSheet": "BIO BIO  GRAL 17-7-26",
+  "periodLabel": "Base inicial Excel · 4 meses",
+  "clients": [
+    {
+      "name": "Registro Civil Biobío",
+      "budget4m": 1732438,
+      "totalUnits4m": 1759,
+      "authorizedProducts": 17,
+      "installations": []
+    },
+    {
+      "name": "CONAF Biobío",
+      "budget4m": 162675,
+      "totalUnits4m": 173,
+      "authorizedProducts": 19,
+      "installations": []
+    },
+    {
+      "name": "Dirección del Trabajo Biobío",
+      "budget4m": 516666,
+      "totalUnits4m": 466,
+      "authorizedProducts": 17,
+      "installations": []
+    },
+    {
+      "name": "SERCOTEC Biobío",
+      "budget4m": 52208,
+      "totalUnits4m": 46,
+      "authorizedProducts": 17,
+      "installations": []
+    },
+    {
+      "name": "GORE Biobío",
+      "budget4m": 393514,
+      "totalUnits4m": 378,
+      "authorizedProducts": 17,
+      "installations": []
+    },
+    {
+      "name": "SEA Biobío",
+      "budget4m": 46713,
+      "totalUnits4m": 51,
+      "authorizedProducts": 15,
+      "installations": []
+    },
+    {
+      "name": "SMA Biobío",
+      "budget4m": 31067,
+      "totalUnits4m": 38,
+      "authorizedProducts": 15,
+      "installations": []
+    },
+    {
+      "name": "SII Biobío",
+      "budget4m": 330544,
+      "totalUnits4m": 395,
+      "authorizedProducts": 21,
+      "installations": []
+    }
+  ],
+  "products": [
+    {
+      "id": "MAT-001",
+      "sourceRow": 4,
+      "name": "Bolsa de basura CAMISETA 50 x 60 ( 100 UNIDADES)",
+      "category": "Bolsas",
+      "unitPrice": 2890,
+      "clientQty": {
+        "Registro Civil Biobío": 120,
+        "CONAF Biobío": 10,
+        "Dirección del Trabajo Biobío": 24,
+        "SERCOTEC Biobío": 3,
+        "GORE Biobío": 24,
+        "SEA Biobío": 4,
+        "SMA Biobío": 2,
+        "SII Biobío": 17
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$346,800",
+        "CONAF Biobío": "$28,900",
+        "Dirección del Trabajo Biobío": "$69,360",
+        "SERCOTEC Biobío": "$8,670",
+        "GORE Biobío": "$69,360",
+        "SEA Biobío": "$11,560",
+        "SMA Biobío": "$5,780",
+        "SII Biobío": "$49,130"
+      },
+      "totalQty": "204",
+      "totalValue": "$589,560",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-002",
+      "sourceRow": 6,
+      "name": "Bolsa de basura 70 X 90 (10 unidades) Codigo Vanni: 2020301",
+      "category": "Bolsas",
+      "unitPrice": 655,
+      "clientQty": {
+        "Registro Civil Biobío": 300,
+        "CONAF Biobío": 40,
+        "Dirección del Trabajo Biobío": 40,
+        "SERCOTEC Biobío": 12,
+        "GORE Biobío": 130,
+        "SEA Biobío": 12,
+        "SMA Biobío": 10,
+        "SII Biobío": 130
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$196,500",
+        "CONAF Biobío": "$26,200",
+        "Dirección del Trabajo Biobío": "$26,200",
+        "SERCOTEC Biobío": "$7,860",
+        "GORE Biobío": "$85,150",
+        "SEA Biobío": "$7,860",
+        "SMA Biobío": "$6,550",
+        "SII Biobío": "$85,150"
+      },
+      "totalQty": "674",
+      "totalValue": "$441,470",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-003",
+      "sourceRow": 7,
+      "name": "Bolsa de basura 80x110 (10 unidades) Codigo Vanni: 2020303",
+      "category": "Bolsas",
+      "unitPrice": 1012,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": 15
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$15,180"
+      },
+      "totalQty": "15",
+      "totalValue": "$15,180",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-004",
+      "sourceRow": 8,
+      "name": "Bolsa de basura 115 x 150 (10 Unidades) Codigo Vanni:2022312",
+      "category": "Bolsas",
+      "unitPrice": 520,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "0",
+      "totalValue": "$0",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-005",
+      "sourceRow": 9,
+      "name": "PAÑO MICROFIBRA ROJO PROFESIONAL 38x38cm UN",
+      "category": "Paños y traperos",
+      "unitPrice": 465,
+      "clientQty": {
+        "Registro Civil Biobío": 57,
+        "CONAF Biobío": 5,
+        "Dirección del Trabajo Biobío": 14,
+        "SERCOTEC Biobío": 1,
+        "GORE Biobío": 17,
+        "SEA Biobío": 2,
+        "SMA Biobío": 1,
+        "SII Biobío": 11
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$26,505",
+        "CONAF Biobío": "$2,325",
+        "Dirección del Trabajo Biobío": "$6,510",
+        "SERCOTEC Biobío": "$465",
+        "GORE Biobío": "$7,905",
+        "SEA Biobío": "$930",
+        "SMA Biobío": "$465",
+        "SII Biobío": "$5,115"
+      },
+      "totalQty": "108",
+      "totalValue": "$50,220",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-006",
+      "sourceRow": 10,
+      "name": "PAÑO MICROFIBRA VERDE PROFESIONAL 38x38cm UN",
+      "category": "Paños y traperos",
+      "unitPrice": 465,
+      "clientQty": {
+        "Registro Civil Biobío": 57,
+        "CONAF Biobío": 5,
+        "Dirección del Trabajo Biobío": 14,
+        "SERCOTEC Biobío": 1,
+        "GORE Biobío": 17,
+        "SEA Biobío": 2,
+        "SMA Biobío": 1,
+        "SII Biobío": 11
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$26,505",
+        "CONAF Biobío": "$2,325",
+        "Dirección del Trabajo Biobío": "$6,510",
+        "SERCOTEC Biobío": "$465",
+        "GORE Biobío": "$7,905",
+        "SEA Biobío": "$930",
+        "SMA Biobío": "$465",
+        "SII Biobío": "$5,115"
+      },
+      "totalQty": "108",
+      "totalValue": "$50,220",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-007",
+      "sourceRow": 11,
+      "name": "PAÑO MICROFIBRA AMARILLO PROFESIONAL 38x38cm UN",
+      "category": "Paños y traperos",
+      "unitPrice": 465,
+      "clientQty": {
+        "Registro Civil Biobío": 57,
+        "CONAF Biobío": 8,
+        "Dirección del Trabajo Biobío": 14,
+        "SERCOTEC Biobío": 2,
+        "GORE Biobío": 17,
+        "SEA Biobío": 2,
+        "SMA Biobío": 1,
+        "SII Biobío": 11
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$26,505",
+        "CONAF Biobío": "$3,720",
+        "Dirección del Trabajo Biobío": "$6,510",
+        "SERCOTEC Biobío": "$930",
+        "GORE Biobío": "$7,905",
+        "SEA Biobío": "$930",
+        "SMA Biobío": "$465",
+        "SII Biobío": "$5,115"
+      },
+      "totalQty": "112",
+      "totalValue": "$52,080",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-008",
+      "sourceRow": 12,
+      "name": "PAÑO MICROFIBRA AZUL  PROFESIONAL 38x38cm UN",
+      "category": "Paños y traperos",
+      "unitPrice": 465,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-009",
+      "sourceRow": 13,
+      "name": "TRAPERO MICROFIBRA ROJO DE 50x70cm PREMIUM CON OJAL UN",
+      "category": "Paños y traperos",
+      "unitPrice": 940,
+      "clientQty": {
+        "Registro Civil Biobío": 57,
+        "CONAF Biobío": 5,
+        "Dirección del Trabajo Biobío": 14,
+        "SERCOTEC Biobío": 1,
+        "GORE Biobío": 17,
+        "SEA Biobío": 2,
+        "SMA Biobío": 1,
+        "SII Biobío": 11
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$53,580",
+        "CONAF Biobío": "$4,700",
+        "Dirección del Trabajo Biobío": "$13,160",
+        "SERCOTEC Biobío": "$940",
+        "GORE Biobío": "$15,980",
+        "SEA Biobío": "$1,880",
+        "SMA Biobío": "$940",
+        "SII Biobío": "$10,340"
+      },
+      "totalQty": "108",
+      "totalValue": "$101,520",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-010",
+      "sourceRow": 14,
+      "name": "TRAPERO MICROFIBRA VERDE DE 50x70cm PREMIUM CON OJAL UN",
+      "category": "Paños y traperos",
+      "unitPrice": 940,
+      "clientQty": {
+        "Registro Civil Biobío": 57,
+        "CONAF Biobío": 5,
+        "Dirección del Trabajo Biobío": 14,
+        "SERCOTEC Biobío": 1,
+        "GORE Biobío": 17,
+        "SEA Biobío": 2,
+        "SMA Biobío": 1,
+        "SII Biobío": 11
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$53,580",
+        "CONAF Biobío": "$4,700",
+        "Dirección del Trabajo Biobío": "$13,160",
+        "SERCOTEC Biobío": "$940",
+        "GORE Biobío": "$15,980",
+        "SEA Biobío": "$1,880",
+        "SMA Biobío": "$940",
+        "SII Biobío": "$10,340"
+      },
+      "totalQty": "108",
+      "totalValue": "$101,520",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-011",
+      "sourceRow": 15,
+      "name": "TRAPERO MICROFIBRA AMARILLO  DE 50x70cm PREMIUM CON OJAL UN",
+      "category": "Paños y traperos",
+      "unitPrice": null,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Pendiente precio"
+    },
+    {
+      "id": "MAT-012",
+      "sourceRow": 16,
+      "name": "TRAPERO MICROFIBRA AZUL  DE 50x70cm PREMIUM CON OJAL UN",
+      "category": "Paños y traperos",
+      "unitPrice": null,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Pendiente precio"
+    },
+    {
+      "id": "MAT-013",
+      "sourceRow": 17,
+      "name": "ESPONJA C/ABRASIVO VERDE 7x4cm K20 SALVA UÑA UN",
+      "category": "Útiles y accesorios",
+      "unitPrice": 92,
+      "clientQty": {
+        "Registro Civil Biobío": 400,
+        "CONAF Biobío": 20,
+        "Dirección del Trabajo Biobío": 123,
+        "SERCOTEC Biobío": 9,
+        "GORE Biobío": 30,
+        "SEA Biobío": 10,
+        "SMA Biobío": 10,
+        "SII Biobío": 75
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$36,800",
+        "CONAF Biobío": "$1,840",
+        "Dirección del Trabajo Biobío": "$11,316",
+        "SERCOTEC Biobío": "$828",
+        "GORE Biobío": "$2,760",
+        "SEA Biobío": "$920",
+        "SMA Biobío": "$920",
+        "SII Biobío": "$6,900"
+      },
+      "totalQty": "677",
+      "totalValue": "$62,284",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-014",
+      "sourceRow": 19,
+      "name": "Lija",
+      "category": "Útiles y accesorios",
+      "unitPrice": 100,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "0",
+      "totalValue": "$0",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-015",
+      "sourceRow": 20,
+      "name": "DESINFECTANTE DETERGENTE CON AROMA ENV. 1L. WK-100",
+      "category": "Químicos",
+      "unitPrice": 1845,
+      "clientQty": {
+        "Registro Civil Biobío": 114,
+        "CONAF Biobío": 7,
+        "Dirección del Trabajo Biobío": 14,
+        "SERCOTEC Biobío": 2,
+        "GORE Biobío": 8,
+        "SEA Biobío": 1,
+        "SMA Biobío": 1,
+        "SII Biobío": 10
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$210,330",
+        "CONAF Biobío": "$12,915",
+        "Dirección del Trabajo Biobío": "$25,830",
+        "SERCOTEC Biobío": "$3,690",
+        "GORE Biobío": "$14,760",
+        "SEA Biobío": "$1,845",
+        "SMA Biobío": "$1,845",
+        "SII Biobío": "$18,450"
+      },
+      "totalQty": "157",
+      "totalValue": "$289,665",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-016",
+      "sourceRow": 21,
+      "name": "DETERGENTE LIQUIDO MULTIUSO. ENV. 1L. WK-550",
+      "category": "Químicos",
+      "unitPrice": 1190,
+      "clientQty": {
+        "Registro Civil Biobío": 57,
+        "CONAF Biobío": 5,
+        "Dirección del Trabajo Biobío": 14,
+        "SERCOTEC Biobío": 1,
+        "GORE Biobío": 8,
+        "SEA Biobío": 1,
+        "SMA Biobío": 1,
+        "SII Biobío": 5
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$67,830",
+        "CONAF Biobío": "$5,950",
+        "Dirección del Trabajo Biobío": "$16,660",
+        "SERCOTEC Biobío": "$1,190",
+        "GORE Biobío": "$9,520",
+        "SEA Biobío": "$1,190",
+        "SMA Biobío": "$1,190",
+        "SII Biobío": "$5,950"
+      },
+      "totalQty": "92",
+      "totalValue": "$109,480",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-017",
+      "sourceRow": 22,
+      "name": "MANTENEDOR LPU PISOS DURO WK635 VIVA 5 LT.",
+      "category": "Químicos",
+      "unitPrice": 3570,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "0",
+      "totalValue": "$0",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-018",
+      "sourceRow": 23,
+      "name": "MANTENEDOR \"LPU\" DE PISOS VIVA. ENV. 1 LT. WK-635",
+      "category": "Químicos",
+      "unitPrice": 987,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "0",
+      "totalValue": "$0",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-019",
+      "sourceRow": 24,
+      "name": "MANTENEDOR DE PISOS VIVA. ENV. 5L. WK-635 V \"CONCENTRADO\"",
+      "category": "Químicos",
+      "unitPrice": 6900,
+      "clientQty": {
+        "Registro Civil Biobío": 3,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": 3,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": 1
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$20,700",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$20,700",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$6,900"
+      },
+      "totalQty": "7",
+      "totalValue": "$48,300",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-020",
+      "sourceRow": 25,
+      "name": "MANTENEDOR DE PISOS VIVA. ENV. 1LT. WK-635 V \"CONCENTRADO\"",
+      "category": "Químicos",
+      "unitPrice": 1650,
+      "clientQty": {
+        "Registro Civil Biobío": 114,
+        "CONAF Biobío": 6,
+        "Dirección del Trabajo Biobío": 42,
+        "SERCOTEC Biobío": 3,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": 2,
+        "SII Biobío": 12
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$188,100",
+        "CONAF Biobío": "$9,900",
+        "Dirección del Trabajo Biobío": "$69,300",
+        "SERCOTEC Biobío": "$4,950",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$3,300",
+        "SII Biobío": "$19,800"
+      },
+      "totalQty": "179",
+      "totalValue": "$295,350",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-021",
+      "sourceRow": 26,
+      "name": "LIMPIADOR CREMA TAPA FLIP TOP CITRUS ENV 500ml/750g WK-540",
+      "category": "Químicos",
+      "unitPrice": 1200,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "0",
+      "totalValue": "$0",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-022",
+      "sourceRow": 27,
+      "name": "LIMPIADOR CREMA CITRUS ENV 1Lt WK-540",
+      "category": "Químicos",
+      "unitPrice": 1547,
+      "clientQty": {
+        "Registro Civil Biobío": 57,
+        "CONAF Biobío": 6,
+        "Dirección del Trabajo Biobío": 20,
+        "SERCOTEC Biobío": 2,
+        "GORE Biobío": 17,
+        "SEA Biobío": 2,
+        "SMA Biobío": 1,
+        "SII Biobío": 9
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$88,179",
+        "CONAF Biobío": "$9,282",
+        "Dirección del Trabajo Biobío": "$30,940",
+        "SERCOTEC Biobío": "$3,094",
+        "GORE Biobío": "$26,299",
+        "SEA Biobío": "$3,094",
+        "SMA Biobío": "$1,547",
+        "SII Biobío": "$13,923"
+      },
+      "totalQty": "114",
+      "totalValue": "$176,358",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-023",
+      "sourceRow": 28,
+      "name": "LAVALOZA CONCENTRADO TAPA PUSH PULL ENV. 750ml",
+      "category": "Químicos",
+      "unitPrice": 1050,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "0",
+      "totalValue": "$0",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-024",
+      "sourceRow": 29,
+      "name": "LAVALOZA CONCENTRADO ENV. 1L. WK-750",
+      "category": "Químicos",
+      "unitPrice": 1178,
+      "clientQty": {
+        "Registro Civil Biobío": 88,
+        "CONAF Biobío": 6,
+        "Dirección del Trabajo Biobío": 30,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": 3,
+        "SMA Biobío": null,
+        "SII Biobío": 12
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$103,664",
+        "CONAF Biobío": "$7,068",
+        "Dirección del Trabajo Biobío": "$35,340",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$3,534",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$14,136"
+      },
+      "totalQty": "139",
+      "totalValue": "$163,742",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-025",
+      "sourceRow": 30,
+      "name": "LAVALOZA CONCENTRADO ENV. 5L. WK-750",
+      "category": "Químicos",
+      "unitPrice": 5926,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": 5,
+        "SERCOTEC Biobío": 1,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$29,630",
+        "SERCOTEC Biobío": "$5,926",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "6",
+      "totalValue": "$35,556",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-026",
+      "sourceRow": 31,
+      "name": "DESENGRASANTE DE ALTO PODER. ENV. 1 LT. WK-093",
+      "category": "Químicos",
+      "unitPrice": 1720,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": 1
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$1,720"
+      },
+      "totalQty": "1",
+      "totalValue": "$1,720",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-027",
+      "sourceRow": 32,
+      "name": "LUSTRAMUEBLES EMULSIONADO. ENV. 1LT. WK-580",
+      "category": "Químicos",
+      "unitPrice": 1100,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": 5,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": 1,
+        "GORE Biobío": 2,
+        "SEA Biobío": 2,
+        "SMA Biobío": 1,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$5,500",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$1,100",
+        "GORE Biobío": "$2,200",
+        "SEA Biobío": "$2,200",
+        "SMA Biobío": "$1,100",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "11",
+      "totalValue": "$12,100",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-028",
+      "sourceRow": 33,
+      "name": "REMOVEDOR O DESINCRUSTANTE DE CERA ENV. 5 LT",
+      "category": "Químicos",
+      "unitPrice": 15000,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": 1,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$15,000",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "1",
+      "totalValue": "$15,000",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-029",
+      "sourceRow": 34,
+      "name": "REMOVEDOR O DESINCRUSTANTE DE CERA ENV. 1 LT",
+      "category": "Químicos",
+      "unitPrice": 3500,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-030",
+      "sourceRow": 35,
+      "name": "CERA ACRILICA AUTOBRILLO INCOLORA 18% ENV. 5L. WK-630I",
+      "category": "Químicos",
+      "unitPrice": 22000,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-031",
+      "sourceRow": 36,
+      "name": "CERA ACRILICA AUTOBRILLO INCOLORA 18% ENV. 1L. WK-630I",
+      "category": "Químicos",
+      "unitPrice": 4800,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-032",
+      "sourceRow": 37,
+      "name": "CERA PAQUETE / SACHET PISOS COLORES",
+      "category": "Químicos",
+      "unitPrice": 1200,
+      "clientQty": {
+        "Registro Civil Biobío": 50,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$60,000",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "50",
+      "totalValue": "$60,000",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-033",
+      "sourceRow": 38,
+      "name": "SELLO PARA PISOS DUROS ENV. 5LT WK- 618",
+      "category": "Químicos",
+      "unitPrice": 35000,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "0",
+      "totalValue": "$0",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-034",
+      "sourceRow": 40,
+      "name": "Limpiador y Abrillantador Acero Inoxidable - WK-804",
+      "category": "Químicos",
+      "unitPrice": 5500,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": 2,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": "$11,000",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "2",
+      "totalValue": "$11,000",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-035",
+      "sourceRow": 41,
+      "name": "RENOVADOR DE GOMA 1 LT",
+      "category": "Químicos",
+      "unitPrice": 2500,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "0",
+      "totalValue": "$0",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-036",
+      "sourceRow": 42,
+      "name": "JABON 5 LT",
+      "category": "Químicos",
+      "unitPrice": 5600,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": 14,
+        "SERCOTEC Biobío": 1,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$78,400",
+        "SERCOTEC Biobío": "$5,600",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "15",
+      "totalValue": "$84,000",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-037",
+      "sourceRow": 45,
+      "name": "GUANTES NITRILO FLOCADO 13\" TALLA M PAR",
+      "category": "EPP",
+      "unitPrice": 790,
+      "clientQty": {
+        "Registro Civil Biobío": 114,
+        "CONAF Biobío": 15,
+        "Dirección del Trabajo Biobío": 56,
+        "SERCOTEC Biobío": 4,
+        "GORE Biobío": 51,
+        "SEA Biobío": 4,
+        "SMA Biobío": 4,
+        "SII Biobío": 22
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$90,060",
+        "CONAF Biobío": "$11,850",
+        "Dirección del Trabajo Biobío": "$44,240",
+        "SERCOTEC Biobío": "$3,160",
+        "GORE Biobío": "$40,290",
+        "SEA Biobío": "$3,160",
+        "SMA Biobío": "$3,160",
+        "SII Biobío": "$17,380"
+      },
+      "totalQty": "270",
+      "totalValue": "$213,300",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-038",
+      "sourceRow": 47,
+      "name": "PAPEL HIGIENICO VANNI 300 Mt 6 Unidades por Pack Codigo: 2000704",
+      "category": "Papelería",
+      "unitPrice": 10000,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-039",
+      "sourceRow": 48,
+      "name": "TOALLA DE PAPEL VANNI 310 Mts 2 Unidades por Pack Codigo: 2000706",
+      "category": "Papelería",
+      "unitPrice": 5900,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-040",
+      "sourceRow": 50,
+      "name": "ESCOBILLON PLASTICO 30x10cm 2 COLORES CON MANGO UN",
+      "category": "Útiles y accesorios",
+      "unitPrice": 2400,
+      "clientQty": {
+        "Registro Civil Biobío": 57,
+        "CONAF Biobío": 5,
+        "Dirección del Trabajo Biobío": 14,
+        "SERCOTEC Biobío": 1,
+        "GORE Biobío": 17,
+        "SEA Biobío": 2,
+        "SMA Biobío": 1,
+        "SII Biobío": 11
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$136,800",
+        "CONAF Biobío": "$12,000",
+        "Dirección del Trabajo Biobío": "$33,600",
+        "SERCOTEC Biobío": "$2,400",
+        "GORE Biobío": "$40,800",
+        "SEA Biobío": "$4,800",
+        "SMA Biobío": "$2,400",
+        "SII Biobío": "$26,400"
+      },
+      "totalQty": "108",
+      "totalValue": "$259,200",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-041",
+      "sourceRow": 51,
+      "name": "PAD ROJO 17\"",
+      "category": "Útiles y accesorios",
+      "unitPrice": 4500,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "0",
+      "totalValue": "$0",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-042",
+      "sourceRow": 52,
+      "name": "PAD NEGRO 17\"",
+      "category": "Útiles y accesorios",
+      "unitPrice": 4500,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$0",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$0"
+      },
+      "totalQty": "0",
+      "totalValue": "$0",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-043",
+      "sourceRow": 53,
+      "name": "PAD BLANCO 17\"",
+      "category": "Útiles y accesorios",
+      "unitPrice": null,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Pendiente precio"
+    },
+    {
+      "id": "MAT-044",
+      "sourceRow": 54,
+      "name": "BOTELLAS DILUSORAS 1 LT",
+      "category": "Útiles y accesorios",
+      "unitPrice": 800,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": 10,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": 10
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$8,000",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$8,000"
+      },
+      "totalQty": "20",
+      "totalValue": "$16,000",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-045",
+      "sourceRow": 55,
+      "name": "GATILLO ROJO",
+      "category": "Útiles y accesorios",
+      "unitPrice": 550,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": 5,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": 5
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$2,750",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$2,750"
+      },
+      "totalQty": "10",
+      "totalValue": "$5,500",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-046",
+      "sourceRow": 56,
+      "name": "GATILLO VERDE",
+      "category": "Útiles y accesorios",
+      "unitPrice": 550,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": 5,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": 5
+      },
+      "clientValue": {
+        "Registro Civil Biobío": "$0",
+        "CONAF Biobío": "$2,750",
+        "Dirección del Trabajo Biobío": "$0",
+        "SERCOTEC Biobío": "$0",
+        "GORE Biobío": "$0",
+        "SEA Biobío": "$0",
+        "SMA Biobío": "$0",
+        "SII Biobío": "$2,750"
+      },
+      "totalQty": "10",
+      "totalValue": "$5,500",
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-047",
+      "sourceRow": 57,
+      "name": "GATILLO AZUL",
+      "category": "Útiles y accesorios",
+      "unitPrice": 550,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-048",
+      "sourceRow": 58,
+      "name": "GATILLO AMARILLO",
+      "category": "Útiles y accesorios",
+      "unitPrice": 550,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-049",
+      "sourceRow": 59,
+      "name": "BALDE CON ASA 10 LT",
+      "category": "Útiles y accesorios",
+      "unitPrice": 500,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-050",
+      "sourceRow": 60,
+      "name": "PLUMERO MICROFIBRA",
+      "category": "Paños y traperos",
+      "unitPrice": 2500,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Activo"
+    },
+    {
+      "id": "MAT-051",
+      "sourceRow": 61,
+      "name": "CEPILLO BAÑO CON BASE",
+      "category": "Útiles y accesorios",
+      "unitPrice": 2500,
+      "clientQty": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "clientValue": {
+        "Registro Civil Biobío": null,
+        "CONAF Biobío": null,
+        "Dirección del Trabajo Biobío": null,
+        "SERCOTEC Biobío": null,
+        "GORE Biobío": null,
+        "SEA Biobío": null,
+        "SMA Biobío": null,
+        "SII Biobío": null
+      },
+      "totalQty": null,
+      "totalValue": null,
+      "status": "Activo"
+    }
+  ]
+}
