@@ -1,4 +1,4 @@
-# ALEMSI Materiales V0.3
+# ALEMSI Materiales V0.2
 
 Versión de desarrollo que reemplaza la estructura plana de V0.1 por una navegación territorial y contractual.
 

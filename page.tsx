@@ -93,7 +93,7 @@ export default function Page(){
   const addRequest=(r:MaterialRequest)=>{setState(s=>({...s,requests:[r,...s.requests]}));setModal(null)};
 
   return <div className="app">
-    <header className="top"><div><div className="brand">ALEMSI Materiales</div><div className="sub">Control territorial, contractual e histórico · V0.3</div></div><div className="small">Datos: Excel operativo + contratos cotejados</div></header>
+    <header className="top"><div><div className="brand">ALEMSI Materiales</div><div className="sub">Control territorial, contractual e histórico · V0.2</div></div><div className="small">Datos: Excel operativo + contratos cotejados</div></header>
     <div className="shell"><aside className="side">
       {[["inicio","Inicio"],["contratos","Contratos"],["instalaciones","Instalaciones"],["historico","Histórico"],["maestro","Materiales"],["solicitudes","Solicitudes"]].map(([k,l])=><button key={k} className={`navbtn ${tab===k?"active":""}`} onClick={()=>setTab(k)}>{l}</button>)}
     </aside><main className="main">
@@ -106,7 +106,7 @@ export default function Page(){
       {tab==="historico"&&<Historico records={history} contracts={state.contracts} installations={state.installations} region={regionFilter} selectedContract={selectedContract}/>} 
       {tab==="maestro"&&contract&&<Maestro contract={contract} history={contractHistory} budget={budget}/>} 
       {tab==="solicitudes"&&contract&&<Solicitudes contract={contract} installations={inst} requests={reqs} budget={budget} spent={spent} history={contractHistory} onNew={()=>setModal("req")}/>} 
-      <div className="toolbar"><button className="btn danger" onClick={()=>{if(confirm("¿Restablecer datos editados y volver a la base V0.3?")){clearState();location.reload()}}}>Restablecer base V0.3</button></div>
+      <div className="toolbar"><button className="btn danger" onClick={()=>{if(confirm("¿Restablecer datos editados y volver a la base V0.2?")){clearState();location.reload()}}}>Restablecer base V0.2</button></div>
     </main></div>
     {modal==="inst"&&contract&&<InstallationModal onClose={()=>setModal(null)} onSave={addInstallation}/>} 
     {editingInstallation&&<EditInstallationModal item={editingInstallation} onClose={()=>setEditingInstallation(null)} onSave={updateInstallation}/>} 
@@ -168,50 +168,14 @@ function InstallationModal({onClose,onSave}:{onClose:()=>void;onSave:(x:any)=>vo
 function EditInstallationModal({item,onClose,onSave}:{item:Installation;onClose:()=>void;onSave:(x:Installation)=>void}){const [f,setF]=useState({...item});return <div className="modalBg"><div className="modal"><h2>Editar instalación</h2><p className="small muted">La dirección puede corregirse cuando cambie o se valide una fuente más reciente.</p><div className="grid g2">{Object.entries({name:"Nombre",city:"Ciudad",commune:"Comuna",address:"Dirección vigente",type:"Tipo",verification:"Verificación / nota"}).map(([k,l])=><div className="field" key={k}><label>{l}</label><input value={String((f as any)[k]||"")} onChange={e=>setF({...f,[k]:e.target.value})}/></div>)}</div><div className="toolbar"><button className="btn" onClick={onClose}>Cancelar</button><button className="btn primary" onClick={()=>onSave(f)}>Guardar cambios</button></div></div></div>}
 
 function RequestModal({contract,installations,available,history,onClose,onSave}:{contract:Contract;installations:Installation[];available:number;history:HistoricalRecord[];onClose:()=>void;onSave:(r:MaterialRequest)=>void}){
-  const [installationId,setInstallationId]=useState(installations[0]?.id||"");
-  const [reviewed,setReviewed]=useState(false);
-  const [reviewDate,setReviewDate]=useState(new Date().toISOString().slice(0,10));
-  const [notes,setNotes]=useState("");
+  const [installationId,setInstallationId]=useState(installations[0]?.id||"");const [reviewed,setReviewed]=useState(false);const [reviewDate,setReviewDate]=useState(new Date().toISOString().slice(0,10));const [notes,setNotes]=useState("");
   const selectedInst=installations.find(i=>i.id===installationId);
-  const baseByProduct=useMemo(()=>{
-    const m=new Map<string,number>();
-    if(!selectedInst)return m;
-    history.filter(h=>sameInstallation(h.installationName,selectedInst.name)).forEach(h=>m.set(h.productName.toLowerCase(),(m.get(h.productName.toLowerCase())||0)+h.quantity));
-    return m;
-  },[installationId,selectedInst,history]);
-  const initialLines=()=>products.filter(p=>baseByProduct.has(p.name.toLowerCase())).slice(0,30).map(p=>{
-    const base=baseByProduct.get(p.name.toLowerCase())||0;
-    return {productId:p.id,productName:p.name,unitPrice:p.price,baseQty:base,remainder:0,requestedQty:base,lineTotal:(p.price||0)*base};
-  });
-  const fallbackLines=()=>products.slice(0,15).map(p=>({productId:p.id,productName:p.name,unitPrice:p.price,baseQty:0,remainder:0,requestedQty:0,lineTotal:0}));
-  const [lines,setLines]=useState<RequestLine[]>(()=>initialLines().length?initialLines():fallbackLines());
-  useEffect(()=>{const n=initialLines();setLines(n.length?n:fallbackLines())},[installationId]);
+  const baseByProduct=useMemo(()=>{const m=new Map<string,number>(); if(!selectedInst)return m; history.filter(h=>sameInstallation(h.installationName,selectedInst.name)).forEach(h=>m.set(h.productName.toLowerCase(),(m.get(h.productName.toLowerCase())||0)+h.quantity));return m},[installationId,selectedInst,history]);
+  const initialLines=()=>products.filter(p=>baseByProduct.has(p.name.toLowerCase())).slice(0,30).map(p=>({productId:p.id,productName:p.name,unitPrice:p.price,baseQty:baseByProduct.get(p.name.toLowerCase())||0,remainder:0,requestedQty:0,lineTotal:0}));
+  const [lines,setLines]=useState<RequestLine[]>(()=>initialLines().length?initialLines():products.slice(0,15).map(p=>({productId:p.id,productName:p.name,unitPrice:p.price,baseQty:0,remainder:0,requestedQty:0,lineTotal:0})));
+  useEffect(()=>{const n=initialLines();setLines(n.length?n:products.slice(0,15).map(p=>({productId:p.id,productName:p.name,unitPrice:p.price,baseQty:0,remainder:0,requestedQty:0,lineTotal:0})))},[installationId]);
   const total=lines.reduce((s,l)=>s+l.lineTotal,0);
-  const updateRemainder=(idx:number,v:number)=>setLines(ls=>ls.map((l,i)=>{
-    if(i!==idx)return l;
-    const remainder=Math.max(0,v);
-    const requestedQty=Math.max(0,(l.baseQty||0)-remainder);
-    return {...l,remainder,requestedQty,lineTotal:(l.unitPrice||0)*requestedQty};
-  }));
-  const updateRequested=(idx:number,v:number)=>setLines(ls=>ls.map((l,i)=>i===idx?{...l,requestedQty:Math.max(0,v),lineTotal:(l.unitPrice||0)*Math.max(0,v)}:l));
+  const update=(idx:number,key:"remainder"|"requestedQty",v:number)=>setLines(ls=>ls.map((l,i)=>i===idx?{...l,[key]:v,lineTotal:key==="requestedQty"?(l.unitPrice||0)*v:(l.unitPrice||0)*l.requestedQty}:l));
   const can=reviewed&&installationId&&total>0&&(available===0||total<=available);
-  return <div className="modalBg"><div className="modal requestModal">
-    <div className="requestHeader">
-      <div><div className="eyebrow">NUEVA SOLICITUD</div><h2>{contract.institution}</h2><p>{selectedInst?.name||"Selecciona una instalación"}</p></div>
-      <button className="iconBtn" onClick={onClose} aria-label="Cerrar">×</button>
-    </div>
-    <div className="requestIntro"><b>Automático:</b> ingresa únicamente el remanente físico. El sistema calcula <b>Base histórica − Remanente = Solicitar</b>. La cantidad sugerida queda editable si necesitas hacer una corrección excepcional.</div>
-    <div className="requestControls">
-      <div className="field"><label>Instalación</label><select value={installationId} onChange={e=>setInstallationId(e.target.value)}>{installations.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select></div>
-      <div className="field"><label>Fecha de revisión</label><input type="date" value={reviewDate} onChange={e=>setReviewDate(e.target.value)}/></div>
-      <label className={`reviewCheck ${reviewed?"checked":""}`}><input type="checkbox" checked={reviewed} onChange={e=>setReviewed(e.target.checked)}/><span><b>Revisión física realizada</b><small>Confirmo que revisé los materiales disponibles en la instalación.</small></span></label>
-    </div>
-    <div className="requestTableWrap"><table className="requestTable"><thead><tr><th>Material</th><th className="num">Base 4 meses</th><th className="num">Precio</th><th className="num focusCol">Remanente físico</th><th className="num autoCol">Solicitar automáticamente</th><th className="num">Total</th></tr></thead><tbody>{lines.map((l,i)=><tr key={l.productId}><td><b>{l.productName}</b></td><td className="num baseCell">{l.baseQty||"—"}</td><td className="num">{l.unitPrice?clp(l.unitPrice):"Pendiente"}</td><td className="num focusCol"><input className="qtyInput" type="number" min={0} value={l.remainder} onChange={e=>updateRemainder(i,Number(e.target.value)||0)}/></td><td className="num autoCol"><div className="autoQty"><input className="qtyInput suggested" type="number" min={0} value={l.requestedQty} onChange={e=>updateRequested(i,Number(e.target.value)||0)}/><span>Auto</span></div></td><td className="num totalCell">{clp(l.lineTotal)}</td></tr>)}</tbody></table></div>
-    <div className="requestFooter">
-      <div className="field notesField"><label>Observaciones</label><textarea rows={3} placeholder="Solo si existe una situación especial..." value={notes} onChange={e=>setNotes(e.target.value)}/></div>
-      <div className="requestSummary"><span>Total solicitud</span><strong>{clp(total)}</strong><small>{available?`Saldo disponible: ${clp(available)}`:"Contrato sin presupuesto cargado"}</small>{available>0&&total>available&&<div className="inlineWarning">Supera el saldo disponible.</div>}</div>
-    </div>
-    <div className="requestActions"><button className="btn" onClick={onClose}>Cancelar</button><button className="btn primary large" disabled={!can} onClick={()=>onSave({id:crypto.randomUUID(),contractId:contract.id,installationId,createdAt:new Date().toISOString(),reviewed,reviewDate,notes,lines:lines.filter(l=>l.requestedQty>0),total,status:"Solicitada"})}>Confirmar solicitud</button></div>
-  </div></div>
+  return <div className="modalBg"><div className="modal wide"><h2>Nueva solicitud · {contract.institution}</h2><div className="notice"><b>Revisión física obligatoria.</b> La base histórica se muestra como referencia; el remanente observado determina lo que realmente debe pedirse.</div><div className="grid g2" style={{marginTop:14}}><div className="field"><label>Instalación</label><select value={installationId} onChange={e=>setInstallationId(e.target.value)}>{installations.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select></div><div className="field"><label>Fecha revisión</label><input type="date" value={reviewDate} onChange={e=>setReviewDate(e.target.value)}/></div></div><label className="checkline"><input type="checkbox" checked={reviewed} onChange={e=>setReviewed(e.target.checked)}/> Confirmo que revisé físicamente los materiales restantes en esta instalación.</label><div className="tableWrap"><table><thead><tr><th>Material</th><th>Base histórica</th><th>Precio</th><th>Remanente</th><th>Solicitar</th><th>Total</th></tr></thead><tbody>{lines.map((l,i)=><tr key={l.productId}><td>{l.productName}</td><td>{l.baseQty||"—"}</td><td>{l.unitPrice?clp(l.unitPrice):"Pendiente"}</td><td><input type="number" min={0} value={l.remainder} onChange={e=>update(i,"remainder",Number(e.target.value)||0)} style={{width:90}}/></td><td><input type="number" min={0} value={l.requestedQty} onChange={e=>update(i,"requestedQty",Number(e.target.value)||0)} style={{width:90}}/></td><td>{clp(l.lineTotal)}</td></tr>)}</tbody></table></div><div className="grid g2" style={{marginTop:14}}><div className="field"><label>Observaciones</label><textarea rows={3} value={notes} onChange={e=>setNotes(e.target.value)}/></div><div className="card"><Info label="Total solicitud" value={clp(total)}/><Info label="Disponible contrato" value={available?clp(available):"Sin presupuesto cargado"}/>{available>0&&total>available&&<div className="notice warning">La solicitud supera el saldo disponible.</div>}</div></div><div className="toolbar"><button className="btn" onClick={onClose}>Cancelar</button><button className="btn primary" disabled={!can} onClick={()=>onSave({id:crypto.randomUUID(),contractId:contract.id,installationId,createdAt:new Date().toISOString(),reviewed,reviewDate,notes,lines:lines.filter(l=>l.requestedQty>0),total,status:"Solicitada"})}>Confirmar solicitud</button></div></div></div>
 }
-
