@@ -1,0 +1,3 @@
+"use client";
+import type {ClientProfile} from "@/lib/materiales-domain";
+export default function ClientsModule({profiles}:{profiles:ClientProfile[]}){return <><h1>Clientes y contratos</h1><p className="lead">Toda la operación nace desde cliente, contrato e instalación.</p><div className="tableWrap"><table><thead><tr><th>Región</th><th>Cliente / institución</th><th>Instalaciones</th></tr></thead><tbody>{profiles.map(p=><tr key={p.id}><td>{p.region}</td><td><b>{p.institution}</b><div className="small muted">{p.clientName}</div></td><td>{p.installations.length}</td></tr>)}</tbody></table></div></>}

@@ -1,0 +1,3 @@
+"use client";
+import type {ClientProfile,MaterialState,Product} from "@/lib/materiales-domain";
+export default function ManagementModule({state,setState,profiles,products}:{state:MaterialState;setState:(x:MaterialState)=>void;profiles:ClientProfile[];products:Product[]}){const add=()=>{const n=prompt("Proveedor:","");if(n?.trim())setState({...state,suppliers:Array.from(new Set([...state.suppliers,n.trim()]))})};return <><h1>Gestión</h1><div className="grid g3"><div className="card"><h2>Clientes</h2><b>{profiles.length}</b></div><div className="card"><h2>Productos</h2><b>{products.length}</b></div><div className="card"><h2>Proveedores</h2><b>{state.suppliers.length}</b><button className="btn" onClick={add}>Agregar</button></div></div></>}
