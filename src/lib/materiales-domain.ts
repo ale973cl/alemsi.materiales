@@ -1,4 +1,4 @@
-export type Role = "Supervisora" | "Gerencia" | "Finanzas" | "Bodega" | "Admin";
+export type Role = "Supervisora" | "Gerencia" | "Finanzas" | "Bodega" | "Admin" | "Admin Total";
 
 export type Product = {
   id:string; name:string; price:number; presentation?:string; code?:string; active:boolean;

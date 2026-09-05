@@ -15,7 +15,7 @@ export function useMaterialStore(defaultProfileId:string){
  const [state,setState]=useState<MaterialState>(()=>initialState(defaultProfileId)); const [ready,setReady]=useState(false);
  useEffect(()=>{try{const raw=localStorage.getItem(KEY);if(raw)setState({...initialState(defaultProfileId),...JSON.parse(raw)})}catch{} setReady(true)},[defaultProfileId]);
  useEffect(()=>{if(ready)localStorage.setItem(KEY,JSON.stringify(state))},[state,ready]);
- return {state,setState,patch:(p:Partial<MaterialState>)=>setState(s=>({...s,...p})),reset:()=>{localStorage.removeItem(KEY);location.reload()}};
+ return {state,setState,patch:(p:Partial<MaterialState>)=>setState(s=>({...s,...p}))};
 }
 export function activeCampaign(state:MaterialState,profileId:string){
  return state.campaigns.find(c=>c.profileId===profileId&&c.status==="Abierta")||state.campaigns.filter(c=>c.profileId===profileId).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))[0];
@@ -31,6 +31,7 @@ export function consolidatedFor(state:MaterialState,campaign?:Campaign):Consolid
 }
 export function visibleModules(role:Role){
  const all=["inicio","clientes","maestro","levantamiento","cotejo","consolidado","kits","oc","ingreso","guias","pendientes","historico","gestion"];
+ if(role==="Admin Total")return [...all,"respaldos"];
  if(role==="Supervisora")return ["inicio","levantamiento","cotejo","pendientes","historico"];
  if(role==="Finanzas")return ["inicio","oc","ingreso","pendientes","historico"];
  if(role==="Bodega")return ["inicio","ingreso","guias","pendientes","historico"];

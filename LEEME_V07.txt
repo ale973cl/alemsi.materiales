@@ -1,0 +1,19 @@
+ALEMSI MATERIALES V0.7 — PAQUETE COMPLETO
+
+Este ZIP contiene el proyecto completo. No es necesario crear carpetas o subcarpetas manualmente.
+
+Incluye:
+- estructura V0.5 recibida del usuario;
+- módulo 13. Respaldos para Admin Total;
+- API servidor para respaldo completo ZIP + JSON + CSV;
+- eliminación del botón y función Restablecer;
+- registro de generación en activity_log.
+
+Antes del deploy configure en Vercel:
+NEXT_PUBLIC_SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+BACKUP_ADMIN_TOKEN
+
+SUPABASE_SERVICE_ROLE_KEY debe existir solo como variable privada de servidor.
+
+Nota de validación: el paquete fue revisado estructuralmente. En este entorno no fue posible completar npm install/build por límite de ejecución de instalación; Vercel instalará jszip desde package.json durante el build.

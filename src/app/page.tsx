@@ -18,12 +18,13 @@ import DispatchModule from "@/components/modules/DispatchModule";
 import PendingModule from "@/components/modules/PendingModule";
 import HistoryModule from "@/components/modules/HistoryModule";
 import ManagementModule from "@/components/modules/ManagementModule";
+import BackupModule from "@/components/modules/BackupModule";
 
 const profiles=((operations as any).profiles||[]) as ClientProfile[];
 const products:Product[]=(((master as any).products||[]) as any[]).map((p,i)=>({id:String(p.id||`p-${i+1}`),name:String(p.name||p.product||p.descripcion||`Producto ${i+1}`),price:Number(p.price??p.netPrice??p.precio??p.unitPrice??0)||0,presentation:String(p.presentation||p.presentacion||""),code:String(p.code||p.codigo||""),active:true}));
 
 export default function Page(){
- const {state,setState,patch,reset}=useMaterialStore(profiles[0]?.id||"");const [tab,setTab]=useState("inicio");
+ const {state,setState,patch}=useMaterialStore(profiles[0]?.id||"");const [tab,setTab]=useState("inicio");
  useEffect(()=>{if(!visibleModules(state.role).includes(tab))setTab("inicio")},[state.role,tab]);
  const profile=profiles.find(p=>p.id===state.selectedProfileId)||profiles[0];
  if(!profile)return <div className="fatal">No hay perfiles cargados.</div>;
@@ -41,6 +42,6 @@ export default function Page(){
   {tab==="pendientes"&&<PendingModule state={state} profile={profile}/>}
   {tab==="historico"&&<HistoryModule state={state} profile={profile}/>}
   {tab==="gestion"&&<ManagementModule state={state} setState={setState} profiles={profiles} products={products}/>}
-  {state.role==="Admin"&&<div className="adminTools"><button className="btn danger" onClick={reset}>Restablecer V0.5</button></div>}
+  {tab==="respaldos"&&state.role==="Admin Total"&&<BackupModule/>}
  </AppShell>;
 }
