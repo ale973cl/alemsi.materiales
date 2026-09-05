@@ -26,7 +26,8 @@ export async function POST(req:Request){
   const zip=new JSZip();zip.file("manifest.json",JSON.stringify(manifest,null,2));zip.file("full_backup.json",JSON.stringify({manifest,data},null,2));
   const folder=zip.folder("csv");for(const table of TABLES)folder?.file(`${table}.csv`,toCsv(data[table]));
   await fetch(`${url}/rest/v1/activity_log`,{method:"POST",headers:{apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,"content-type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({actor_name:"Admin Total",module:"Respaldos",action:"GENERAR_RESPALDO_COMPLETO",entity_table:"system",new_data:{generated_at:generatedAt,tables:counts,total_records:manifest.totalRecords},observation:"Respaldo externo ZIP/CSV/JSON generado desde el módulo Admin Total"})});
-  const bytes=await zip.generateAsync({type:"uint8array",compression:"DEFLATE",compressionOptions:{level:6}});
-  const stamp=generatedAt.replace(/[:.]/g,"-");return new Response(bytes,{status:200,headers:{"content-type":"application/zip","content-disposition":`attachment; filename="ALEMSI_Materiales_Backup_${stamp}.zip"`,"cache-control":"no-store"}});
+  const archive=await zip.generateAsync({type:"arraybuffer",compression:"DEFLATE",compressionOptions:{level:6}});
+  const stamp=generatedAt.replace(/[:.]/g,"-");
+  return new Response(archive,{status:200,headers:{"content-type":"application/zip","content-disposition":`attachment; filename="ALEMSI_Materiales_Backup_${stamp}.zip"`,"cache-control":"no-store"}});
  }catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Error generando respaldo"},{status:500})}
 }
