@@ -1,5 +1,7 @@
 import type { AppState } from "@/types";
-const KEY="alemsi-materiales-v0-1";
-export function loadState(fallback:AppState):AppState{ if(typeof window==="undefined") return fallback; try{const raw=localStorage.getItem(KEY); return raw?{...fallback,...JSON.parse(raw)}:fallback}catch{return fallback} }
-export function saveState(state:AppState){ if(typeof window!=="undefined") localStorage.setItem(KEY,JSON.stringify(state)); }
-export function clearState(){ if(typeof window!=="undefined") localStorage.removeItem(KEY); }
+/** @deprecated Compatibilidad. El estado operacional vive en Supabase. */
+export function loadState(fallback:AppState):AppState{return fallback}
+/** @deprecated No persiste datos; use mutaciones protegidas por RLS. */
+export function saveState(_state:AppState){return}
+/** @deprecated No existe estado local que limpiar. */
+export function clearState(){return}

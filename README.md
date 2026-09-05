@@ -1,4 +1,4 @@
-# ALEMSI Materiales V0.3
+# ALEMSI Materiales — Desarrollo integrado
 
 Versión de desarrollo que reemplaza la estructura plana de V0.1 por una navegación territorial y contractual.
 
@@ -17,4 +17,23 @@ Versión de desarrollo que reemplaza la estructura plana de V0.1 por una navegac
 ## Importante
 Los registros del Excel se guardan como histórico/base de pedido, no como inventario ni como entrega confirmada.
 
-Rama objetivo: `development`.
+Rama objetivo: `development`. Production/main no debe modificarse sin autorización.
+
+## Arquitectura vigente
+
+- Next.js App Router con autenticación SSR de Supabase.
+- Rol individual obtenido desde `user_profiles`; se eliminó el selector visual de perfiles.
+- Dos niveles superiores: **Admin Total** y **Gerencia**. Luego perfiles operativos Admin/Operaciones, Finanzas, Bodega y Supervisora.
+- Supabase es la fuente central. `localStorage` no participa en la nueva entrada operacional.
+- Flujo encadenado: perfil → campaña → levantamiento → carencia → consolidado → abastecimiento → OC → Finanzas → recepción → despacho → entrega → pendientes/histórico.
+- Motor de correo central con eventos y plantillas por módulo, cola, reintentos e idempotencia.
+
+## Antes de ejecutar
+
+Copie `.env.example` a `.env.local` y configure las claves. La clave secreta de Supabase y Resend son exclusivamente de servidor.
+
+La migración `supabase/migrations/20260905_development_workflow_integration.sql` está preparada para una rama de desarrollo. No fue aplicada a la base principal.
+
+## Auditoría del Excel
+
+Consulte `docs/ANALISIS_EXCEL_LOGISTICO.md`. El Excel se interpreta como antecedente histórico/perfil, no como inventario, compra, recepción o entrega confirmada.

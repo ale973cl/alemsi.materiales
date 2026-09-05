@@ -1,8 +1,7 @@
 "use client";
-import {useEffect,useState} from "react";
+import {useState} from "react";
 import type {Campaign,ConsolidatedLine,MaterialState,Role} from "./materiales-domain";
 
-const KEY="alemsi-materiales-v05";
 export const uid=(p:string)=>`${p}-${crypto.randomUUID()}`;
 export const isoDate=()=>new Date().toISOString().slice(0,10);
 export const now=()=>new Date().toISOString();
@@ -12,9 +11,9 @@ export function initialState(profileId:string):MaterialState{
  return {role:"Admin",selectedProfileId:profileId,contractMaterials:[],campaigns:[],surveys:[],supplyRuns:[],purchaseOrders:[],receipts:[],localPurchases:[],dispatches:[],kits:[],limits:{},suppliers:["Proveedor por definir"]};
 }
 export function useMaterialStore(defaultProfileId:string){
- const [state,setState]=useState<MaterialState>(()=>initialState(defaultProfileId)); const [ready,setReady]=useState(false);
- useEffect(()=>{try{const raw=localStorage.getItem(KEY);if(raw)setState({...initialState(defaultProfileId),...JSON.parse(raw)})}catch{} setReady(true)},[defaultProfileId]);
- useEffect(()=>{if(ready)localStorage.setItem(KEY,JSON.stringify(state))},[state,ready]);
+ // Compatibilidad exclusiva con componentes heredados. La aplicación operacional
+ // vigente persiste en Supabase y no escribe estado de negocio en el navegador.
+ const [state,setState]=useState<MaterialState>(()=>initialState(defaultProfileId));
  return {state,setState,patch:(p:Partial<MaterialState>)=>setState(s=>({...s,...p}))};
 }
 export function activeCampaign(state:MaterialState,profileId:string){
