@@ -1,9 +1,9 @@
 "use client";
 import {useMemo,useState} from "react";
 import {createClientWithContract,createInstallation,importClientsInstallationsCsv,renameContract} from "@/app/actions";
-type Installation={id:string;name:string;region?:string|null;city?:string|null;commune?:string|null;active?:boolean};
+type Installation={id:string;name:string;address?:string|null;region?:string|null;city?:string|null;commune?:string|null;delivery_contact_name?:string|null;delivery_email?:string|null;delivery_phone?:string|null;phone?:string|null;general_email?:string|null;active?:boolean};
 type Contract={id:string;name:string;code?:string|null;installations:Installation[]};
-export type ClientInstallationGroup={id:string;legal_name:string;business_center?:string|null;contracts:Contract[]};
+export type ClientInstallationGroup={id:string;legal_name:string;rut?:string|null;business_center?:string|null;contracts:Contract[]};
 const clean=(value:unknown)=>String(value??"").trim(); const normalized=(value:unknown)=>clean(value).toLocaleLowerCase("es-CL");
 export default function ClientInstallationsModule({clients}:{clients:ClientInstallationGroup[]}){
  const [search,setSearch]=useState(""),[showNewClient,setShowNewClient]=useState(false),[newInstallation,setNewInstallation]=useState<string|null>(null),[editingContract,setEditingContract]=useState<string|null>(null);
