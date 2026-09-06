@@ -27,7 +27,7 @@ export default async function Page() {
     ({ data: profile } = await supabase.from("user_profiles").select("id,full_name,email,role,active").eq("id", user.id).maybeSingle());
   }
   if (!profile?.active) return <main className="blocked"><h1>Acceso pendiente</h1><p>Tu usuario existe, pero todavía no está habilitado por Administración.</p></main>;
-  const [clients, installations, materials, openCampaigns, pendingSurveys, openPOs, partialReceipts, openDispatches, financePending, emailPending, campaigns, orders, dispatches, audit, materialCatalog, clientInstallations] = await Promise.all([
+  const [clients, installations, materials, openCampaigns, pendingSurveys, openPOs, partialReceipts, openDispatches, financePending, emailPending, campaigns, orders, dispatches, audit, materialCatalog, clientInstallations, users, userInstallationAccess] = await Promise.all([
     count(supabase,"clients",["active","true"]), count(supabase,"installations",["active","true"]), count(supabase,"materials",["active","true"]),
     count(supabase,"campaigns",["status","Abierta"]), count(supabase,"campaign_installations",["status","Pendiente"]), count(supabase,"purchase_orders",["status","Emitida"]),
     count(supabase,"receipts",["status","Parcial"]), count(supabase,"dispatches",["status","Pendiente"]), count(supabase,"finance_movements",["status","Pendiente"]), count(supabase,"email_queue",["status","Pendiente"]),
@@ -36,6 +36,8 @@ export default async function Page() {
     supabase.from("dispatches").select("id,guide_number,status,created_at,installations(name,region)").order("created_at",{ascending:false}).limit(8),
     supabase.from("activity_log").select("id,module,action,actor_name,created_at").order("created_at",{ascending:false}).limit(10), loadMaterialCatalog(supabase),
     supabase.from("clients").select("id,legal_name,business_center,contracts!inner(id,name,code,active,installations(id,name,region,city,commune,active))").eq("active",true).eq("contracts.active",true).eq("contracts.installations.active",true).order("legal_name"),
+    supabase.from("user_profiles").select("id,full_name,email,role,active,created_at").order("full_name"),
+    supabase.from("user_installation_access").select("id,user_id,installation_id,active,can_view_master,can_survey"),
   ]);
-  return <OperationalApp profile={profile} summary={{clients,installations,materials,openCampaigns,pendingSurveys,openPOs,partialReceipts,openDispatches,financePending,emailPending}} campaigns={campaigns.data||[]} orders={orders.data||[]} dispatches={dispatches.data||[]} audit={audit.data||[]} materialCatalog={materialCatalog.rows} materialCatalogSourceCount={materialCatalog.sourceCount} materialCatalogError={materialCatalog.error} clientInstallations={clientInstallations.data||[]}/>;
+  return <OperationalApp profile={profile} summary={{clients,installations,materials,openCampaigns,pendingSurveys,openPOs,partialReceipts,openDispatches,financePending,emailPending}} campaigns={campaigns.data||[]} orders={orders.data||[]} dispatches={dispatches.data||[]} audit={audit.data||[]} materialCatalog={materialCatalog.rows} materialCatalogSourceCount={materialCatalog.sourceCount} materialCatalogError={materialCatalog.error} clientInstallations={clientInstallations.data||[]} users={users.data||[]} userInstallationAccess={userInstallationAccess.data||[]}/>;
 }
