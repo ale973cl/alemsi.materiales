@@ -161,3 +161,19 @@ export async function setUserInstallationAccess(formData:FormData) {
   else if(granted){const {error}=await supabase.from("user_installation_access").insert({user_id:userId,installation_id:installationId,can_view_master:true,can_survey:true,active:true});if(error)throw error;}
   await audit(supabase,user,profile,{module:"Usuarios",action:granted?"Asignar instalación":"Retirar instalación",entity_table:"user_installation_access",entity_id:existing?.id,new_data:{user_id:userId,installation_id:installationId,active:granted}}); revalidatePath("/");
 }
+
+export async function createDispatchV1(input:{installationId:string;observations?:string;lines:{material_id:string;quantity:number}[]}){
+  const {supabase}=await context(["Admin Total","Admin","Bodega"]);
+  const {data,error}=await supabase.rpc("create_dispatch_v1",{p_installation_id:input.installationId,p_lines:input.lines,p_observations:input.observations||null});
+  if(error)throw new Error(error.message);revalidatePath("/");return data as string;
+}
+export async function transitionDispatchV1(dispatchId:string,status:string,reason?:string){
+  const {supabase}=await context(["Admin Total","Admin","Bodega"]);
+  const {data,error}=await supabase.rpc("transition_dispatch_v1",{p_dispatch_id:dispatchId,p_status:status,p_reason:reason||null});
+  if(error)throw new Error(error.message);revalidatePath("/");return data as string;
+}
+export async function registerDispatchDeliveryV1(input:{dispatchId:string;recipientName:string;recipientRut:string;recipientRole?:string;observations?:string;signature?:string;lines:{line_id:string;delivered_qty:number}[]}){
+  const {supabase}=await context(["Admin Total","Admin","Bodega","Supervisora"]);
+  const {data,error}=await supabase.rpc("register_dispatch_delivery_v1",{p_dispatch_id:input.dispatchId,p_lines:input.lines,p_recipient_name:input.recipientName,p_recipient_rut:input.recipientRut,p_recipient_role:input.recipientRole||null,p_observations:input.observations||null,p_signature:input.signature||null});
+  if(error)throw new Error(error.message);revalidatePath("/");return data as string;
+}
