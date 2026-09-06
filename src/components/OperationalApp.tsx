@@ -1,11 +1,12 @@
 "use client";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { closeCampaign, derivePurchaseOrder, signOut } from "@/app/actions";
+import { derivePurchaseOrder, signOut } from "@/app/actions";
 import MaterialsCatalogModule, {type MaterialCatalogRow} from "@/components/modules/MaterialsCatalogModule";
 import ClientInstallationsModule, {type ClientInstallationGroup} from "@/components/modules/ClientInstallationsModule";
 import UsersModule, {type UserAccessRow,type UserProfileRow} from "@/components/modules/UsersModule";
 import DispatchDeliveryModule from "@/components/modules/DispatchDeliveryModule";
+import CampaignsModule from "@/components/modules/CampaignsModule";
 
 type Props={profile:any;summary:Record<string,number>;campaigns:any[];orders:any[];dispatches:any[];audit:any[];materialCatalog:MaterialCatalogRow[];materialCatalogSourceCount:number;materialCatalogError?:string|null;clientInstallations:ClientInstallationGroup[];users:UserProfileRow[];userInstallationAccess:UserAccessRow[]};
 const roleModules:Record<string,string[]>={
@@ -38,7 +39,7 @@ export default function OperationalApp({profile,summary,campaigns,orders,dispatc
       {tab==="maestros"&&<ClientInstallationsModule clients={clientInstallations}/>} 
       {tab==="usuarios"&&<UsersModule users={users} clients={clientInstallations} access={userInstallationAccess} currentUserId={profile.id}/>} 
       {tab==="inicio"&&<><section className="flow">{stages.map((s,i)=><div key={s}><b>{i+1}</b><span>{s}</span></div>)}</section><section className="cards">{cards.map(([a,b,c])=><article key={String(a)}><small>{a}</small><strong>{b}</strong><span>{c}</span></article>)}</section><section className="panel"><h2>Base operativa</h2><div className="three"><p><b>{summary.clients}</b> clientes activos</p><p><b>{summary.installations}</b> instalaciones</p><p><b>{summary.materials}</b> materiales activos</p></div><p className="note">El Excel se conserva como antecedente de perfil. Inventario disponible se reconoce desde recepción física y asignación, nunca desde una cantidad histórica.</p></section></>}
-      {tab==="campañas"&&<section className="panel"><h2>Universo cerrado de levantamientos</h2><p>Cada campaña controla X/Y instalaciones y no puede cerrarse con pendientes sin justificación formal.</p><div className="table">{campaigns.length?campaigns.map(c=><div className="row" key={c.id}><span><b>{c.label}</b><small>{c.contracts?.clients?.legal_name||"Cliente"} · {c.contracts?.name||"Contrato"}</small></span><em>{c.status}</em>{c.status==="Abierta"&&<form action={closeCampaign}><input type="hidden" name="campaign_id" value={c.id}/><button>Cerrar con validación</button></form>}</div>):<Empty/>}</div></section>}
+      {tab==="campañas"&&<CampaignsModule campaigns={campaigns} clients={clientInstallations}/>} 
       {tab==="oc"&&<section className="panel"><h2>Órdenes de compra y derivación</h2><p>Operaciones deriva la OC al proveedor y genera simultáneamente la tarea para Finanzas. Los montos operacionales se muestran netos.</p><div className="table">{orders.length?orders.map(o=><div className="row" key={o.id}><span><b>{o.order_number||"OC sin folio"}</b><small>{o.suppliers?.legal_name||"Proveedor"}</small></span><strong>{money(Number(o.total_net))} neto</strong><em>{o.status}</em>{["Admin Total","Gerencia","Admin"].includes(profile.role)&&<form action={derivePurchaseOrder}><input type="hidden" name="purchase_order_id" value={o.id}/><button>Derivar OC y pago</button></form>}</div>):<Empty/>}</div></section>}
       {tab==="despacho"&&<DispatchDeliveryModule dispatches={dispatches} clients={clientInstallations} materials={materialCatalog} role={profile.role}/>} 
       {tab==="pendientes"&&<section className="panel"><h2>Control transversal de excepciones</h2><div className="cards compact">{cards.filter(([,v])=>Number(v)>0).map(([a,b,c])=><article key={String(a)}><small>{a}</small><strong>{b}</strong><span>{c}</span></article>)}</div>{cards.every(([,v])=>Number(v)===0)&&<Empty/>}</section>}
