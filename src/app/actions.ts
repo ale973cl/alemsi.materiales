@@ -142,3 +142,22 @@ export async function importClientsInstallationsCsv(formData:FormData) {
   await audit(supabase,user,profile,{module:"Clientes e instalaciones",action:"Carga masiva CSV",entity_table:"installations",new_data:{file:file.name,clientsCreated,contractsCreated,installationsCreated,installationsUpdated},observation:"Las coincidencias se actualizaron; no se duplicaron."});
   revalidatePath("/");
 }
+
+const USER_ROLES=["Admin Total","Gerencia","Supervisora","Finanzas","Bodega"] as const;
+export async function updateUserProfile(formData:FormData) {
+  const {supabase,user,profile}=await context(["Admin Total"]); const id=String(formData.get("user_id")||"");
+  const fullName=String(formData.get("full_name")||"").trim(); const role=String(formData.get("role")||""); const active=String(formData.get("active")||"")==="true";
+  if(!id||!fullName||!USER_ROLES.includes(role as typeof USER_ROLES[number])) throw new Error("Usuario, nombre y rol válido son obligatorios");
+  if(id===user.id&&(!active||role!=="Admin Total")) throw new Error("No puedes quitar tu propio acceso de Admin Total");
+  const {data:old,error:readError}=await supabase.from("user_profiles").select("id,full_name,email,role,active").eq("id",id).single(); if(readError)throw readError;
+  const {data,error}=await supabase.from("user_profiles").update({full_name:fullName,role,active,updated_at:new Date().toISOString()}).eq("id",id).select("id,full_name,email,role,active").single(); if(error)throw error;
+  await audit(supabase,user,profile,{module:"Usuarios",action:"Actualizar perfil",entity_table:"user_profiles",entity_id:id,old_data:old,new_data:data}); revalidatePath("/");
+}
+export async function setUserInstallationAccess(formData:FormData) {
+  const {supabase,user,profile}=await context(["Admin Total"]); const userId=String(formData.get("user_id")||""); const installationId=String(formData.get("installation_id")||""); const granted=String(formData.get("granted")||"")==="true";
+  if(!userId||!installationId) throw new Error("Usuario e instalación son obligatorios");
+  const {data:existing,error:readError}=await supabase.from("user_installation_access").select("id,active").eq("user_id",userId).eq("installation_id",installationId).maybeSingle(); if(readError)throw readError;
+  if(existing){const {error}=await supabase.from("user_installation_access").update({active:granted,can_view_master:true,can_survey:true,updated_at:new Date().toISOString()}).eq("id",existing.id);if(error)throw error;}
+  else if(granted){const {error}=await supabase.from("user_installation_access").insert({user_id:userId,installation_id:installationId,can_view_master:true,can_survey:true,active:true});if(error)throw error;}
+  await audit(supabase,user,profile,{module:"Usuarios",action:granted?"Asignar instalación":"Retirar instalación",entity_table:"user_installation_access",entity_id:existing?.id,new_data:{user_id:userId,installation_id:installationId,active:granted}}); revalidatePath("/");
+}
