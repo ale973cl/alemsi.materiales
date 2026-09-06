@@ -20,14 +20,20 @@ export async function signOut() { const supabase=await createClient(); await sup
 
 export async function createCampaign(formData:FormData) {
   const {supabase,user}=await context(["Admin Total","Gerencia","Admin"]);
-  const contractId=String(formData.get("contract_id")||""); const label=String(formData.get("label")||"").trim();
-  if(!contractId||!label) throw new Error("Contrato y período son obligatorios");
-  const {data:installations,error:iError}=await supabase.from("installations").select("id").eq("contract_id",contractId).eq("active",true);
-  if(iError||!installations?.length) throw new Error("El contrato no tiene instalaciones activas; no se puede abrir un universo vacío");
-  const {data:campaign,error}=await supabase.from("campaigns").insert({contract_id:contractId,label,status:"Abierta",created_by:user.id}).select("id").single();
+  const clientIds=[...new Set(formData.getAll("client_ids").map(value=>String(value)).filter(Boolean))];
+  const name=String(formData.get("name")||"").trim();
+  const periodicity=String(formData.get("periodicity")||"");
+  const allowedPeriodicities=["Mensual","Bimensual","Trimestral","Cuatrimestral","Semestral","Personalizada"];
+  if(!clientIds.length||!name||!allowedPeriodicities.includes(periodicity)) throw new Error("Nombre, periodicidad y al menos un cliente son obligatorios");
+  const {data:contracts,error:contractError}=await supabase.from("contracts").select("id").in("client_id",clientIds).eq("active",true);
+  if(contractError||!contracts?.length) throw new Error("Los clientes seleccionados no tienen contratos activos");
+  const {data:installations,error:installationError}=await supabase.from("installations").select("id,contract_id").in("contract_id",contracts.map((contract:any)=>contract.id)).eq("active",true);
+  if(installationError||!installations?.length) throw new Error("Los clientes seleccionados no tienen instalaciones activas");
+  const label=JSON.stringify({name,periodicity,clientCount:clientIds.length});
+  const {data:campaign,error}=await supabase.from("campaigns").insert({contract_id:installations[0].contract_id,label,status:"Abierta",created_by:user.id}).select("id").single();
   if(error) throw error;
-  const {error:linkError}=await supabase.from("campaign_installations").insert(installations.map((i:any)=>({campaign_id:campaign.id,installation_id:i.id,status:"Pendiente"})));
-  if(linkError) throw linkError;
+  const {error:linkError}=await supabase.from("campaign_installations").insert(installations.map((installation:any)=>({campaign_id:campaign.id,installation_id:installation.id,status:"Pendiente"})));
+  if(linkError){await supabase.from("campaigns").delete().eq("id",campaign.id);throw linkError;}
   revalidatePath("/");
 }
 
