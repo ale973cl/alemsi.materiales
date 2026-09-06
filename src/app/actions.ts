@@ -144,6 +144,13 @@ export async function importClientsInstallationsCsv(formData:FormData) {
 }
 
 const USER_ROLES=["Admin Total","Gerencia","Supervisora","Finanzas","Bodega"] as const;
+export async function inviteUser(formData:FormData){
+  const {supabase}=await context(["Admin Total"]);const fullName=String(formData.get("full_name")||"").trim();const email=String(formData.get("email")||"").trim().toLowerCase();const role=String(formData.get("role")||"");const active=String(formData.get("active")||"")==="true";
+  if(!fullName||!/^\S+@\S+\.\S+$/.test(email)||!USER_ROLES.includes(role as typeof USER_ROLES[number]))throw new Error("Nombre, correo y rol válido son obligatorios");
+  const {data:{session}}=await supabase.auth.getSession();if(!session?.access_token)throw new Error("Sesión no válida");
+  const response=await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/invite-material-user`,{method:"POST",headers:{Authorization:`Bearer ${session.access_token}`,"Content-Type":"application/json"},body:JSON.stringify({full_name:fullName,email,role,active,redirect_to:process.env.NEXT_PUBLIC_APP_URL?`${process.env.NEXT_PUBLIC_APP_URL}/login`:undefined})});
+  const result=await response.json();if(!response.ok)throw new Error(result.error||"No se pudo invitar al usuario");revalidatePath("/");return result;
+}
 export async function updateUserProfile(formData:FormData) {
   const {supabase,user,profile}=await context(["Admin Total"]); const id=String(formData.get("user_id")||"");
   const fullName=String(formData.get("full_name")||"").trim(); const role=String(formData.get("role")||""); const active=String(formData.get("active")||"")==="true";
