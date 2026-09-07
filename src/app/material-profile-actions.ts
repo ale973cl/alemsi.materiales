@@ -11,24 +11,34 @@ async function allowedContext(){
   return supabase;
 }
 
-export async function loadInstallationMaterialProfile(contractId:string,installationId:string){
+export async function loadMaterialProfile(contractId:string,installationId:string|null){
   const supabase=await allowedContext();
-  if(!contractId||!installationId) throw new Error("Contrato e instalación son obligatorios");
-  const {data:installation,error:installationError}=await supabase.from("installations").select("id,contract_id,name").eq("id",installationId).eq("contract_id",contractId).eq("active",true).single();
-  if(installationError||!installation) throw new Error("Instalación no válida para este contrato");
+  if(!contractId) throw new Error("Contrato obligatorio");
+  const {data:contract,error:contractError}=await supabase.from("contracts").select("id,name,active").eq("id",contractId).eq("active",true).single();
+  if(contractError||!contract) throw new Error("Contrato no válido o inactivo");
+  let installation:any=null;
+  if(installationId){
+    const result=await supabase.from("installations").select("id,contract_id,name").eq("id",installationId).eq("contract_id",contractId).eq("active",true).single();
+    if(result.error||!result.data) throw new Error("Instalación no válida para este contrato");
+    installation=result.data;
+  }
   const [{data:assignments,error:assignmentError},{data:limits,error:limitError},{data:materials,error:materialsError}]=await Promise.all([
-    supabase.from("contract_materials").select("id,material_id,authorized,authorized_qty,net_limit,coverage_status,notes,updated_at").eq("contract_id",contractId).eq("installation_id",installationId),
-    supabase.from("contract_limits").select("id,material_id,period_type,period_value,quantity_limit,net_amount_limit,active").eq("contract_id",contractId).eq("installation_id",installationId).eq("active",true),
+    installationId
+      ? supabase.from("contract_materials").select("id,material_id,installation_id,authorized,authorized_qty,net_limit,coverage_status,notes,updated_at").eq("contract_id",contractId).or(`installation_id.is.null,installation_id.eq.${installationId}`)
+      : supabase.from("contract_materials").select("id,material_id,installation_id,authorized,authorized_qty,net_limit,coverage_status,notes,updated_at").eq("contract_id",contractId).is("installation_id",null),
+    installationId
+      ? supabase.from("contract_limits").select("id,material_id,installation_id,period_type,period_value,quantity_limit,net_amount_limit,active").eq("contract_id",contractId).eq("active",true).or(`installation_id.is.null,installation_id.eq.${installationId}`)
+      : supabase.from("contract_limits").select("id,material_id,installation_id,period_type,period_value,quantity_limit,net_amount_limit,active").eq("contract_id",contractId).eq("active",true).is("installation_id",null),
     supabase.from("materials").select("id,family,name,presentation,unit,supplier_code,current_net_price,active").eq("active",true).order("family").order("name")
   ]);
   if(assignmentError) throw assignmentError;
   if(limitError) throw limitError;
   if(materialsError) throw materialsError;
-  return {installation,assignments:assignments||[],limits:limits||[],materials:materials||[]};
+  return {contract,installation,assignments:assignments||[],limits:limits||[],materials:materials||[]};
 }
 
-type SaveInput={contract_id:string;installation_id:string;material_id:string;assigned:boolean;authorized_qty:number;period_type?:string|null;period_value?:number|null;quantity_limit?:number|null;net_amount_limit?:number|null;coverage_status?:string|null;notes?:string|null};
-export async function saveInstallationMaterialConfig(input:SaveInput){
+type SaveInput={contract_id:string;installation_id:string|null;material_id:string;assigned:boolean;authorized_qty:number;period_type?:string|null;period_value?:number|null;quantity_limit?:number|null;net_amount_limit?:number|null;coverage_status?:string|null;notes?:string|null};
+export async function saveMaterialProfileConfig(input:SaveInput){
   const supabase=await allowedContext();
   const payload={
     p_contract_id:input.contract_id,
@@ -47,3 +57,6 @@ export async function saveInstallationMaterialConfig(input:SaveInput){
   if(error) throw new Error(error.message);
   return data;
 }
+
+export const loadInstallationMaterialProfile=(contractId:string,installationId:string)=>loadMaterialProfile(contractId,installationId);
+export const saveInstallationMaterialConfig=(input:Omit<SaveInput,"installation_id">&{installation_id:string})=>saveMaterialProfileConfig(input);
