@@ -1,7 +1,8 @@
 "use client";
 import {useMemo,useState} from "react";
 import {closeCampaign,createCampaign} from "@/app/actions";
-import {deleteCampaign,forceCloseCampaign,justifyCampaignInstallation} from "@/app/campaign-actions";
+import {forceCloseCampaign,justifyCampaignInstallation} from "@/app/campaign-actions";
+import {deleteCampaignSafe} from "@/app/delete-campaign-action";
 import type {ClientInstallationGroup} from "@/components/modules/ClientInstallationsModule";
 
 type CampaignInstallation={id?:string;installation_id?:string;status:string;justification?:string|null;installations?:{id?:string;name?:string|null;region?:string|null;contracts?:{name?:string|null;clients?:{legal_name?:string|null}|null}|null}|null};
@@ -21,7 +22,7 @@ export default function CampaignsModule({campaigns,clients,onOpenSurveys}:{campa
  {c.status==="Abierta"&&<>{pending===0&&<form action={closeCampaign} className="campaignClose"><input type="hidden" name="campaign_id" value={c.id}/><button>Cerrar campaña</button><small>Universo completo o formalmente justificado.</small></form>}<button type="button" className="campaignSurveyLink" onClick={()=>setAdminCampaign(adminOpen?null:c.id)}>{adminOpen?"Ocultar controles":"Administrar campaña"}</button></>}
  {adminOpen&&<div className="adminForm campaignForm"><h3>Control administrativo</h3><p>Las instalaciones sin materiales pueden justificarse para que no bloqueen el cierre. El cierre forzado conserva la campaña y su trazabilidad.</p>{universe.filter(item=>item.status!=="Completada"&&item.status!=="Justificada").map(item=>{const installationId=item.installation_id||item.installations?.id||item.id||"";return <form action={justifyCampaignInstallation} key={installationId} className="campaignClose"><input type="hidden" name="campaign_id" value={c.id}/><input type="hidden" name="installation_id" value={installationId}/><span><b>{item.installations?.name||"Instalación"}</b><small>{item.installations?.contracts?.clients?.legal_name||""} · {item.installations?.region||"Región pendiente"}</small></span><input name="reason" required minLength={4} placeholder="Ej.: Sin materiales configurados / No corresponde levantamiento"/><button>Justificar</button></form>})}
  <form action={forceCloseCampaign} className="campaignClose"><input type="hidden" name="campaign_id" value={c.id}/><input name="reason" required minLength={5} placeholder="Motivo obligatorio del cierre forzado"/><button>Forzar cierre</button><small>Marca los pendientes como justificados y conserva todos los levantamientos existentes.</small></form>
- <form action={deleteCampaign} className="campaignClose"><input type="hidden" name="campaign_id" value={c.id}/><input name="confirmation" required placeholder="Escribe ELIMINAR"/><button>Eliminar campaña</button><small>Solo se permite antes de abastecimiento, compras locales o despachos. Elimina también sus levantamientos de prueba.</small></form></div>}
+ <form action={deleteCampaignSafe} className="campaignClose"><input type="hidden" name="campaign_id" value={c.id}/><input name="confirmation" required placeholder="Escribe ELIMINAR"/><button>Eliminar campaña</button><small>Solo se permite antes de abastecimiento, compras locales o despachos. Elimina también sus levantamientos de prueba.</small></form></div>}
  </article>}):<div className="empty"><b>Sin campañas</b><span>Crea la primera campaña seleccionando uno o varios clientes.</span></div>}</div>
  </section>;
 }
