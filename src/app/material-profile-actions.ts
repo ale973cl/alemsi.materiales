@@ -58,5 +58,10 @@ export async function saveMaterialProfileConfig(input:SaveInput){
   return data;
 }
 
-export const loadInstallationMaterialProfile=(contractId:string,installationId:string)=>loadMaterialProfile(contractId,installationId);
-export const saveInstallationMaterialConfig=(input:Omit<SaveInput,"installation_id">&{installation_id:string})=>saveMaterialProfileConfig(input);
+export async function loadInstallationMaterialProfile(contractId:string,installationId:string){
+  return loadMaterialProfile(contractId,installationId);
+}
+
+export async function saveInstallationMaterialConfig(input:Omit<SaveInput,"installation_id">&{installation_id:string}){
+  return saveMaterialProfileConfig(input);
+}
