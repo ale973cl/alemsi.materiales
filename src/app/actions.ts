@@ -198,3 +198,26 @@ export async function registerDispatchDeliveryV1(input:{dispatchId:string;recipi
   const {data,error}=await supabase.rpc("register_dispatch_delivery_v1",{p_dispatch_id:input.dispatchId,p_lines:input.lines,p_recipient_name:input.recipientName,p_recipient_rut:input.recipientRut,p_recipient_role:input.recipientRole||null,p_observations:input.observations||null,p_signature:input.signature||null});
   if(error)throw new Error(error.message);revalidatePath("/");return data as string;
 }
+
+export async function saveSurvey(formData:FormData) {
+  const {supabase,user}=await context(["Admin Total","Gerencia","Admin","Supervisora"]);
+  const campaignId=String(formData.get("campaign_id")||""); const installationId=String(formData.get("installation_id")||"");
+  const submitted=JSON.parse(String(formData.get("lines")||"[]")) as {material_id:string;physical_remainder:number}[];
+  const {data:membership,error:membershipError}=await supabase.from("campaign_installations").select("campaign_id,installation_id,installations(contract_id)").eq("campaign_id",campaignId).eq("installation_id",installationId).single();
+  if(membershipError||!membership) throw new Error("La instalación no pertenece al universo de la campaña");
+  const contractId=(membership.installations as any)?.contract_id;
+  const {data:authorized,error:materialsError}=await supabase.from("contract_materials").select("material_id,installation_id,authorized_qty,materials(current_net_price)").eq("contract_id",contractId).eq("authorized",true).or(`installation_id.is.null,installation_id.eq.${installationId}`);
+  if(materialsError) throw materialsError;
+  const byMaterial=new Map<string,any>(); for(const item of authorized||[]){if(!byMaterial.has(item.material_id)||item.installation_id===installationId)byMaterial.set(item.material_id,item)}
+  if(!byMaterial.size) throw new Error("La instalación no tiene materiales autorizados");
+  if(submitted.length!==byMaterial.size||submitted.some(line=>!byMaterial.has(line.material_id)||Number(line.physical_remainder)<0)) throw new Error("El levantamiento no coincide con los materiales autorizados");
+  const lines=submitted.map(line=>{const source=byMaterial.get(line.material_id);const authorizedQty=Number(source.authorized_qty||0);const remainder=Number(line.physical_remainder||0);const shortage=Math.max(authorizedQty-remainder,0);const price=Number(source.materials?.current_net_price||0);return{material_id:line.material_id,authorized_qty:authorizedQty,physical_remainder:remainder,shortage_qty:shortage,unit_net_price:price,line_net:shortage*price}});
+  const shortageNet=lines.reduce((sum,line)=>sum+line.line_net,0);
+  const {data:survey,error:surveyError}=await supabase.from("surveys").upsert({campaign_id:campaignId,installation_id:installationId,supervisor_id:user.id,status:"Borrador",shortage_net:shortageNet,confirmed_at:null},{onConflict:"campaign_id,installation_id"}).select("id").single(); if(surveyError)throw surveyError;
+  const deleted=await supabase.from("survey_lines").delete().eq("survey_id",survey.id); if(deleted.error)throw deleted.error;
+  const inserted=await supabase.from("survey_lines").insert(lines.map(line=>({...line,survey_id:survey.id}))); if(inserted.error)throw inserted.error;
+  const confirmedAt=new Date().toISOString();
+  const confirmed=await supabase.from("surveys").update({status:"Confirmada",confirmed_at:confirmedAt,shortage_net:shortageNet}).eq("id",survey.id); if(confirmed.error)throw confirmed.error;
+  const completed=await supabase.from("campaign_installations").update({status:"Completada",completed_at:confirmedAt,supervisor_id:user.id}).eq("campaign_id",campaignId).eq("installation_id",installationId); if(completed.error)throw completed.error;
+  revalidatePath("/");
+}
