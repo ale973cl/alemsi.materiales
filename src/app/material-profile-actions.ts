@@ -40,28 +40,19 @@ export async function loadMaterialProfile(contractId:string,installationId:strin
 type SaveInput={contract_id:string;installation_id:string|null;material_id:string;assigned:boolean;authorized_qty:number;period_type?:string|null;period_value?:number|null;quantity_limit?:number|null;net_amount_limit?:number|null;coverage_status?:string|null;notes?:string|null};
 export async function saveMaterialProfileConfig(input:SaveInput){
   const supabase=await allowedContext();
-  const payload={
-    p_contract_id:input.contract_id,
-    p_installation_id:input.installation_id,
-    p_material_id:input.material_id,
-    p_assigned:Boolean(input.assigned),
-    p_authorized_qty:Number(input.authorized_qty||0),
-    p_period_type:input.period_type||null,
-    p_period_value:input.period_value??null,
-    p_quantity_limit:input.quantity_limit??null,
-    p_net_amount_limit:input.net_amount_limit??null,
-    p_coverage_status:input.coverage_status||"included",
-    p_notes:input.notes||null,
-  };
+  const payload={p_contract_id:input.contract_id,p_installation_id:input.installation_id,p_material_id:input.material_id,p_assigned:Boolean(input.assigned),p_authorized_qty:Number(input.authorized_qty||0),p_period_type:input.period_type||null,p_period_value:input.period_value??null,p_quantity_limit:input.quantity_limit??null,p_net_amount_limit:input.net_amount_limit??null,p_coverage_status:input.coverage_status||"included",p_notes:input.notes||null};
   const {data,error}=await supabase.rpc("save_client_profile_material_config",payload);
   if(error) throw new Error(error.message);
   return data;
 }
 
-export async function loadInstallationMaterialProfile(contractId:string,installationId:string){
-  return loadMaterialProfile(contractId,installationId);
+export async function clearInstallationMaterialException(contractId:string,installationId:string,materialId:string){
+  const supabase=await allowedContext();
+  if(!contractId||!installationId||!materialId) throw new Error("Datos incompletos para volver al perfil general");
+  const {data,error}=await supabase.rpc("clear_installation_material_exception",{p_contract_id:contractId,p_installation_id:installationId,p_material_id:materialId});
+  if(error) throw new Error(error.message);
+  return data;
 }
 
-export async function saveInstallationMaterialConfig(input:Omit<SaveInput,"installation_id">&{installation_id:string}){
-  return saveMaterialProfileConfig(input);
-}
+export async function loadInstallationMaterialProfile(contractId:string,installationId:string){return loadMaterialProfile(contractId,installationId);}
+export async function saveInstallationMaterialConfig(input:Omit<SaveInput,"installation_id">&{installation_id:string}){return saveMaterialProfileConfig(input);}
