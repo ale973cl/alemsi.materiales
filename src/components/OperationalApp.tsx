@@ -9,6 +9,7 @@ import UsersModule, {type UserAccessRow,type UserProfileRow} from "@/components/
 import DispatchDeliveryModule from "@/components/modules/DispatchDeliveryModule";
 import CampaignsModule from "@/components/modules/CampaignsModule";
 import ConsolidatedSupplyModule from "@/components/modules/ConsolidatedSupplyModule";
+import ConnectedReceiptModule from "@/components/modules/ConnectedReceiptModule";
 
 type Props={profile:any;summary:Record<string,number>;campaigns:any[];activeCampaigns:any[];consolidatedSurveys:any[];orders:any[];dispatches:any[];audit:any[];materialCatalog:MaterialCatalogRow[];materialCatalogSourceCount:number;materialCatalogError?:string|null;clientInstallations:ClientInstallationGroup[];users:UserProfileRow[];userInstallationAccess:UserAccessRow[]};
 const roleModules:Record<string,string[]>={
@@ -47,11 +48,12 @@ export default function OperationalApp({profile,summary,campaigns,activeCampaign
       {tab==="levantamientos"&&<SurveyCampaignSelector campaigns={activeCampaigns} surveys={consolidatedSurveys} selectedCampaignId={selectedCampaignId} onSelect={(id)=>{setSelectedCampaignId(id);setSelectedSurveyInstallationId("")}} selectedInstallationId={selectedSurveyInstallationId} onSelectInstallation={setSelectedSurveyInstallationId}/>} 
       {tab==="abastecimiento"&&<ConsolidatedSupplyModule surveys={consolidatedSurveys}/>} 
       {tab==="oc"&&<section className="panel"><h2>Órdenes de compra y derivación</h2><p>Operaciones deriva la OC al proveedor y genera simultáneamente la tarea para Finanzas. Los montos operacionales se muestran netos.</p><div className="table">{orders.length?orders.map(o=><div className="row" key={o.id}><span><b>{o.order_number||"OC sin folio"}</b><small>{o.suppliers?.legal_name||"Proveedor"}</small></span><strong>{money(Number(o.total_net))} neto</strong><em>{o.status}</em>{["Admin Total","Gerencia","Admin"].includes(profile.role)&&<form action={derivePurchaseOrder}><input type="hidden" name="purchase_order_id" value={o.id}/><button>Derivar OC y pago</button></form>}</div>):<Empty/>}</div></section>}
+      {tab==="recepcion"&&<ConnectedReceiptModule role={profile.role}/>} 
       {tab==="despacho"&&<DispatchDeliveryModule dispatches={dispatches} clients={clientInstallations} materials={materialCatalog} role={profile.role}/>} 
       {tab==="pendientes"&&<section className="panel"><h2>Control transversal de excepciones</h2><div className="cards compact">{cards.filter(([,v])=>Number(v)>0).map(([a,b,c])=><article key={String(a)}><small>{a}</small><strong>{b}</strong><span>{c}</span></article>)}</div>{cards.every(([,v])=>Number(v)===0)&&<Empty/>}</section>}
       {tab==="correos"&&<section className="panel"><h2>Un motor, reglas por módulo</h2><div className="emailGrid"><article><b>Infraestructura única</b><p>Cola, idempotencia, reintentos, estado y eventos de entrega.</p></article><article><b>Plantillas modulares</b><p>Campañas, aprobaciones, OC, Finanzas, recepción, despacho, guía firmada y alertas.</p></article><article><b>Destinatarios trazables</b><p>Proveedor, receptor de la instalación, Operaciones y copia a Finanzas según el evento.</p></article></div><p className="note">Correos pendientes en cola: <b>{summary.emailPending}</b>.</p></section>}
       {tab==="auditoria"&&<section className="panel"><h2>Trazabilidad reciente</h2><div className="table">{audit.length?audit.map(a=><div className="row" key={a.id}><span><b>{a.module} · {a.action}</b><small>{a.actor_name||"Sistema"}</small></span><time>{date(a.created_at)}</time></div>):<Empty/>}</div></section>}
-      {!['inicio','maestro-materiales','maestros','usuarios','campañas','levantamientos','abastecimiento','oc','despacho','pendientes','correos','auditoria'].includes(tab)&&<ModuleInfo tab={tab} summary={summary}/>} 
+      {!['inicio','maestro-materiales','maestros','usuarios','campañas','levantamientos','abastecimiento','oc','recepcion','despacho','pendientes','correos','auditoria'].includes(tab)&&<ModuleInfo tab={tab} summary={summary}/>} 
     </main></div>
   </div>;
 }
