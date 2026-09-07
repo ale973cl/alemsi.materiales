@@ -16,11 +16,15 @@ export async function loadInstallationMaterialProfile(contractId:string,installa
   if(!contractId||!installationId) throw new Error("Contrato e instalación son obligatorios");
   const {data:installation,error:installationError}=await supabase.from("installations").select("id,contract_id,name").eq("id",installationId).eq("contract_id",contractId).eq("active",true).single();
   if(installationError||!installation) throw new Error("Instalación no válida para este contrato");
-  const {data:assignments,error:assignmentError}=await supabase.from("contract_materials").select("id,material_id,authorized,authorized_qty,net_limit,coverage_status,notes,updated_at").eq("contract_id",contractId).eq("installation_id",installationId);
+  const [{data:assignments,error:assignmentError},{data:limits,error:limitError},{data:materials,error:materialsError}]=await Promise.all([
+    supabase.from("contract_materials").select("id,material_id,authorized,authorized_qty,net_limit,coverage_status,notes,updated_at").eq("contract_id",contractId).eq("installation_id",installationId),
+    supabase.from("contract_limits").select("id,material_id,period_type,period_value,quantity_limit,net_amount_limit,active").eq("contract_id",contractId).eq("installation_id",installationId).eq("active",true),
+    supabase.from("materials").select("id,family,name,presentation,unit,supplier_code,current_net_price,active").eq("active",true).order("family").order("name")
+  ]);
   if(assignmentError) throw assignmentError;
-  const {data:limits,error:limitError}=await supabase.from("contract_limits").select("id,material_id,period_type,period_value,quantity_limit,net_amount_limit,active").eq("contract_id",contractId).eq("installation_id",installationId).eq("active",true);
   if(limitError) throw limitError;
-  return {installation,assignments:assignments||[],limits:limits||[]};
+  if(materialsError) throw materialsError;
+  return {installation,assignments:assignments||[],limits:limits||[],materials:materials||[]};
 }
 
 type SaveInput={contract_id:string;installation_id:string;material_id:string;assigned:boolean;authorized_qty:number;period_type?:string|null;period_value?:number|null;quantity_limit?:number|null;net_amount_limit?:number|null;coverage_status?:string|null;notes?:string|null};
