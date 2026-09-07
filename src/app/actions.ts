@@ -213,11 +213,15 @@ export async function saveSurvey(formData:FormData) {
   if(submitted.length!==byMaterial.size||submitted.some(line=>!byMaterial.has(line.material_id)||Number(line.physical_remainder)<0)) throw new Error("El levantamiento no coincide con los materiales autorizados");
   const lines=submitted.map(line=>{const source=byMaterial.get(line.material_id);const authorizedQty=Number(source.authorized_qty||0);const remainder=Number(line.physical_remainder||0);const shortage=Math.max(authorizedQty-remainder,0);const price=Number(source.materials?.current_net_price||0);return{material_id:line.material_id,authorized_qty:authorizedQty,physical_remainder:remainder,shortage_qty:shortage,unit_net_price:price,line_net:shortage*price}});
   const shortageNet=lines.reduce((sum,line)=>sum+line.line_net,0);
-  const {data:survey,error:surveyError}=await supabase.from("surveys").upsert({campaign_id:campaignId,installation_id:installationId,supervisor_id:user.id,status:"Borrador",shortage_net:shortageNet,confirmed_at:null},{onConflict:"campaign_id,installation_id"}).select("id").single(); if(surveyError)throw surveyError;
-  const deleted=await supabase.from("survey_lines").delete().eq("survey_id",survey.id); if(deleted.error)throw deleted.error;
-  const inserted=await supabase.from("survey_lines").insert(lines.map(line=>({...line,survey_id:survey.id}))); if(inserted.error)throw inserted.error;
+  const {data:survey,error:surveyError}=await supabase.from("surveys").upsert({campaign_id:campaignId,installation_id:installationId,supervisor_id:user.id,status:"Borrador",shortage_net:shortageNet,confirmed_at:null},{onConflict:"campaign_id,installation_id"}).select("id,campaign_id,installation_id").single();
+  if(surveyError||!survey||survey.campaign_id!==campaignId||survey.installation_id!==installationId) throw surveyError||new Error("No se pudo asociar el levantamiento a la campaña e instalación");
+  const {error:deleteError}=await supabase.from("survey_lines").delete().eq("survey_id",survey.id); if(deleteError)throw deleteError;
+  const {data:savedLines,error:insertError}=await supabase.from("survey_lines").insert(lines.map(line=>({...line,survey_id:survey.id}))).select("id,survey_id");
+  if(insertError||savedLines?.length!==lines.length||savedLines.some(line=>line.survey_id!==survey.id)) throw insertError||new Error("No se guardaron todas las líneas del levantamiento");
   const confirmedAt=new Date().toISOString();
-  const confirmed=await supabase.from("surveys").update({status:"Confirmada",confirmed_at:confirmedAt,shortage_net:shortageNet}).eq("id",survey.id); if(confirmed.error)throw confirmed.error;
-  const completed=await supabase.from("campaign_installations").update({status:"Completada",completed_at:confirmedAt,supervisor_id:user.id}).eq("campaign_id",campaignId).eq("installation_id",installationId); if(completed.error)throw completed.error;
+  const {data:confirmed,error:confirmError}=await supabase.from("surveys").update({status:"Confirmada",confirmed_at:confirmedAt,shortage_net:shortageNet}).eq("id",survey.id).eq("campaign_id",campaignId).eq("installation_id",installationId).select("id,status").single();
+  if(confirmError||confirmed?.status!=="Confirmada") throw confirmError||new Error("No se pudo confirmar el levantamiento");
+  const {data:completed,error:completeError}=await supabase.from("campaign_installations").update({status:"Completada",completed_at:confirmedAt,supervisor_id:user.id}).eq("campaign_id",campaignId).eq("installation_id",installationId).select("campaign_id,installation_id,status").single();
+  if(completeError||completed?.status!=="Completada") throw completeError||new Error("No se pudo marcar la instalación como completada");
   revalidatePath("/");
 }
