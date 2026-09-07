@@ -12,10 +12,6 @@ input,select,textarea,button{max-width:100%}
   .portalTop{height:auto;min-height:72px;padding:8px 14px;gap:10px}
   .portalTop img{max-width:150px;height:auto}
   .userBox{font-size:12px;gap:2px 8px}
-  .portalBody{grid-template-columns:190px minmax(0,1fr)}
-  aside{padding:14px 9px}
-  .productTitle{font-size:15px;padding:8px 9px 14px}
-  .nav{font-size:12px;padding:9px 8px;white-space:normal;line-height:1.2}
   .workspace{padding:18px 14px}
   .pageHead{gap:12px;align-items:flex-start}
   .pageHead h1{font-size:24px}
@@ -86,18 +82,16 @@ input,select,textarea,button{max-width:100%}
   .contractActions{grid-template-columns:1fr}
 }
 
-/* Navegación lateral compacta: visible por icono, se expande al pasar por encima */
+/* Navegación lateral compacta estable. La expansión se superpone y NO mueve el contenido. */
 @media (min-width:761px){
-  .portalBody{grid-template-columns:64px minmax(0,1fr);transition:grid-template-columns .18s ease}
-  .portalBody:has(aside:hover){grid-template-columns:244px minmax(0,1fr)}
-  .portalBody>aside{width:64px;min-width:64px;overflow-x:hidden;transition:width .18s ease,min-width .18s ease;padding:14px 8px;position:relative;z-index:12}
-  .portalBody>aside:hover{width:244px;min-width:244px;box-shadow:8px 0 22px rgba(7,39,64,.12)}
+  .portalBody{grid-template-columns:64px minmax(0,1fr);position:relative}
+  .portalBody>aside{width:64px;min-width:64px;overflow-x:hidden;transition:width .16s ease; padding:14px 8px;position:relative;z-index:40}
+  .portalBody>aside:hover{width:244px;box-shadow:8px 0 22px rgba(7,39,64,.18)}
   .productTitle{height:48px;padding:0;margin:0 0 10px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;font-size:0;color:white}
   .productTitle::before{content:'☰';display:grid;place-items:center;flex:0 0 46px;width:46px;height:42px;font-size:25px;font-weight:400;color:white}
   .productTitle small{display:none}
   .portalBody>aside:hover .productTitle{font-size:16px;font-weight:800}
   .portalBody>aside:hover .productTitle::before{margin-right:6px}
-  .portalBody>aside:hover .productTitle small{display:none}
   .nav{height:46px;display:flex;align-items:center;gap:10px;width:100%;padding:0 8px;margin:3px 0;white-space:nowrap;overflow:hidden;font-size:0;border-radius:9px}
   .nav::before{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;font-size:18px;line-height:1}
   .portalBody>aside:hover .nav{font-size:13px;padding:0 10px}
@@ -120,12 +114,11 @@ input,select,textarea,button{max-width:100%}
   .workspace{max-width:none;margin:0;padding-left:clamp(16px,2vw,28px);padding-right:clamp(16px,2vw,28px)}
 }
 
-/* En Chrome móvil con sitio para computador, mantener la barra compacta para ganar ancho */
+/* Chrome móvil con sitio para computador */
 @media (min-width:761px) and (max-width:1100px){
   .portalBody{grid-template-columns:58px minmax(0,1fr)}
-  .portalBody:has(aside:hover){grid-template-columns:220px minmax(0,1fr)}
   .portalBody>aside{width:58px;min-width:58px;padding:10px 6px}
-  .portalBody>aside:hover{width:220px;min-width:220px}
+  .portalBody>aside:hover{width:220px}
   .productTitle::before{flex-basis:42px;width:42px}
   .nav{padding:0 6px}
   .nav::before{flex-basis:28px;width:28px;font-size:17px}
