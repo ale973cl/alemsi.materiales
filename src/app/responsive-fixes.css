@@ -7,6 +7,30 @@ html,body{max-width:100%;overflow-x:hidden}
 .panel p,.panel small,.panel b,.campaignCard p,.campaignCard small,.campaignCard b,.surveyInstallationCard b,.surveyInstallationCard small{overflow-wrap:anywhere;word-break:normal}
 input,select,textarea,button{max-width:100%}
 
+/* Vista dedicada para asignación de materiales por instalación */
+.materialProfilePage{padding:20px 22px}
+.materialProfilePageHead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
+.materialProfilePageHead h2{margin:4px 0 4px;font-size:clamp(22px,2vw,30px)}
+.materialProfilePageHead p{margin:2px 0}
+.backButton{margin-bottom:10px;background:transparent!important;color:#075a79!important;border:1px solid #b7d5df!important;padding:8px 12px!important}
+.materialProfileToolbar{display:grid;grid-template-columns:minmax(260px,1fr) auto;align-items:end;gap:14px;margin:14px 0 16px}
+.materialProfileToolbar label{display:grid;gap:6px;font-weight:700}
+.materialProfileToolbar input{width:100%}
+.materialProfileToolbar>div{padding:10px 12px;border-radius:10px;background:#eef8f7;white-space:nowrap}
+.materialProfileList.materialProfileDedicated{display:grid;gap:10px}
+.materialProfileDedicated article{display:grid;grid-template-columns:minmax(260px,2fr) repeat(4,minmax(125px,1fr)) minmax(170px,1.2fr) auto;gap:10px;align-items:end;padding:12px 14px;border:1px solid #dbe7eb;border-radius:12px;background:#fff}
+.materialProfileDedicated article.assigned{border-color:#8dcfd0;background:#f7fcfb}
+.materialProfileDedicated label{display:grid;gap:5px;font-size:12px;color:#496578;min-width:0}
+.materialProfileDedicated input,.materialProfileDedicated select{width:100%;min-width:0}
+.materialProfileIdentity{min-width:0;align-self:center}
+.materialProfileToggle{display:flex!important;align-items:flex-start;gap:9px!important;color:#0b2a42!important}
+.materialProfileToggle input{width:auto!important;margin-top:4px}
+.materialProfileToggle span{display:grid;gap:3px;min-width:0}
+.materialProfileToggle b{font-size:13px;line-height:1.25}
+.materialProfileToggle small{font-size:11px;color:#668092}
+.materialProfileDedicated button{min-height:40px;white-space:nowrap}
+.materialProfileNotes{min-width:160px}
+
 /* Tablet y teléfono horizontal / Chrome móvil solicitando versión escritorio */
 @media (max-width:1100px){
   .portalTop{height:auto;min-height:72px;padding:8px 14px;gap:10px}
@@ -22,6 +46,10 @@ input,select,textarea,button{max-width:100%}
   .surveyInstallationCard{grid-template-columns:1fr 1fr;gap:10px}
   .surveyInstallationCard button{justify-self:stretch;width:100%}
   .surveyMaterialList article{grid-template-columns:minmax(150px,2fr) minmax(90px,1fr) minmax(90px,1fr) minmax(90px,1fr)}
+  .materialProfileDedicated article{grid-template-columns:minmax(220px,2fr) repeat(2,minmax(130px,1fr));align-items:end}
+  .materialProfileIdentity{grid-row:span 2}
+  .materialProfileNotes{grid-column:2/4}
+  .materialProfileDedicated button{grid-column:3}
 }
 
 /* Móvil real: priorizar contenido y dejar de comprimir el texto */
@@ -67,6 +95,13 @@ input,select,textarea,button{max-width:100%}
   .contractActions{display:grid!important;grid-template-columns:1fr 1fr;gap:6px}
   .contractActions button{width:100%}
   .installationGrid{grid-template-columns:1fr!important}
+  .materialProfilePage{padding:10px}
+  .materialProfilePageHead{display:grid;grid-template-columns:1fr;gap:10px}
+  .materialProfileToolbar{grid-template-columns:1fr}
+  .materialProfileToolbar>div{justify-self:start}
+  .materialProfileDedicated article{grid-template-columns:1fr!important;gap:8px;padding:11px}
+  .materialProfileIdentity,.materialProfileNotes,.materialProfileDedicated button{grid-column:1!important;grid-row:auto!important}
+  .materialProfileDedicated button{width:100%}
   table{min-width:680px}
 }
 
