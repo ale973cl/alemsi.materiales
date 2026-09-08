@@ -15,10 +15,11 @@ export async function updateMaterialNetPrice(formData:FormData){
  if(!reason) return {ok:false,error:"Debes indicar el motivo del ajuste"};
  const {data:old,error:oldError}=await supabase.from("materials").select("id,name,current_net_price").eq("id",materialId).single();
  if(oldError||!old) return {ok:false,error:"Material no encontrado"};
- const {error}=await supabase.from("materials").update({current_net_price:newPrice,price_source_note:`Ajuste manual: ${reason}`,updated_at:new Date().toISOString()}).eq("id",materialId);
+ const {data:updated,error}=await supabase.from("materials").update({current_net_price:newPrice,price_source_note:`Ajuste manual: ${reason}`,updated_at:new Date().toISOString()}).eq("id",materialId).select("id,current_net_price").maybeSingle();
  if(error) return {ok:false,error:error.message||"No fue posible actualizar el precio"};
- const {error:auditError}=await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Maestro de materiales",action:"Ajuste manual de precio",entity_table:"materials",entity_id:materialId,old_data:{current_net_price:Number(old.current_net_price||0)},new_data:{current_net_price:newPrice,origin:"Ajuste manual",reason},observation:reason});
- if(auditError) return {ok:false,error:"El precio se actualizó, pero no fue posible registrar la auditoría. Revisa con Administración."};
+ if(!updated) return {ok:false,error:"El valor no fue guardado. Revisa permisos de edición del Maestro."};
+ const {error:auditError}=await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Maestro de materiales",action:"Ajuste manual de precio",entity_table:"materials",entity_id:materialId,old_data:{current_net_price:Number(old.current_net_price||0)},new_data:{current_net_price:Number(updated.current_net_price||newPrice),origin:"Ajuste manual",reason},observation:reason});
  revalidatePath("/");
- return {ok:true,material_id:materialId,new_price:newPrice,message:"Precio neto actualizado correctamente"};
+ if(auditError) return {ok:true,material_id:materialId,new_price:Number(updated.current_net_price||newPrice),message:"Precio actualizado. La auditoría no pudo registrarse; informa a Administración."};
+ return {ok:true,material_id:materialId,new_price:Number(updated.current_net_price||newPrice),message:"Precio neto actualizado correctamente"};
 }
