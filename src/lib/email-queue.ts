@@ -11,6 +11,7 @@ type QueueInput={
   to?:string[];
   cc?:string[];
   facts?:Record<string,string|number|null>;
+  actionUrl?:string|null;
   idempotencyKey?:string;
 };
 
@@ -31,7 +32,7 @@ export async function enqueueModuleEmail(supabase:any,input:QueueInput){
   const idempotencyKey=input.idempotencyKey||`${input.module}:${input.event}:${input.relatedId}`;
   const {data:existing}=await supabase.from("email_queue").select("id,status").eq("idempotency_key",idempotencyKey).maybeSingle();
   if(existing)return{queued:false,existing:true,id:existing.id,status:existing.status};
-  const payload={module:input.module,event:input.event,summary:input.summary,facts:input.facts||{},template_code:rule?.template_code||null};
+  const payload={module:input.module,event:input.event,summary:input.summary,facts:input.facts||{},action_url:input.actionUrl||null,template_code:rule?.template_code||null};
   const {data,error}=await supabase.from("email_queue").insert({
     email_type:input.emailType,
     module:input.module,
