@@ -13,7 +13,7 @@ export async function POST(request:Request){
     const payload:any=item.payload||{};
     const module=(item.module||payload.module||"alerts") as EmailModule;
     const event=String(item.event_code||payload.event||item.email_type||"notification");
-    const html=renderEmail({module,event,title:item.subject,summary:payload.summary||"Existe una actualización en el proceso de materiales.",facts:payload.facts||{}});
+    const html=renderEmail({module,event,title:item.subject,summary:payload.summary||"Existe una actualización en el proceso de materiales.",facts:payload.facts||{},actionUrl:payload.action_url||null});
     const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`,"Content-Type":"application/json","Idempotency-Key":item.idempotency_key||`${item.email_type}-${item.related_id||item.id}`},body:JSON.stringify({from:process.env.EMAIL_FROM,to:item.to_addresses,cc:item.cc_addresses||[],subject:item.subject,html})});
     const body:any=await response.json().catch(()=>({}));
     const attempts=Number(item.attempts||0)+1;
