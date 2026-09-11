@@ -2,6 +2,7 @@
 
 import {useRef,useState} from "react";
 import {confirmClientsCsvRows,previewClientsCsvRows} from "@/app/client-import-actions";
+import InstallationCsvImportPanel from "@/components/modules/InstallationCsvImportPanel";
 
 type Row={name?:string;email?:string;rut?:string;activity?:string;phone?:string;commune?:string;address?:string};
 type Preview={total:number;created:number;updated:number;unchanged:number;review:number;duplicates:number;details:Array<{index:number;name:string;rut:string;status:string;reason?:string;changes?:Record<string,string>}>};
@@ -29,7 +30,7 @@ export default function ClientCsvImportPanel(){
   finally{setBusy(false)}
  };
  const confirm=async()=>{if(!rows.length||!preview)return;setBusy(true);setMessage("");try{const result=await confirmClientsCsvRows(rows);setMessage(`Carga confirmada: ${result.created} nuevos, ${result.updated} actualizados, ${result.skipped} sin modificación.`);setPreview(null);setRows([]);setFileName("");if(inputRef.current)inputRef.current.value="";window.location.reload();}catch(error:any){setMessage(error?.message||"No se pudo confirmar la carga");}finally{setBusy(false)}};
- return <div className="clientCsvImport">
+ return <><div className="clientCsvImport">
   <style dangerouslySetInnerHTML={{__html:`
    .clientCsvImport{margin:12px 0;padding:14px;border:1px solid #c8dce8;border-radius:12px;background:#f8fbfd}
    .clientCsvTop{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.clientCsvTop input{max-width:320px}.clientCsvSummary{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.clientCsvSummary span{padding:7px 10px;border-radius:999px;background:#eef5f8;font-size:12px;font-weight:700;color:#173650}
@@ -42,5 +43,5 @@ export default function ClientCsvImportPanel(){
    <div className="clientCsvTable"><table><thead><tr><th>Cliente</th><th>RUT</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>{preview.details.map(d=><tr key={`${d.index}-${d.rut}`}><td>{d.name}</td><td>{d.rut}</td><td><b>{d.status}</b></td><td>{d.reason||Object.keys(d.changes||{}).join(", ")||"—"}</td></tr>)}</tbody></table></div>
    {(preview.review>0||preview.duplicates>0)&&<p className="warning">Los registros en revisión o duplicados no se cargarán al confirmar.</p>}
    <div className="clientCsvActions"><button type="button" disabled={busy} onClick={confirm}>{busy?"Confirmando...":"Confirmar actualización"}</button><button type="button" className="clearFilters" disabled={busy} onClick={reset}>Cancelar</button></div></>}
- </div>;
+ </div><InstallationCsvImportPanel/></>;
 }
