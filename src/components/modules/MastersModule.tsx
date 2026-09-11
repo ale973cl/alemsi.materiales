@@ -1,7 +1,8 @@
 "use client";
 import {useMemo,useState} from "react";
 import MaterialsCatalogModule,{type MaterialCatalogRow} from "./MaterialsCatalogModule";
-import ClientInstallationsModule,{type ClientInstallationGroup} from "./ClientInstallationsModule";
+import ClientsMasterView from "./ClientsMasterView";
+import type {ClientInstallationGroup} from "./ClientInstallationsModule";
 import SuppliersModule from "./SuppliersModule";
 import UsersModule,{type UserAccessRow,type UserProfileRow} from "./UsersModule";
 
@@ -48,7 +49,7 @@ export default function MastersModule({role,materials,materialSourceCount,materi
   </section>
   {!tab&&<section className="panel"><div className="mastersLanding">{allowed.map(item=><button key={item} type="button" onClick={()=>changeTab(item)}><b>{labels[item]}</b><span>{descriptions[item]}</span></button>)}</div></section>}
   {tab==="materials"&&<MaterialsCatalogModule rows={filteredMaterials} sourceCount={status==="active"?materialSourceCount:filteredMaterials.length} error={materialError}/>} 
-  {tab==="clients"&&<ClientInstallationsModule clients={filteredClients}/>} 
+  {tab==="clients"&&<ClientsMasterView clients={filteredClients}/>} 
   {tab==="suppliers"&&<SuppliersModule statusFilter={status}/>} 
   {tab==="users"&&<UsersModule users={filteredUsers} clients={clients.filter(c=>c.active!==false)} access={access} currentUserId={currentUserId}/>} 
  </div>;
