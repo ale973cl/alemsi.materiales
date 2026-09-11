@@ -1,0 +1,25 @@
+/* Perfil de materiales estandarizado: contrato global + excepciones por instalación */
+.profileToolbarStandard{grid-template-columns:minmax(260px,1fr) auto!important;align-items:end!important}
+.profileToolbarActions{display:flex;gap:8px;align-items:center}
+.profileToolbarActions button{min-width:132px}
+.profileToolbarActions button.active{background:var(--teal)!important;color:#fff!important}
+.profileToolbarActions .dangerAction.active{background:#fff4f2!important;color:#a63a3a!important;border:1px solid #e3b4b4!important}
+.profileAddResults{margin:-4px 0 14px;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden}
+.profileAddResults>p{margin:0;padding:12px 14px}
+.profileAddResults>button{width:100%;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;text-align:left!important;background:#fff!important;color:var(--navy)!important;border:0!important;border-bottom:1px solid #edf2f4!important;border-radius:0!important;padding:10px 13px!important;min-height:52px!important}
+.profileAddResults>button:last-child{border-bottom:0!important}
+.profileAddResults>button:hover{background:#f4fbfa!important}
+.profileAddResults>button span{display:grid;gap:2px;min-width:0}
+.profileAddResults>button small{font-size:10px;color:#627d98;font-weight:400}
+.profileAddResults>button strong{color:var(--teal);font-size:11px;white-space:nowrap}
+.materialProfileDedicated article.pendingRemoval{border-color:#e3b4b4!important;background:#fff8f7!important;opacity:.78}
+.materialProfileDedicated article.pendingRemoval .profileField input,.materialProfileDedicated article.pendingRemoval .profileField select{background:#f1f3f4}
+.profileSaveBar{position:sticky;bottom:10px;z-index:35;margin:14px 0 0;padding:10px 12px;border:1px solid #b8d9d6;border-radius:11px;background:#f7fcfb;box-shadow:0 8px 24px rgba(7,39,64,.12);display:flex;align-items:center;justify-content:flex-end;gap:9px}
+.profileSaveBar span{margin-right:auto;color:#52636e;font-size:12px}
+.profileSaveBar span b{color:var(--navy);font-size:15px}
+.profileSaveBar button{min-width:120px}
+.profileSaveBar button:first-of-type{background:#edf5f6!important;color:var(--navy)!important;border:1px solid #d7e5e9!important}
+.contractTitle>.contractActions{flex-wrap:wrap;justify-content:flex-end}
+.contractTitle>.contractActions button{min-width:118px}
+@media(max-width:900px){.profileToolbarStandard{grid-template-columns:1fr!important}.profileToolbarActions{display:grid;grid-template-columns:1fr 1fr}.profileToolbarActions button{width:100%;min-width:0}.profileSaveBar{bottom:6px}}
+@media(max-width:560px){.profileToolbarActions{grid-template-columns:1fr}.profileSaveBar{display:grid;grid-template-columns:1fr 1fr}.profileSaveBar span{grid-column:1/-1;margin:0}.profileSaveBar button{width:100%;min-width:0}}
