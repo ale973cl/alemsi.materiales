@@ -6,14 +6,17 @@ import InstallationCsvImportPanel from "@/components/modules/InstallationCsvImpo
 
 type Row={name?:string;email?:string;rut?:string;activity?:string;phone?:string;commune?:string;address?:string};
 type Preview={total:number;created:number;updated:number;unchanged:number;review:number;duplicates:number;details:Array<{index:number;name:string;rut:string;status:string;reason?:string;changes?:Record<string,string>}>};
+type ImportView="clients"|"installations"|null;
 
 const parseLine=(line:string,delimiter:string)=>{const out:string[]=[];let value="",quoted=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(quoted&&line[i+1]==='"'){value+='"';i++}else quoted=!quoted}else if(ch===delimiter&&!quoted){out.push(value.trim());value=""}else value+=ch}out.push(value.trim());return out};
 const norm=(v:string)=>String(v||"").trim().toLocaleLowerCase("es-CL").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 
 export default function ClientCsvImportPanel(){
  const inputRef=useRef<HTMLInputElement|null>(null);
+ const [view,setView]=useState<ImportView>(null);
  const [fileName,setFileName]=useState(""),[rows,setRows]=useState<Row[]>([]),[preview,setPreview]=useState<Preview|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
  const reset=()=>{setRows([]);setPreview(null);setFileName("");setMessage("");if(inputRef.current)inputRef.current.value=""};
+ const close=()=>{reset();setView(null)};
  const loadFile=async(file:File)=>{
   setBusy(true);setMessage("");setPreview(null);
   try{
@@ -30,19 +33,25 @@ export default function ClientCsvImportPanel(){
   finally{setBusy(false)}
  };
  const confirm=async()=>{if(!rows.length||!preview)return;setBusy(true);setMessage("");try{const result=await confirmClientsCsvRows(rows);setMessage(`Carga confirmada: ${result.created} nuevos, ${result.updated} actualizados, ${result.skipped} sin modificación.`);setPreview(null);setRows([]);setFileName("");if(inputRef.current)inputRef.current.value="";window.location.reload();}catch(error:any){setMessage(error?.message||"No se pudo confirmar la carga")}finally{setBusy(false)}};
- return <><div className="clientCsvImport">
+ return <>
   <style dangerouslySetInnerHTML={{__html:`
-   .clientCsvImport{margin:12px 0;padding:14px;border:1px solid #c8dce8;border-radius:12px;background:#f8fbfd}
-   .clientCsvTop{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.clientCsvTop input{max-width:320px}.clientCsvTop a{display:inline-flex;align-items:center;min-height:38px;padding:0 12px;border:1px solid #0b2f4a;border-radius:9px;background:#fff;color:#0b2f4a;font-weight:700;text-decoration:none}.clientCsvTop a:hover{background:#eef7f5}.clientCsvSummary{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.clientCsvSummary span{padding:7px 10px;border-radius:999px;background:#eef5f8;font-size:12px;font-weight:700;color:#173650}
-   .clientCsvTable{max-height:280px;overflow:auto;border:1px solid #d7e4eb;border-radius:10px;background:#fff}.clientCsvTable table{width:100%;border-collapse:collapse;font-size:12px}.clientCsvTable th,.clientCsvTable td{padding:8px 10px;border-bottom:1px solid #edf2f5;text-align:left;vertical-align:top}.clientCsvTable th{position:sticky;top:0;background:#f4f8fa;z-index:1}.clientCsvActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.clientCsvImport .warning{color:#8a4b00;font-weight:700}.csvAiHelp{font-size:12px;line-height:1.45;color:#557084}
+   .csvImportLaunchers{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.csvImportLaunchers button{border:1px solid #0b2f4a;border-radius:10px;background:#fff;color:#0b2f4a;padding:10px 14px;font-weight:800}.csvImportLaunchers button.active{background:#0b2f4a;color:#fff}.csvImportPanelHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}.csvImportPanelHead h3{margin:0;color:#0b2f4a}.clientCsvImport{margin:12px 0;padding:14px;border:1px solid #c8dce8;border-radius:12px;background:#f8fbfd}.clientCsvTop{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.clientCsvTop input{max-width:320px}.clientCsvTop a{display:inline-flex;align-items:center;min-height:38px;padding:0 12px;border:1px solid #0b2f4a;border-radius:9px;background:#fff;color:#0b2f4a;font-weight:700;text-decoration:none}.clientCsvTop a:hover{background:#eef7f5}.clientCsvSummary{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.clientCsvSummary span{padding:7px 10px;border-radius:999px;background:#eef5f8;font-size:12px;font-weight:700;color:#173650}.clientCsvTable{max-height:280px;overflow:auto;border:1px solid #d7e4eb;border-radius:10px;background:#fff}.clientCsvTable table{width:100%;border-collapse:collapse;font-size:12px}.clientCsvTable th,.clientCsvTable td{padding:8px 10px;border-bottom:1px solid #edf2f5;text-align:left;vertical-align:top}.clientCsvTable th{position:sticky;top:0;background:#f4f8fa;z-index:1}.clientCsvActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.clientCsvImport .warning{color:#8a4b00;font-weight:700}.csvAiHelp{font-size:12px;line-height:1.45;color:#557084}
   `}}/>
-  <div className="clientCsvTop"><input ref={inputRef} type="file" accept=".csv,text/csv" onChange={e=>{const f=e.target.files?.[0];if(f)void loadFile(f)}}/><span>{busy?"Procesando...":fileName||"Selecciona el CSV maestro de clientes"}</span><a href="/plantilla-clientes.csv" download>Descargar plantilla clientes CSV</a></div>
-  <p style={{margin:"10px 0 0"}}>Esta carga administra solo el <b>cliente legal por RUT</b>. No crea contratos ni instalaciones.</p>
-  <p className="csvAiHelp">La plantilla define exactamente las columnas que debe completar una IA o una persona. Puedes entregarla a una IA y pedirle que investigue fuentes confiables, mantenga las columnas y deje vacío cualquier dato que no pueda verificar.</p>
-  {message&&<p className="note">{message}</p>}
-  {preview&&<><div className="clientCsvSummary"><span>{preview.total} filas</span><span>{preview.created} nuevos</span><span>{preview.updated} actualizar</span><span>{preview.unchanged} sin cambios</span><span>{preview.review} revisar</span><span>{preview.duplicates} duplicados CSV</span></div>
-   <div className="clientCsvTable"><table><thead><tr><th>Cliente</th><th>RUT</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>{preview.details.map(d=><tr key={`${d.index}-${d.rut}`}><td>{d.name}</td><td>{d.rut}</td><td><b>{d.status}</b></td><td>{d.reason||Object.keys(d.changes||{}).join(", ")||"—"}</td></tr>)}</tbody></table></div>
-   {(preview.review>0||preview.duplicates>0)&&<p className="warning">Los registros en revisión o duplicados no se cargarán al confirmar.</p>}
-   <div className="clientCsvActions"><button type="button" disabled={busy} onClick={confirm}>{busy?"Confirmando...":"Confirmar actualización"}</button><button type="button" className="clearFilters" disabled={busy} onClick={reset}>Cancelar</button></div></>}
- </div><InstallationCsvImportPanel/></>;
+  <div className="csvImportLaunchers">
+   <button type="button" className={view==="clients"?"active":""} onClick={()=>setView(view==="clients"?null:"clients")}>Cargar clientes CSV</button>
+   <button type="button" className={view==="installations"?"active":""} onClick={()=>setView(view==="installations"?null:"installations")}>Cargar instalaciones CSV</button>
+  </div>
+  {view==="clients"&&<div className="clientCsvImport">
+   <div className="csvImportPanelHead"><h3>Clientes CSV</h3><button type="button" className="clearFilters" onClick={close}>Cerrar</button></div>
+   <div className="clientCsvTop"><input ref={inputRef} type="file" accept=".csv,text/csv" onChange={e=>{const f=e.target.files?.[0];if(f)void loadFile(f)}}/><span>{busy?"Procesando...":fileName||"Selecciona el CSV maestro de clientes"}</span><a href="/plantilla-clientes.csv" download>Descargar plantilla clientes CSV</a></div>
+   <p style={{margin:"10px 0 0"}}>Esta carga administra solo el <b>cliente legal por RUT</b>. No crea contratos ni instalaciones.</p>
+   <p className="csvAiHelp">La plantilla define exactamente las columnas que debe completar una IA o una persona. Puedes entregarla a una IA y pedirle que investigue fuentes confiables, mantenga las columnas y deje vacío cualquier dato que no pueda verificar.</p>
+   {message&&<p className="note">{message}</p>}
+   {preview&&<><div className="clientCsvSummary"><span>{preview.total} filas</span><span>{preview.created} nuevos</span><span>{preview.updated} actualizar</span><span>{preview.unchanged} sin cambios</span><span>{preview.review} revisar</span><span>{preview.duplicates} duplicados CSV</span></div>
+    <div className="clientCsvTable"><table><thead><tr><th>Cliente</th><th>RUT</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>{preview.details.map(d=><tr key={`${d.index}-${d.rut}`}><td>{d.name}</td><td>{d.rut}</td><td><b>{d.status}</b></td><td>{d.reason||Object.keys(d.changes||{}).join(", ")||"—"}</td></tr>)}</tbody></table></div>
+    {(preview.review>0||preview.duplicates>0)&&<p className="warning">Los registros en revisión o duplicados no se cargarán al confirmar.</p>}
+    <div className="clientCsvActions"><button type="button" disabled={busy} onClick={confirm}>{busy?"Confirmando...":"Confirmar actualización"}</button><button type="button" className="clearFilters" disabled={busy} onClick={reset}>Cancelar</button></div></>}
+  </div>}
+  {view==="installations"&&<InstallationCsvImportPanel/>}
+ </>;
 }
