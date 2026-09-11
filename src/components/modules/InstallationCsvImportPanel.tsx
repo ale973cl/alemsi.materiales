@@ -55,8 +55,9 @@ export default function InstallationCsvImportPanel(){
  }
 
  return <div className="clientCsvImport">
-  <div className="clientCsvTop"><input ref={ref} type="file" accept=".csv,text/csv" onChange={e=>{const f=e.target.files?.[0];if(f)void load(f);}}/><span>{busy?"Procesando...":fileName||"Cargar instalaciones CSV"}</span></div>
+  <div className="clientCsvTop"><input ref={ref} type="file" accept=".csv,text/csv" onChange={e=>{const f=e.target.files?.[0];if(f)void load(f);}}/><span>{busy?"Procesando...":fileName||"Cargar instalaciones CSV"}</span><a href="/plantilla-instalaciones.csv" download>Descargar plantilla instalaciones CSV</a></div>
   <p style={{margin:"10px 0 0"}}><b>Cargar instalaciones CSV.</b> Usa clientes y contratos existentes. Puede crear instalaciones realmente nuevas o completar instalaciones existentes reconocidas por nombre, alias o dirección.</p>
+  <p className="csvAiHelp">La plantilla incluye todos los campos que este importador reconoce. Puede completarse con IA respetando exactamente las columnas y dejando vacíos los datos que no se puedan verificar.</p>
   {message&&<p className="note">{message}</p>}
   {preview&&<><div className="clientCsvSummary"><span>{preview.total} leídas</span><span>{preview.new} nuevas</span><span>{preview.exists} existentes/actualizables</span><span>{preview.review} revisar</span><span>{preview.duplicates} duplicadas</span></div>
    <div className="clientCsvTable"><table><thead><tr><th>Cliente</th><th>Contrato</th><th>Instalación</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>{preview.details.map((d:any)=><tr key={`${d.index}-${d.installation}`}><td>{d.client}</td><td>{d.contract}</td><td>{d.installation}</td><td><b>{d.status}</b></td><td>{d.reason||"—"}</td></tr>)}</tbody></table></div>
