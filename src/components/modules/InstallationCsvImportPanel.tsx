@@ -5,7 +5,7 @@ import {confirmInstallationCsvRows,previewInstallationCsvRows} from "@/app/insta
 
 type Row={
  client?:string;rut?:string;contract?:string;installation?:string;region?:string;city?:string;commune?:string;address?:string;
- collaborator_count?:string;delivery_contact_name?:string;delivery_email?:string;general_email?:string;delivery_phone?:string;phone?:string;
+ surface_m2?:string;collaborator_count?:string;delivery_contact_name?:string;delivery_email?:string;general_email?:string;delivery_phone?:string;phone?:string;
  delivery_notes?:string;postal_code?:string;latitude?:string;longitude?:string;access_hours?:string;technical_contact_name?:string;
  technical_contact_email?:string;technical_contact_phone?:string;observations?:string
 };
@@ -25,7 +25,7 @@ export default function InstallationCsvImportPanel(){
    const d=lines[0].includes(";")?";":",";const h=parse(lines[0],d).map(norm);
    const aliases:Record<string,string[]>={
     client:["cliente","razon social","razon social cliente"],rut:["rut","rut cliente"],contract:["contrato","perfil","contrato perfil"],installation:["instalacion"],
-    region:["region"],city:["ciudad"],commune:["comuna"],address:["direccion","direccion instalacion"],
+    region:["region"],city:["ciudad"],commune:["comuna"],address:["direccion","direccion instalacion"],surface_m2:["superficie","superficie m2","superficie (m2)","m2","metros cuadrados"],
     collaborator_count:["n colaboradoras","n° colaboradoras","numero colaboradoras","dotacion","dotacion colaboradoras"],
     delivery_contact_name:["contacto entrega","contacto de entrega"],delivery_email:["email entrega","correo entrega"],general_email:["email general","correo general"],
     delivery_phone:["telefono entrega","fono entrega"],phone:["telefono general","telefono","fono"],delivery_notes:["notas entrega","observaciones entrega"],
@@ -48,7 +48,7 @@ export default function InstallationCsvImportPanel(){
   setBusy(true);setMessage("");
   try{
    const r=await confirmInstallationCsvRows(rows);
-   setMessage(`Carga confirmada: ${r.created} nuevas, ${r.exists} existentes, ${r.review} revisar, ${r.duplicates} duplicadas.`);
+   setMessage(`Carga confirmada: ${r.created} nuevas, ${r.updated||0} actualizadas, ${r.exists} sin cambios, ${r.review} revisar, ${r.duplicates} duplicadas.`);
    setPreview(null);setRows([]);setFileName("");if(ref.current)ref.current.value="";window.location.reload();
   }catch(e:any){setMessage(e?.message||"No se pudo confirmar");}
   finally{setBusy(false);}
@@ -56,12 +56,12 @@ export default function InstallationCsvImportPanel(){
 
  return <div className="clientCsvImport">
   <div className="clientCsvTop"><input ref={ref} type="file" accept=".csv,text/csv" onChange={e=>{const f=e.target.files?.[0];if(f)void load(f);}}/><span>{busy?"Procesando...":fileName||"Cargar instalaciones CSV"}</span></div>
-  <p style={{margin:"10px 0 0"}}><b>Cargar instalaciones CSV.</b> Usa solamente clientes y contratos existentes. No crea clientes ni contratos y no modifica instalaciones existentes.</p>
+  <p style={{margin:"10px 0 0"}}><b>Cargar instalaciones CSV.</b> Usa clientes y contratos existentes. Puede crear instalaciones realmente nuevas o completar instalaciones existentes reconocidas por nombre, alias o dirección.</p>
   {message&&<p className="note">{message}</p>}
-  {preview&&<><div className="clientCsvSummary"><span>{preview.total} leídas</span><span>{preview.new} nuevas</span><span>{preview.exists} existentes</span><span>{preview.review} revisar</span><span>{preview.duplicates} duplicadas</span></div>
+  {preview&&<><div className="clientCsvSummary"><span>{preview.total} leídas</span><span>{preview.new} nuevas</span><span>{preview.exists} existentes/actualizables</span><span>{preview.review} revisar</span><span>{preview.duplicates} duplicadas</span></div>
    <div className="clientCsvTable"><table><thead><tr><th>Cliente</th><th>Contrato</th><th>Instalación</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>{preview.details.map((d:any)=><tr key={`${d.index}-${d.installation}`}><td>{d.client}</td><td>{d.contract}</td><td>{d.installation}</td><td><b>{d.status}</b></td><td>{d.reason||"—"}</td></tr>)}</tbody></table></div>
-   {(preview.review>0||preview.duplicates>0)&&<p className="warning">Las filas REVISAR o DUPLICADA no se insertarán automáticamente.</p>}
-   <div className="clientCsvActions"><button type="button" disabled={busy||preview.new===0} onClick={confirm}>{busy?"Confirmando...":"Confirmar solo NUEVAS"}</button><button type="button" className="clearFilters" disabled={busy} onClick={reset}>Cancelar</button></div>
+   {(preview.review>0||preview.duplicates>0)&&<p className="warning">Las filas REVISAR o DUPLICADA no se procesarán automáticamente.</p>}
+   <div className="clientCsvActions"><button type="button" disabled={busy||(preview.new===0&&preview.exists===0)} onClick={confirm}>{busy?"Confirmando...":"Confirmar carga segura"}</button><button type="button" className="clearFilters" disabled={busy} onClick={reset}>Cancelar</button></div>
   </>}
  </div>;
 }
