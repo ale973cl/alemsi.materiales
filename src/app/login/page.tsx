@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { login } from "./actions";
 export default async function Login({ searchParams }:{searchParams:Promise<{error?:string}>}) {
   const { error } = await searchParams;
@@ -7,6 +8,7 @@ export default async function Login({ searchParams }:{searchParams:Promise<{erro
     <div><p className="eyebrow">CONTROL OPERACIONAL</p><h1>Materiales</h1><p>Ingreso individualizado y protegido por perfil.</p></div>
     {error && <p className="alert danger">{error}</p>}
     <form action={login} className="formStack"><label>Correo<input name="email" type="email" required autoComplete="email"/></label><label>Contraseña<input name="password" type="password" required autoComplete="current-password"/></label><button className="primary">Ingresar</button></form>
+    <Link href="/forgot-password">¿Olvidaste tu contraseña?</Link>
     <small>Los permisos se obtienen desde Supabase; no existe selector manual de rol.</small>
   </section><Image className="loginMascot" src="/alemsin-maestro.png" width={420} height={610} alt="Alemsín" /></main>;
 }

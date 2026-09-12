@@ -1,0 +1,72 @@
+"use client";
+import {useMemo,useState} from "react";
+import {closeCampaign} from "@/app/actions";
+import {createRegionalCampaign} from "@/app/campaign-create-actions";
+import {forceCloseCampaign,justifyCampaignInstallation} from "@/app/campaign-actions";
+import {deleteCampaignSafe} from "@/app/delete-campaign-action";
+import type {ClientInstallationGroup} from "@/components/modules/ClientInstallationsModule";
+import SurveyLinkControl from "@/components/modules/SurveyLinkControl";
+
+type CampaignInstallation={id?:string;installation_id?:string;status:string;justification?:string|null;installations?:{id?:string;name?:string|null;region?:string|null;city?:string|null;commune?:string|null;contracts?:{name?:string|null;clients?:{legal_name?:string|null}|null}|null}|null};
+type CampaignRow={id:string;label:string;status:string;created_at:string;contracts?:{name?:string|null;clients?:{legal_name?:string|null}|null}|null;campaign_installations?:CampaignInstallation[]};
+const campaignInfo=(label:string)=>{try{const value=JSON.parse(label);return typeof value?.name==="string"?value:{name:label,periodicity:"No indicada",clientCount:null}}catch{return{name:label,periodicity:"No indicada",clientCount:null}}};
+const regionName=(value?:string|null)=>String(value||"Sin región").trim()||"Sin región";
+
+export default function CampaignsModule({campaigns,clients,onOpenSurveys}:{campaigns:CampaignRow[];clients:ClientInstallationGroup[];onOpenSurveys?:(campaignId:string,installationId?:string)=>void}){
+ const [showNew,setShowNew]=useState(false);
+ const [selectedInstallationIds,setSelectedInstallationIds]=useState<string[]>([]);
+ const [adminCampaign,setAdminCampaign]=useState<string|null>(null);
+ const [openCampaign,setOpenCampaign]=useState<string|null>(null);
+ const [campaignMessage,setCampaignMessage]=useState("");
+ const [deletingCampaign,setDeletingCampaign]=useState<string|null>(null);
+
+ const regionalGroups=useMemo(()=>{
+  const map=new Map<string,Map<string,{id:string;legal_name:string;contracts:{id:string;name:string;installations:any[]}[]}>>();
+  for(const client of clients){
+   for(const contract of client.contracts||[]){
+    for(const installation of contract.installations||[]){
+     const region=regionName(installation.region);
+     if(!map.has(region))map.set(region,new Map());
+     const clientsMap=map.get(region)!;
+     if(!clientsMap.has(client.id))clientsMap.set(client.id,{id:client.id,legal_name:client.legal_name,contracts:[]});
+     const clientRow=clientsMap.get(client.id)!;
+     let contractRow=clientRow.contracts.find(item=>item.id===contract.id);
+     if(!contractRow){contractRow={id:contract.id,name:contract.name,installations:[]};clientRow.contracts.push(contractRow);}
+     contractRow.installations.push(installation);
+    }
+   }
+  }
+  return [...map.entries()].sort(([a],[b])=>a.localeCompare(b,"es")).map(([region,clientsMap])=>({region,clients:[...clientsMap.values()].sort((a,b)=>a.legal_name.localeCompare(b.legal_name,"es"))}));
+ },[clients]);
+
+ const selectedUniverse=useMemo(()=>regionalGroups.flatMap(group=>group.clients.flatMap(client=>client.contracts.flatMap(contract=>contract.installations.filter(installation=>selectedInstallationIds.includes(installation.id)).map(installation=>({region:group.region,client:client.legal_name,contract:contract.name,installation}))))),[regionalGroups,selectedInstallationIds]);
+ const selectedClientCount=new Set(selectedUniverse.map(item=>item.client)).size;
+ const selectedRegionCount=new Set(selectedUniverse.map(item=>item.region)).size;
+
+ const toggleRegionalClient=(ids:string[])=>setSelectedInstallationIds(current=>{
+  const allSelected=ids.every(id=>current.includes(id));
+  return allSelected?current.filter(id=>!ids.includes(id)):[...new Set([...current,...ids])];
+ });
+
+ async function removeCampaign(campaignId:string,name:string){
+  if(!window.confirm(`¿Eliminar definitivamente la campaña ${name}? Esta acción elimina sus levantamientos de prueba y no se puede deshacer.`))return;
+  setDeletingCampaign(campaignId);setCampaignMessage("Eliminando campaña...");
+  const formData=new FormData();formData.set("campaign_id",campaignId);formData.set("confirmation","ELIMINAR");
+  try{const result=await deleteCampaignSafe(formData);if(!result?.ok){setCampaignMessage(result?.error||"No fue posible eliminar la campaña");return;}setCampaignMessage(result.message||"Campaña eliminada correctamente");window.location.reload();}
+  catch(err:any){setCampaignMessage(err?.message||"No fue posible eliminar la campaña");}
+  finally{setDeletingCampaign(null)}
+ }
+
+ return <section className="panel campaignModule"><div className="catalogIntro"><div><h2>Universo cerrado de levantamientos</h2><p>Las campañas se construyen por región. Un mismo cliente aparece separado si tiene instalaciones en regiones distintas.</p></div><button type="button" onClick={()=>setShowNew(value=>!value)}>+ Nueva campaña</button></div>
+ {campaignMessage&&<p className="note">{campaignMessage}</p>}
+ {showNew&&<form action={createRegionalCampaign} className="adminForm campaignForm"><h3>Crear campaña por región</h3><div className="campaignFields"><label>Nombre de campaña<input name="name" required placeholder="Ej.: Levantamiento Araucanía"/></label><label>Periodicidad<select name="periodicity" required defaultValue="Mensual"><option>Mensual</option><option>Bimensual</option><option>Trimestral</option><option>Cuatrimestral</option><option>Semestral</option><option>Personalizada</option></select></label></div>
+ {selectedInstallationIds.map(id=><input key={id} type="hidden" name="installation_ids" value={id}/>)}
+ <div className="campaignClientPicker">{regionalGroups.map(group=><fieldset key={group.region} style={{marginBottom:14}}><legend>{group.region}</legend>{group.clients.map(client=>{const ids=client.contracts.flatMap(contract=>contract.installations.map(installation=>installation.id));const checked=ids.length>0&&ids.every(id=>selectedInstallationIds.includes(id));const count=ids.length;return <label key={`${group.region}-${client.id}`}><input type="checkbox" checked={checked} onChange={()=>toggleRegionalClient(ids)}/><span><b>{client.legal_name}</b><small>{count} instalaciones en {group.region} · {client.contracts.length} contrato(s)</small></span></label>})}</fieldset>)}</div>
+ <div className="campaignUniversePreview"><div className="campaignUniverseHead"><b>Instalaciones resultantes</b><span>{selectedUniverse.length} instalaciones · {selectedClientCount} clientes · {selectedRegionCount} regiones</span></div>{selectedUniverse.length?<div className="campaignUniverseList">{selectedUniverse.map(({region,client,contract,installation})=><article key={installation.id}><span><b>{installation.name}</b><small>{client} · {contract}</small></span><small>{[installation.commune,installation.city,region].filter(Boolean).join(" · ")}</small></article>)}</div>:<p>Selecciona clientes dentro de cada región. Las instalaciones de otras regiones no se incorporan automáticamente.</p>}</div><button disabled={!selectedInstallationIds.length}>Crear campaña</button></form>}
+ <div className="campaignList">{campaigns.length?campaigns.map(c=>{const info=campaignInfo(c.label);const universe=c.campaign_installations||[];const total=universe.length;const completed=universe.filter(item=>item.status==="Completada").length;const justified=universe.filter(item=>item.status==="Justificada"||(!item.status.includes("Completada")&&!!item.justification?.trim())).length;const pending=universe.filter(item=>item.status!=="Completada"&&item.status!=="Justificada"&&!item.justification?.trim()).length;const adminOpen=adminCampaign===c.id;const campaignOpen=openCampaign===c.id;const byRegion=[...new Map(universe.map(item=>[regionName(item.installations?.region),[] as CampaignInstallation[]])).keys()].sort((a,b)=>a.localeCompare(b,"es")).map(region=>({region,items:universe.filter(item=>regionName(item.installations?.region)===region)}));return <article key={c.id} className="campaignCard"><div className="campaignCardHead"><span><b>{info.name}</b><small>{info.periodicity} · {info.clientCount??1} clientes · {total} instalaciones</small></span><em>{c.status}</em></div><button type="button" className="campaignSurveyLink" onClick={()=>setOpenCampaign(campaignOpen?null:c.id)}>{campaignOpen?"Cerrar campaña":"Abrir campaña"}</button><div className="campaignMetrics"><span><b>{total}</b><small>Esperadas</small></span><span><b>{completed}</b><small>Completadas</small></span><span><b>{justified}</b><small>Justificadas</small></span><span className={pending?"pending":"complete"}><b>{pending}</b><small>Pendientes reales</small></span></div>
+ {campaignOpen&&<div className="surveyUniverse"><div className="campaignUniverseHead"><b>Instalaciones de la campaña</b><span>{total} instalaciones</span></div>{universe.length?byRegion.map(group=><div key={group.region} style={{marginBottom:16}}><h3 style={{margin:"8px 0"}}>{group.region}</h3><div className="surveyInstallationList">{group.items.map(item=>{const installationId=item.installation_id||item.installations?.id||item.id||"";return <article className="surveyInstallationCard" key={installationId}><span><small>Cliente</small><b>{item.installations?.contracts?.clients?.legal_name||"Cliente pendiente"}</b></span><span><small>Contrato</small><b>{item.installations?.contracts?.name||"Contrato pendiente"}</b></span><span><small>Instalación</small><b>{item.installations?.name||"Instalación pendiente"}</b></span><span><small>Región</small><b>{group.region}</b></span><span><small>Estado</small><b className="surveyStatus">{item.status}</b></span><button type="button" onClick={()=>onOpenSurveys?.(c.id,installationId)}>Abrir conteo</button>{c.status==="Abierta"&&item.status!=="Completada"&&<SurveyLinkControl campaignId={c.id} installationId={installationId} installationName={item.installations?.name||"Instalación"}/>}</article>})}</div></div>):<div className="empty"><b>Esta campaña no tiene instalaciones guardadas</b></div>}<button type="button" className="campaignSurveyLink" onClick={()=>onOpenSurveys?.(c.id)}>Ver todos los levantamientos</button></div>}
+ {c.status==="Abierta"&&<>{pending===0&&<form action={closeCampaign} className="campaignClose"><input type="hidden" name="campaign_id" value={c.id}/><button>Cerrar campaña</button><small>Universo completo o formalmente justificado.</small></form>}<button type="button" className="campaignSurveyLink" onClick={()=>setAdminCampaign(adminOpen?null:c.id)}>{adminOpen?"Ocultar controles":"Administrar campaña"}</button></>}
+ {adminOpen&&<div className="adminForm campaignForm"><h3>Control administrativo</h3><p>Las instalaciones sin materiales pueden justificarse para que no bloqueen el cierre. El cierre forzado conserva la campaña y su trazabilidad.</p>{universe.filter(item=>item.status!=="Completada"&&item.status!=="Justificada").map(item=>{const installationId=item.installation_id||item.installations?.id||item.id||"";return <form action={justifyCampaignInstallation} key={installationId} className="campaignClose"><input type="hidden" name="campaign_id" value={c.id}/><input type="hidden" name="installation_id" value={installationId}/><span><b>{item.installations?.name||"Instalación"}</b><small>{item.installations?.contracts?.clients?.legal_name||""} · {regionName(item.installations?.region)}</small></span><input name="reason" required minLength={4} placeholder="Ej.: Sin materiales configurados / No corresponde levantamiento"/><button>Justificar</button></form>})}<form action={forceCloseCampaign} className="campaignClose"><input type="hidden" name="campaign_id" value={c.id}/><input name="reason" required minLength={5} placeholder="Motivo obligatorio del cierre forzado"/><button>Forzar cierre</button><small>Marca los pendientes como justificados y conserva todos los levantamientos existentes.</small></form><div className="campaignClose"><button type="button" disabled={deletingCampaign===c.id} onClick={()=>removeCampaign(c.id,info.name)}>{deletingCampaign===c.id?"Eliminando...":"Eliminar campaña"}</button><small>Admin Total/Gerencia pueden eliminar mientras no exista una OC relacionada.</small></div></div>}
+ </article>}):<div className="empty"><b>Sin campañas</b><span>Crea la primera campaña seleccionando clientes por región.</span></div>}</div>
+ </section>;
+}

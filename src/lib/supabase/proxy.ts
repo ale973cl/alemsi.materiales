@@ -16,7 +16,8 @@ export async function updateSession(request: NextRequest) {
     } },
   );
   const { data } = await client.auth.getClaims();
-  if (!data?.claims && !request.nextUrl.pathname.startsWith("/login") && !request.nextUrl.pathname.startsWith("/auth")) {
+  const publicPath=request.nextUrl.pathname.startsWith("/login")||request.nextUrl.pathname.startsWith("/auth")||request.nextUrl.pathname.startsWith("/conteo/");
+  if (!data?.claims && !publicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
