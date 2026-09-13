@@ -38,37 +38,32 @@ export async function createRegionalCampaign(formData: FormData) {
     throw new Error("Una o más instalaciones seleccionadas ya no están activas");
   }
 
+  // Protección real contra duplicidad: la UI también bloquea estas instalaciones,
+  // pero el servidor vuelve a validar para impedir doble campaña por reintentos o pestañas antiguas.
+  const { data: occupied, error: occupiedError } = await supabase
+    .from("campaign_installations")
+    .select("installation_id,campaigns!inner(id,status)")
+    .in("installation_id", installationIds)
+    .eq("campaigns.status", "Abierta");
+  if (occupiedError) throw occupiedError;
+  if (occupied?.length) {
+    throw new Error(`${occupied.length} instalación(es) ya pertenecen a una campaña activa. Actualiza la pantalla y selecciona solo instalaciones disponibles.`);
+  }
+
   const clientIds = [...new Set(installations.map((item: any) => item.contracts?.client_id).filter(Boolean))];
   const regions = [...new Set(installations.map((item: any) => String(item.region || "Sin región").trim()))];
-  const label = JSON.stringify({
-    name,
-    periodicity,
-    clientCount: clientIds.length,
-    regionCount: regions.length,
-    regions,
-  });
+  const label = JSON.stringify({ name, periodicity, clientCount: clientIds.length, regionCount: regions.length, regions });
 
   const { data: campaign, error } = await supabase
     .from("campaigns")
-    .insert({
-      contract_id: installations[0].contract_id,
-      label,
-      status: "Abierta",
-      created_by: user.id,
-    })
+    .insert({ contract_id: installations[0].contract_id, label, status: "Abierta", created_by: user.id })
     .select("id")
     .single();
-
   if (error) throw error;
 
   const { error: linkError } = await supabase.from("campaign_installations").insert(
-    installations.map((installation: any) => ({
-      campaign_id: campaign.id,
-      installation_id: installation.id,
-      status: "Pendiente",
-    })),
+    installations.map((installation: any) => ({ campaign_id: campaign.id, installation_id: installation.id, status: "Pendiente" })),
   );
-
   if (linkError) {
     await supabase.from("campaigns").delete().eq("id", campaign.id);
     throw linkError;
