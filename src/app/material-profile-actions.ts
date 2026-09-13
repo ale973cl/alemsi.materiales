@@ -77,6 +77,113 @@ export async function loadMaterialProfile(contractId:string,installationId:strin
   };
 }
 
+export async function loadContractMaterialMatrix(contractId:string){
+  const {supabase}=await allowedContext();
+  if(!contractId)throw new Error("Contrato obligatorio");
+  const {data:contract,error:ce}=await supabase.from("contracts").select("id,name,active,client_id,net_budget").eq("id",contractId).eq("active",true).single();
+  if(ce||!contract)throw new Error("Contrato no válido o inactivo");
+  const [i,a,m,c]=await Promise.all([
+    supabase.from("installations").select("id,name,address,region,city,commune,active").eq("contract_id",contractId).eq("active",true).order("name"),
+    supabase.from("contract_materials").select("id,material_id,installation_id,authorized,authorized_qty,source_quantity,source_reference,coverage_status,notes,updated_at,manually_overridden").eq("contract_id",contractId),
+    supabase.from("materials").select("id,family,name,presentation,unit,supplier_code,current_net_price,active").eq("active",true).order("family").order("name"),
+    supabase.from("client_materials").select("material_id,authorized").eq("client_id",contract.client_id)
+  ]);
+  if(i.error)throw i.error;if(a.error)throw a.error;if(m.error)throw m.error;if(c.error)throw c.error;
+
+  const clientCatalogConfigured=(c.data||[]).length>0;
+  const clientAllowed=new Set((c.data||[]).filter((x:any)=>x.authorized).map((x:any)=>x.material_id));
+  const catalogMaterials=clientCatalogConfigured?(m.data||[]).filter((x:any)=>clientAllowed.has(x.id)):(m.data||[]);
+  const assignments=a.data||[];
+  const general=new Map(assignments.filter((x:any)=>!x.installation_id).map((x:any)=>[x.material_id,x]));
+  const specifics=new Map<string,Map<string,any>>();
+  for(const row of assignments.filter((x:any)=>x.installation_id)){
+    if(!specifics.has(row.material_id))specifics.set(row.material_id,new Map());
+    specifics.get(row.material_id)!.set(row.installation_id,row);
+  }
+  const effectiveByMaterial:Record<string,string[]>={};
+  const includedIds=new Set<string>();
+  for(const material of catalogMaterials){
+    const g:any=general.get(material.id),spec=specifics.get(material.id),selected:string[]=[];
+    for(const installation of i.data||[]){
+      const s=spec?.get(installation.id);
+      const active=s?Boolean(s.authorized):Boolean(g?.authorized);
+      if(active)selected.push(installation.id);
+    }
+    if(selected.length){includedIds.add(material.id);effectiveByMaterial[material.id]=selected;}
+  }
+  const materials=catalogMaterials.filter((x:any)=>includedIds.has(x.id));
+  return{contract,installations:i.data||[],materials,catalogMaterials,effectiveByMaterial};
+}
+
+type SaveMatrixRowInput={contract_id:string;material_id:string;installation_ids:string[]};
+export async function saveContractMaterialMatrixRow(input:SaveMatrixRowInput){
+  const {supabase}=await allowedContext();
+  const {data:contract}=await supabase.from("contracts").select("id,client_id,active").eq("id",input.contract_id).eq("active",true).single();
+  if(!contract)throw new Error("Contrato no válido o inactivo");
+  const [{data:installations,error:ie},{data:material,error:me},{data:catalog,error:ca},{data:assignments,error:ae}]=await Promise.all([
+    supabase.from("installations").select("id").eq("contract_id",input.contract_id).eq("active",true),
+    supabase.from("materials").select("id,active").eq("id",input.material_id).eq("active",true).single(),
+    supabase.from("client_materials").select("material_id,authorized").eq("client_id",contract.client_id),
+    supabase.from("contract_materials").select("id,material_id,installation_id,authorized,authorized_qty,notes").eq("contract_id",input.contract_id).eq("material_id",input.material_id)
+  ]);
+  if(ie)throw ie;if(me||!material)throw new Error("Material no válido o inactivo");if(ca)throw ca;if(ae)throw ae;
+  if((catalog||[]).length>0&&!catalog?.some((x:any)=>x.material_id===input.material_id&&x.authorized))throw new Error("Este material no está autorizado en el catálogo del cliente");
+
+  const validIds=new Set((installations||[]).map((x:any)=>x.id));
+  const selected=new Set((input.installation_ids||[]).filter(id=>validIds.has(id)));
+  if(selected.size!==(input.installation_ids||[]).length)throw new Error("La selección contiene una instalación que no pertenece al contrato");
+
+  const general=(assignments||[]).find((x:any)=>!x.installation_id);
+  const specific=new Map((assignments||[]).filter((x:any)=>x.installation_id).map((x:any)=>[x.installation_id,x]));
+  const shouldExist=selected.size>0;
+
+  if(Boolean(general?.authorized)!==shouldExist){
+    const {error}=await supabase.rpc("save_client_profile_material_config",{
+      p_contract_id:input.contract_id,p_installation_id:null,p_material_id:input.material_id,p_assigned:shouldExist,
+      p_authorized_qty:shouldExist?Number(general?.authorized_qty||0):0,p_period_type:null,p_period_value:null,p_quantity_limit:null,
+      p_net_amount_limit:null,p_coverage_status:shouldExist?"included":"not_included",p_notes:shouldExist?(general?.notes||null):"Sin instalaciones seleccionadas en matriz"
+    });
+    if(error)throw new Error(error.message);
+  }
+
+  if(shouldExist){
+    for(const installation of installations||[]){
+      const current:any=specific.get(installation.id);
+      const desired=selected.has(installation.id);
+      const effectiveBefore=current?Boolean(current.authorized):Boolean(general?.authorized);
+      if(desired){
+        if(current&&!current.authorized){
+          const {error}=await supabase.rpc("clear_installation_material_exception",{p_contract_id:input.contract_id,p_installation_id:installation.id,p_material_id:input.material_id});
+          if(error)throw new Error(error.message);
+        }else if(!general?.authorized&&!current?.authorized){
+          // El nuevo perfil general ya deja esta instalación incluida por herencia.
+        }
+      }else if(effectiveBefore||!current){
+        const {error}=await supabase.rpc("save_client_profile_material_config",{
+          p_contract_id:input.contract_id,p_installation_id:installation.id,p_material_id:input.material_id,p_assigned:false,
+          p_authorized_qty:0,p_period_type:null,p_period_value:null,p_quantity_limit:null,p_net_amount_limit:null,
+          p_coverage_status:"not_included",p_notes:"Excluido desde matriz Material × Instalación"
+        });
+        if(error)throw new Error(error.message);
+      }
+    }
+  }else{
+    for(const installation of installations||[]){
+      const current:any=specific.get(installation.id);
+      if(current?.authorized){
+        const {error}=await supabase.rpc("save_client_profile_material_config",{
+          p_contract_id:input.contract_id,p_installation_id:installation.id,p_material_id:input.material_id,p_assigned:false,
+          p_authorized_qty:0,p_period_type:null,p_period_value:null,p_quantity_limit:null,p_net_amount_limit:null,
+          p_coverage_status:"not_included",p_notes:"Excluido desde matriz Material × Instalación"
+        });
+        if(error)throw new Error(error.message);
+      }
+    }
+  }
+  revalidatePath("/");
+  return{ok:true,selected_count:selected.size,total_installations:(installations||[]).length};
+}
+
 type SaveInput={contract_id:string;installation_id:string|null;material_id:string;assigned:boolean;authorized_qty:number;historical_reference_qty?:number|null;period_type?:string|null;notes?:string|null;override_reason?:string|null};
 
 export async function saveMaterialProfileConfig(input:SaveInput){
