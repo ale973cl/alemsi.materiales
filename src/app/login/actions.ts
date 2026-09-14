@@ -8,6 +8,11 @@ export async function login(formData: FormData) {
   if (!email || !password) redirect("/login?error=Complete%20correo%20y%20contraseña");
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) redirect(`/login?error=${encodeURIComponent("Credenciales inválidas o usuario inactivo")}`);
+  if (error) {
+    const message = process.env.VERCEL_ENV === "production"
+      ? "Credenciales inválidas o usuario inactivo"
+      : `Supabase Auth: ${error.message}`;
+    redirect(`/login?error=${encodeURIComponent(message)}`);
+  }
   redirect("/");
 }
