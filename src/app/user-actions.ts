@@ -39,12 +39,10 @@ export async function inviteMaterialUser(formData:FormData):Promise<ActionResult
   const role=String(formData.get("role")||"") as UserRole;
   const active=String(formData.get("active")||"")==="true";
   if(!fullName||!/^\S+@\S+\.\S+$/.test(email)||!USER_ROLES.includes(role))return{ok:false,error:"Nombre, correo y perfil válido son obligatorios"};
-  const deploymentHost=process.env.VERCEL_BRANCH_URL||process.env.VERCEL_URL;
-  const appUrl=deploymentHost?`https://${deploymentHost}`:process.env.NEXT_PUBLIC_APP_URL;
-  const result=await callUserManager(token,{action:"invite",full_name:fullName,email,role,active,redirect_to:appUrl?`${appUrl.replace(/\/$/,"")}/login`:undefined});
+  const result=await callUserManager(token,{action:"create",full_name:fullName,email,role,active});
   if(!result.ok)return result;
-  revalidatePath("/");return{...result,message:`Invitación enviada a ${email}`};
- }catch(error:any){return{ok:false,error:error?.message||"No se pudo crear la invitación"};}
+  revalidatePath("/");return{...result,message:`Usuario creado. Acceso: ${email} + ${TEMPORARY_PASSWORD}`};
+ }catch(error:any){return{ok:false,error:error?.message||"No se pudo crear el usuario"};}
 }
 
 export async function setTemporaryPassword(formData:FormData):Promise<ActionResult>{
@@ -52,7 +50,7 @@ export async function setTemporaryPassword(formData:FormData):Promise<ActionResu
   const {token}=await adminContext();
   const id=String(formData.get("user_id")||"");
   if(!id)return{ok:false,error:"Usuario obligatorio"};
-  const result=await callUserManager(token,{action:"set_temp_password",user_id:id,temporary_password:TEMPORARY_PASSWORD});
+  const result=await callUserManager(token,{action:"set_temp_password",user_id:id});
   if(!result.ok)return result;
   revalidatePath("/");return{...result,message:`Clave temporal asignada: ${TEMPORARY_PASSWORD}`};
  }catch(error:any){return{ok:false,error:error?.message||"No se pudo asignar la clave temporal"};}
