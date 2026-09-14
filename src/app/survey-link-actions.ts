@@ -40,5 +40,5 @@ export async function createSurveyAccessLink(input:{campaign_id:string;installat
     await enqueueModuleEmail(supabase,{module:"campaigns",event:"survey_token_link",emailType:"survey_token_link",relatedTable:"campaign_installations",relatedId:`${campaignId}:${installationId}`,subject:`Conteo de materiales · ${inst?.name||"Instalación"}`,summary:"Tienes un levantamiento de materiales pendiente. Usa el enlace seguro para registrar el remanente físico.",to:[target],facts:{Cliente:client?.legal_name||"—",Contrato:contract?.name||"—",Instalación:inst?.name||"—",Región:inst?.region||"—",Vigencia:`${hours} horas`},actionUrl:link,idempotencyKey:`survey-token:${campaignId}:${installationId}:${hash.slice(0,16)}`});
   }
   await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Levantamientos",action:input.mode==="email"?"Enviar link token de conteo":"Generar link token de conteo",entity_table:"campaign_installations",entity_id:installationId,new_data:{campaign_id:campaignId,expires_at:expires,email:target||null}});
-  return{ok:true,link,expires_at:expires,email:target||null,queued:input.mode==="email"};
+  return{ok:true,token,link,expires_at:expires,email:target||null,queued:input.mode==="email"};
 }
