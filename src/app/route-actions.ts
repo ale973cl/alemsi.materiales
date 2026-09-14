@@ -1,0 +1,57 @@
+"use server";
+
+import {revalidatePath} from "next/cache";
+import {createClient} from "@/lib/supabase/server";
+
+const ROUTE_ROLES=["Admin Total","Gerencia","Admin","Bodega","Supervisora"];
+
+async function routeCtx(){
+ const supabase=await createClient();
+ const {data:{user}}=await supabase.auth.getUser();
+ if(!user)throw new Error("Sesión no válida");
+ const {data:profile}=await supabase.from("user_profiles").select("id,full_name,email,role,active").eq("id",user.id).single();
+ if(!profile?.active||!ROUTE_ROLES.includes(profile.role))throw new Error("No autorizado para gestionar rutas");
+ return{supabase,user,profile};
+}
+
+export async function createDeliveryRoute(input:{routeName?:string;plannedDate:string;preparationAssigneeId:string;deliveryAssigneeId:string;dispatchIds:string[]}){
+ const {supabase,user,profile}=await routeCtx();
+ if(!input.dispatchIds?.length)throw new Error("Selecciona al menos una instalación");
+ if(!input.preparationAssigneeId||!input.deliveryAssigneeId)throw new Error("Define quién prepara y quién entrega");
+ const {data:people,error:peopleError}=await supabase.from("user_profiles").select("id,full_name,active").in("id",[input.preparationAssigneeId,input.deliveryAssigneeId]);
+ if(peopleError||!people||people.length<1)throw new Error("No se pudieron validar los responsables");
+ const prep=people.find((p:any)=>p.id===input.preparationAssigneeId),delivery=people.find((p:any)=>p.id===input.deliveryAssigneeId);
+ if(!prep?.active||!delivery?.active)throw new Error("Los responsables deben ser usuarios activos");
+ const autoName=`Ruta ${delivery.full_name||"Entrega"} · ${new Intl.DateTimeFormat("es-CL").format(new Date(`${input.plannedDate}T12:00:00`))}`;
+ const {data:route,error}=await supabase.from("delivery_routes").insert({route_name:String(input.routeName||"").trim()||autoName,planned_date:input.plannedDate,status:"Asignada",preparation_assignee_id:input.preparationAssigneeId,delivery_assignee_id:input.deliveryAssigneeId,created_by:user.id}).select("id,route_name").single();
+ if(error||!route)throw new Error(error?.message||"No se pudo crear la ruta");
+ const links=input.dispatchIds.map((dispatchId,index)=>({route_id:route.id,dispatch_id:dispatchId,delivery_order:index+1,load_order:input.dispatchIds.length-index}));
+ const {error:linkError}=await supabase.from("delivery_route_dispatches").insert(links);
+ if(linkError){await supabase.from("delivery_routes").delete().eq("id",route.id);throw new Error(linkError.message)}
+ await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Despachos",action:"Creó ruta de despacho",entity_table:"delivery_routes",entity_id:route.id,new_data:{route_name:route.route_name,preparation_assignee_id:input.preparationAssigneeId,delivery_assignee_id:input.deliveryAssigneeId,dispatch_count:input.dispatchIds.length}});
+ revalidatePath("/");return{ok:true,id:route.id,name:route.route_name};
+}
+
+export async function confirmRoutePrepared(routeId:string){
+ const {supabase,user,profile}=await routeCtx();
+ const {data:route}=await supabase.from("delivery_routes").select("id,preparation_assignee_id,status").eq("id",routeId).single();
+ if(!route)throw new Error("Ruta no encontrada");
+ if(profile.role==="Supervisora"&&route.preparation_assignee_id!==user.id)throw new Error("Esta ruta está asignada a otra persona para preparación");
+ const {error}=await supabase.from("delivery_routes").update({status:"Preparada",prepared_by:user.id,prepared_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",routeId);
+ if(error)throw new Error(error.message);revalidatePath("/");return{ok:true};
+}
+
+export async function startDeliveryRoute(routeId:string){
+ const {supabase,user,profile}=await routeCtx();
+ const {data:route}=await supabase.from("delivery_routes").select("id,delivery_assignee_id,status,delivery_route_dispatches(dispatch_id,delivery_order)").eq("id",routeId).single();
+ if(!route)throw new Error("Ruta no encontrada");
+ if(profile.role==="Supervisora"&&route.delivery_assignee_id!==user.id)throw new Error("Esta ruta está asignada a otra persona para entrega");
+ const links=[...((route as any).delivery_route_dispatches||[])].sort((a:any,b:any)=>a.delivery_order-b.delivery_order);
+ for(const item of links){
+   const {data:d}=await supabase.from("dispatches").select("id,status").eq("id",item.dispatch_id).single();
+   if(d?.status==="En preparación")await supabase.rpc("transition_dispatch_v1",{p_dispatch_id:d.id,p_new_status:"Listo para despacho",p_reason:null});
+   if(d?.status==="Listo para despacho"||d?.status==="En preparación")await supabase.rpc("transition_dispatch_v1",{p_dispatch_id:d.id,p_new_status:"En tránsito",p_reason:null});
+ }
+ const {error}=await supabase.from("delivery_routes").update({status:"En tránsito",started_by:user.id,started_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",routeId);
+ if(error)throw new Error(error.message);revalidatePath("/");return{ok:true};
+}
