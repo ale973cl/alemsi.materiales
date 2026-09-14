@@ -3,6 +3,7 @@ import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
 
 const USER_ROLES=["Admin Total","Gerencia","Admin","Supervisora","Finanzas","Bodega"] as const;
+const TEMPORARY_PASSWORD="ALEMSI2026";
 type UserRole=typeof USER_ROLES[number];
 type ActionResult={ok:boolean;error?:string;message?:string;[key:string]:unknown};
 
@@ -44,6 +45,17 @@ export async function inviteMaterialUser(formData:FormData):Promise<ActionResult
   if(!result.ok)return result;
   revalidatePath("/");return{...result,message:`Invitación enviada a ${email}`};
  }catch(error:any){return{ok:false,error:error?.message||"No se pudo crear la invitación"};}
+}
+
+export async function setTemporaryPassword(formData:FormData):Promise<ActionResult>{
+ try{
+  const {token}=await adminContext();
+  const id=String(formData.get("user_id")||"");
+  if(!id)return{ok:false,error:"Usuario obligatorio"};
+  const result=await callUserManager(token,{action:"set_temp_password",user_id:id,temporary_password:TEMPORARY_PASSWORD});
+  if(!result.ok)return result;
+  revalidatePath("/");return{...result,message:`Clave temporal asignada: ${TEMPORARY_PASSWORD}`};
+ }catch(error:any){return{ok:false,error:error?.message||"No se pudo asignar la clave temporal"};}
 }
 
 export async function updateMaterialUser(formData:FormData):Promise<ActionResult>{
