@@ -3,14 +3,14 @@ import net from "node:net";
 import tls from "node:tls";
 import { createInterface, type Interface as ReadlineInterface } from "node:readline";
 
-type SmtpErrorType = "configuration" | "connection" | "tls" | "authentication" | "timeout" | "protocol";
+type SmtpErrorType = "configuration" | "connection" | "tls" | "authentication" | "timeout" | "protocol" | "recipient_policy";
 
 export type SmtpDelivery =
   | { ok: true; status: "EMAIL SENT" }
-  | { ok: false; errorType: SmtpErrorType };
+  | { ok: false; errorType: SmtpErrorType; blockedRecipients?: string[] };
 
 class SafeSmtpError extends Error {
-  constructor(readonly errorType: SmtpErrorType) {
+  constructor(readonly errorType: SmtpErrorType, readonly blockedRecipients: string[] = []) {
     super(errorType);
   }
 }
@@ -144,10 +144,25 @@ function normalizeRecipients(values: unknown): string[] {
   return Array.from(
     new Set(
       values
-        .map((value) => String(value || "").trim())
+        .map((value) => String(value || "").trim().toLowerCase())
         .filter((value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)),
     ),
   );
+}
+
+const DEFAULT_PERSONAL_ALLOWLIST = ["ale973@gmail.com"];
+
+function personalAllowlist() {
+  const extra = String(process.env.EMAIL_ALLOWED_PERSONAL || "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+  return new Set([...DEFAULT_PERSONAL_ALLOWLIST, ...extra]);
+}
+
+export function isAllowedEmailRecipient(email: string) {
+  const value = String(email || "").trim().toLowerCase();
+  return value.endsWith("@alemsi.cl") || personalAllowlist().has(value);
 }
 
 export async function enviarCorreoSmtp(input: {
@@ -165,6 +180,9 @@ export async function enviarCorreoSmtp(input: {
     const cc = normalizeRecipients(input.cc);
     const recipients = Array.from(new Set([...to, ...cc]));
     if (!to.length || !recipients.length) throw new SafeSmtpError("configuration");
+
+    const blockedRecipients = recipients.filter((email) => !isAllowedEmailRecipient(email));
+    if (blockedRecipients.length) throw new SafeSmtpError("recipient_policy", blockedRecipients);
 
     const session = await authenticatedSession();
     socket = session.socket;
@@ -214,6 +232,7 @@ export async function enviarCorreoSmtp(input: {
     return {
       ok: false,
       errorType: error instanceof SafeSmtpError ? error.errorType : "protocol",
+      ...(error instanceof SafeSmtpError && error.blockedRecipients.length ? { blockedRecipients: error.blockedRecipients } : {}),
     };
   } finally {
     reader?.close();
