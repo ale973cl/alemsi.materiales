@@ -1,0 +1,41 @@
+"use client";
+
+import {useRef,useState,useTransition} from "react";
+import {registerDeliveryWithEmail} from "@/app/dispatch-actions";
+
+type DispatchLine={id:string;required_qty:number|string;delivered_qty:number|string;pending_qty:number|string;materials?:{name?:string;unit?:string}};
+type Dispatch={id:string;internal_number?:string;guide_number?:string;installations?:any;dispatch_lines:DispatchLine[]};
+const n=(value:unknown)=>Number(value||0);
+
+export default function DeliveryRegistrationModal({dispatch,close,done}:{dispatch:Dispatch;close:()=>void;done:()=>void}){
+  const [pending,start]=useTransition();
+  const [signatureOpen,setSignatureOpen]=useState(false);
+  const [signatureReady,setSignatureReady]=useState(false);
+  const canvas=useRef<HTMLCanvasElement>(null);
+  const drawing=useRef(false);
+
+  const pos=(e:any)=>{const r=canvas.current!.getBoundingClientRect();return{x:(e.clientX-r.left)*(canvas.current!.width/r.width),y:(e.clientY-r.top)*(canvas.current!.height/r.height)}};
+  const begin=(e:any)=>{if(!canvas.current)return;drawing.current=true;const p=pos(e),c=canvas.current.getContext("2d")!;c.beginPath();c.moveTo(p.x,p.y);canvas.current.setPointerCapture?.(e.pointerId);e.preventDefault()};
+  const move=(e:any)=>{if(!drawing.current||!canvas.current)return;const p=pos(e),c=canvas.current.getContext("2d")!;c.lineWidth=4;c.lineCap="round";c.lineJoin="round";c.strokeStyle="#073b5c";c.lineTo(p.x,p.y);c.stroke();e.preventDefault()};
+  const end=(e:any)=>{drawing.current=false;canvas.current?.releasePointerCapture?.(e.pointerId);e.preventDefault()};
+  const clear=()=>{canvas.current?.getContext("2d")?.clearRect(0,0,1200,650);setSignatureReady(false)};
+  const registerSignature=()=>{if(!canvas.current)return;setSignatureReady(true);setSignatureOpen(false)};
+
+  const submit=(form:FormData)=>{
+    if(!signatureReady){alert("Registra la firma de quien recibe antes de confirmar la entrega.");return;}
+    const lines=dispatch.dispatch_lines.map(l=>({line_id:l.id,delivered_qty:n(l.required_qty)}));
+    start(async()=>{try{await registerDeliveryWithEmail({dispatchId:dispatch.id,recipientName:String(form.get("recipient_name")||""),recipientRut:String(form.get("recipient_rut")||""),recipientRole:String(form.get("recipient_role")||""),recipientEmail:String(form.get("recipient_email")||""),observations:String(form.get("observations")||""),signature:canvas.current?.toDataURL("image/png"),lines});done()}catch(e:any){alert(e.message)}});
+  };
+
+  return <div className="modalBg"><div className="modal deliveryModal deliveryModalV2"><div className="modalHead"><div><h2>Registrar entrega</h2><p>{dispatch.internal_number||dispatch.guide_number} · {dispatch.installations?.name||"Instalación"}</p></div><button type="button" onClick={close}>Cerrar</button></div>
+    <form action={submit}>
+      <div className="deliveryFixedSummary"><b>Materiales de esta guía</b><p>Las cantidades ya fueron definidas al generar y preparar la guía. En la recepción solo se identifica y firma a quien recibe.</p></div>
+      <div className="deliveryLines deliveryLinesReadOnly">{dispatch.dispatch_lines.map(l=><div className="deliveryReadOnlyLine" key={l.id}><span><b>{l.materials?.name||"Material"}</b><small>{l.materials?.unit||""}</small></span><strong>{n(l.required_qty)} {l.materials?.unit||""}</strong></div>)}</div>
+      <div className="deliveryFields"><input name="recipient_name" required placeholder="Nombre de quien recibe"/><input name="recipient_rut" required placeholder="RUT de quien recibe"/><input name="recipient_role" placeholder="Cargo / receptor"/><input type="email" name="recipient_email" required placeholder="Correo de quien recibe (para enviar respaldo)"/><textarea name="observations" placeholder="Observaciones de la entrega"/></div>
+      <div className="signatureLaunch"><div><b>Firma de recepción</b><small>{signatureReady?"Firma registrada y lista para guardar.":"Abre el área de firma para entregar el teléfono a quien recibe."}</small></div><button type="button" onClick={()=>setSignatureOpen(true)}>{signatureReady?"Ver / repetir firma":"Firmar en pantalla"}</button></div>
+      <button className="deliveryConfirm" disabled={pending}>{pending?"Registrando...":"Confirmar entrega y guardar respaldo"}</button>
+    </form>
+    {signatureOpen&&<div className="signatureFullscreen"><div className="signatureFullscreenCard"><div className="signatureFullscreenHead"><div><b>Firma de quien recibe</b><small>Firme dentro del recuadro y luego pulse “Registrar firma”.</small></div><button type="button" onClick={()=>setSignatureOpen(false)}>Cancelar</button></div><canvas ref={canvas} width="1200" height="650" onPointerDown={begin} onPointerMove={move} onPointerUp={end} onPointerCancel={end} className="signatureBigCanvas"/><div className="signatureFullscreenActions"><button type="button" onClick={clear}>Limpiar</button><button type="button" className="signatureSave" onClick={registerSignature}>Registrar firma</button></div></div></div>}
+    <style jsx>{`.deliveryFixedSummary{padding:12px 14px;border:1px solid #c8dce8;border-radius:12px;background:#f7fbfc;margin-bottom:12px}.deliveryFixedSummary p{margin:5px 0 0;color:#607887}.deliveryLinesReadOnly{display:grid;gap:7px;margin-bottom:14px}.deliveryReadOnlyLine{display:flex;justify-content:space-between;gap:16px;align-items:center;border:1px solid #dce8ed;border-radius:10px;padding:10px 12px}.deliveryReadOnlyLine span{display:grid}.deliveryReadOnlyLine small{color:#607887}.deliveryReadOnlyLine strong{white-space:nowrap}.signatureLaunch{display:flex;justify-content:space-between;gap:14px;align-items:center;border:1px dashed #7ea8b8;border-radius:12px;padding:14px;margin:14px 0}.signatureLaunch div{display:grid;gap:3px}.signatureLaunch small{color:#607887}.signatureFullscreen{position:fixed;inset:0;z-index:9999;background:rgba(8,29,43,.82);display:flex;align-items:center;justify-content:center;padding:3vh 3vw}.signatureFullscreenCard{width:min(1200px,94vw);height:min(860px,92vh);background:#fff;border-radius:16px;padding:14px;display:grid;grid-template-rows:auto 1fr auto;gap:12px;box-sizing:border-box}.signatureFullscreenHead,.signatureFullscreenActions{display:flex;justify-content:space-between;gap:10px;align-items:center}.signatureFullscreenHead div{display:grid;gap:3px}.signatureFullscreenHead small{color:#607887}.signatureBigCanvas{width:100%;height:100%;min-height:260px;border:2px dashed #7ea8b8;border-radius:12px;background:#fff;touch-action:none;box-sizing:border-box}.signatureFullscreenActions{justify-content:flex-end}.signatureSave{background:#0b526f!important;color:#fff!important}@media(max-width:700px){.signatureFullscreen{padding:2vh 2vw}.signatureFullscreenCard{width:96vw;height:92vh;border-radius:12px;padding:10px}.signatureFullscreenHead{align-items:flex-start}.signatureFullscreenHead b{font-size:18px}.signatureBigCanvas{min-height:55vh}.signatureLaunch{align-items:stretch;flex-direction:column}.signatureLaunch button{min-height:46px}.signatureFullscreenActions button{min-height:48px;padding:0 18px}}`}</style>
+  </div></div>;
+}
