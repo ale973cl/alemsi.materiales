@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_ROLES = ["Admin Total", "Gerencia", "Admin", "Finanzas", "Bodega", "Supervisora"] as const;
 const COOKIE_NAME = "alemsi_preview_origin";
+const ACTIVE_COOKIE = "alemsi_preview_active";
 const MAX_AGE_SECONDS = 60 * 60 * 6;
 
 function ensurePreview() {
@@ -85,6 +86,13 @@ export async function switchPreviewProfile(formData: FormData) {
     maxAge: MAX_AGE_SECONDS,
     path: "/",
   });
+  jar.set(ACTIVE_COOKIE, "1", {
+    httpOnly: false,
+    sameSite: "lax",
+    secure: true,
+    maxAge: MAX_AGE_SECONDS,
+    path: "/",
+  });
 
   await signInAsEmail(target.email);
   redirect("/");
@@ -102,5 +110,6 @@ export async function returnFromPreviewProfile() {
 
   await signInAsEmail(profile.email);
   jar.delete(COOKIE_NAME);
+  jar.delete(ACTIVE_COOKIE);
   redirect("/");
 }
