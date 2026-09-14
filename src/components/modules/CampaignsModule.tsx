@@ -13,6 +13,9 @@ type FlatInstallation={region:string;city:string;commune:string;clientId:string;
 
 const campaignInfo=(label:string)=>{try{const value=JSON.parse(label);return typeof value?.name==="string"?value:{name:label,periodicity:"No indicada",clientCount:null}}catch{return{name:label,periodicity:"No indicada",clientCount:null}}};
 const clean=(value?:string|null)=>String(value||"").trim();
+const normalizeText=(value?:string|null)=>clean(value).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es-CL").replace(/[’'`´\"“”._/\\-]+/g," ").replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim();
+const labelScore=(value:string)=>(/[áéíóúüñ]/i.test(value)?4:0)+(value!==value.toUpperCase()?2:0)+(value.length?1:0);
+const canonicalOptions=(values:string[])=>[...values.reduce((map,value)=>{const key=normalizeText(value);if(!key)return map;const current=map.get(key);if(!current||labelScore(value)>labelScore(current))map.set(key,value);return map},new Map<string,string>()).values()].sort((a,b)=>a.localeCompare(b,"es"));
 const regionName=(value?:string|null)=>clean(value)||"Sin región";
 const statusKey=(value?:string|null)=>{const s=clean(value).toLocaleLowerCase("es-CL");if(s.includes("complet")||s.includes("tomad"))return"done";if(s.includes("justific"))return"justified";if(s.includes("proceso")||s.includes("inici"))return"progress";return"pending"};
 const statusLabel=(value?:string|null)=>statusKey(value)==="done"?"Toma completada":statusKey(value)==="progress"?"Toma en proceso":statusKey(value)==="justified"?"Justificada":"Pendiente de toma";
@@ -21,19 +24,19 @@ export default function CampaignsModule({campaigns,clients,onOpenSurveys}:{campa
  const [showNew,setShowNew]=useState(false),[selectedInstallationIds,setSelectedInstallationIds]=useState<string[]>([]),[adminCampaign,setAdminCampaign]=useState<string|null>(null),[openCampaign,setOpenCampaign]=useState<string|null>(null),[campaignMessage,setCampaignMessage]=useState(""),[deletingCampaign,setDeletingCampaign]=useState<string|null>(null);
  const [regionFilter,setRegionFilter]=useState(""),[cityFilter,setCityFilter]=useState(""),[clientFilter,setClientFilter]=useState(""),[contractFilter,setContractFilter]=useState(""),[statusFilter,setStatusFilter]=useState("available"),[search,setSearch]=useState("");
  const occupied=useMemo(()=>{const m=new Map<string,{campaign:string;status:string}>();for(const c of campaigns.filter(x=>x.status==="Abierta")){for(const item of c.campaign_installations||[]){const id=item.installation_id||item.installations?.id;if(id)m.set(id,{campaign:campaignInfo(c.label).name,status:item.status});}}return m},[campaigns]);
- const flat=useMemo<FlatInstallation[]>(()=>clients.flatMap(client=>(client.contracts||[]).flatMap(contract=>(contract.installations||[]).map(installation=>({region:regionName(installation.region),city:clean(installation.city)||"Sin ciudad",commune:clean(installation.commune)||"Sin comuna",clientId:client.id,client:client.legal_name,contractId:contract.id,contract:contract.name,installation})))),[clients]);
- const regions=useMemo(()=>[...new Set(flat.map(x=>x.region))].sort((a,b)=>a.localeCompare(b,"es")),[flat]);
- const cities=useMemo(()=>[...new Set(flat.filter(x=>!regionFilter||x.region===regionFilter).map(x=>x.city))].sort((a,b)=>a.localeCompare(b,"es")),[flat,regionFilter]);
- const clientOptions=useMemo(()=>[...new Map(flat.filter(x=>(!regionFilter||x.region===regionFilter)&&(!cityFilter||x.city===cityFilter)).map(x=>[x.clientId,x.client])).entries()].sort((a,b)=>a[1].localeCompare(b[1],"es")),[flat,regionFilter,cityFilter]);
- const contractOptions=useMemo(()=>[...new Map(flat.filter(x=>(!regionFilter||x.region===regionFilter)&&(!cityFilter||x.city===cityFilter)&&(!clientFilter||x.clientId===clientFilter)).map(x=>[x.contractId,x.contract])).entries()].sort((a,b)=>a[1].localeCompare(b[1],"es")),[flat,regionFilter,cityFilter,clientFilter]);
+ const flat=useMemo<FlatInstallation[]>(()=>clients.flatMap(client=>(client.contracts||[]).flatMap(contract=>(contract.installations||[]).map(installation=>({region:regionName(installation.region),city:clean(installation.city)||clean(installation.commune)||"Sin ciudad",commune:clean(installation.commune)||clean(installation.city)||"Sin comuna",clientId:client.id,client:client.legal_name,contractId:contract.id,contract:contract.name,installation})))),[clients]);
+ const regions=useMemo(()=>canonicalOptions(flat.map(x=>x.region)),[flat]);
+ const cities=useMemo(()=>canonicalOptions(flat.filter(x=>!regionFilter||normalizeText(x.region)===normalizeText(regionFilter)).map(x=>x.city)),[flat,regionFilter]);
+ const clientOptions=useMemo(()=>[...new Map(flat.filter(x=>(!regionFilter||normalizeText(x.region)===normalizeText(regionFilter))&&(!cityFilter||normalizeText(x.city)===normalizeText(cityFilter))).map(x=>[x.clientId,x.client])).entries()].sort((a,b)=>a[1].localeCompare(b[1],"es")),[flat,regionFilter,cityFilter]);
+ const contractOptions=useMemo(()=>[...new Map(flat.filter(x=>(!regionFilter||normalizeText(x.region)===normalizeText(regionFilter))&&(!cityFilter||normalizeText(x.city)===normalizeText(cityFilter))&&(!clientFilter||x.clientId===clientFilter)).map(x=>[x.contractId,x.contract])).entries()].sort((a,b)=>a[1].localeCompare(b[1],"es")),[flat,regionFilter,cityFilter,clientFilter]);
  const visible=useMemo(()=>flat.filter(x=>{
   const busy=occupied.get(x.installation.id),key=busy?statusKey(busy.status):"available";
-  const text=[x.installation.name,x.region,x.city,x.commune,x.client,x.contract].join(" ").toLocaleLowerCase("es-CL");
-  if(regionFilter&&x.region!==regionFilter)return false;
-  if(cityFilter&&x.city!==cityFilter)return false;
+  const text=normalizeText([x.installation.name,x.region,x.city,x.commune,x.client,x.contract].join(" "));
+  if(regionFilter&&normalizeText(x.region)!==normalizeText(regionFilter))return false;
+  if(cityFilter&&normalizeText(x.city)!==normalizeText(cityFilter))return false;
   if(clientFilter&&x.clientId!==clientFilter)return false;
   if(contractFilter&&x.contractId!==contractFilter)return false;
-  if(search&&!text.includes(search.trim().toLocaleLowerCase("es-CL")))return false;
+  if(search&&!text.includes(normalizeText(search)))return false;
   if(statusFilter==="available"&&busy)return false;
   if(statusFilter==="occupied"&&!busy)return false;
   if(statusFilter==="progress"&&(!busy||key!=="progress"))return false;
