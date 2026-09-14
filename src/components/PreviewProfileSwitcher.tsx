@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { returnFromPreviewProfile, switchPreviewProfile } from "@/app/preview-profile-actions";
 
 const ROLE_OPTIONS = [
+  { role: "Admin Total", label: "Admin Total" },
   { role: "Gerencia", label: "Gerencia" },
   { role: "Admin", label: "Admin / Operaciones" },
   { role: "Finanzas", label: "Finanzas" },
@@ -28,6 +29,7 @@ export default function PreviewProfileSwitcher({ currentRole, users }:{ currentR
 
   const runSwitch=async(formData:FormData)=>{
     const role=String(formData.get("role")||"");
+    if(role===currentRole){setError("");return;}
     setError("");setLoading(role);
     try{const result=await switchPreviewProfile(formData);if(result?.error)setError(result.error);}finally{setLoading("");}
   };
@@ -47,17 +49,18 @@ export default function PreviewProfileSwitcher({ currentRole, users }:{ currentR
 
   return <section style={{margin:"0 0 16px",padding:"14px",border:"1px solid #9ec8c5",background:"#f4fbfa",borderRadius:12}}>
     <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-      <div><b>Acceso de prueba · Preview</b><div style={{fontSize:12,color:"#536b72",marginTop:3}}>Entra como un usuario real de cada perfil para comprobar permisos, asignaciones y circuitos.</div></div>
+      <div><b>Acceso de prueba · Preview</b><div style={{fontSize:12,color:"#536b72",marginTop:3}}>Se muestran todos los perfiles definidos. Los que aún no tienen usuario pueden revisarse en el selector y quedarán identificados hasta que exista una cuenta real para probar sus asignaciones.</div></div>
       <span style={{fontSize:11,fontWeight:700,color:"#0b6f69"}}>NO DISPONIBLE EN PRODUCTION</span>
     </div>
     {error&&<div style={{marginTop:10,padding:"9px 10px",border:"1px solid #e5b5b1",background:"#fff6f5",borderRadius:8,fontSize:12,color:"#a12622"}}><b>No se pudo cambiar de perfil:</b> {error}</div>}
     <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:12}}>
       {ROLE_OPTIONS.map(({role,label}) => {
         const available = activeRoles.has(role);
+        const current = currentRole===role;
         return <form action={runSwitch} key={role}>
           <input type="hidden" name="role" value={role}/>
-          <button type="submit" disabled={!available||Boolean(loading)} title={available?`Entrar como ${label}`:`No existe usuario activo con perfil ${label}`}>
-            {loading===role?"Entrando...":`${label}${available?"":" · sin usuario activo"}`}
+          <button type="submit" disabled={Boolean(loading)||current} title={current?"Perfil actual":available?`Entrar como ${label}`:`Perfil definido, todavía sin usuario activo de prueba`} style={current?{fontWeight:800,outline:"2px solid #0b6f69"}:undefined}>
+            {loading===role?"Entrando...":current?`${label} · actual`:`${label}${available?"":" · sin usuario"}`}
           </button>
         </form>;
       })}
