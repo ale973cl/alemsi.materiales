@@ -22,8 +22,8 @@ export async function POST(request:Request){
   const delivery=await enviarCorreoSmtp({to:[email],subject:title,text:summary,html});
 
   if(!delivery.ok){
-    const labels:Record<string,string>={configuration:"Configuración SMTP incompleta o inválida",connection:"No fue posible conectar con el servidor SMTP",tls:"Falló la negociación TLS",authentication:"El servidor rechazó usuario o contraseña",timeout:"El servidor SMTP no respondió dentro del tiempo esperado",protocol:"Respuesta SMTP inesperada"};
-    return NextResponse.json({ok:false,errorType:delivery.errorType,error:labels[delivery.errorType]||"Error SMTP"},{status:502});
+    const labels:Record<string,string>={configuration:"Configuración SMTP incompleta o inválida",connection:"No fue posible conectar con el servidor SMTP",tls:"Falló la negociación TLS",authentication:"El servidor rechazó usuario o contraseña",timeout:"El servidor SMTP no respondió dentro del tiempo esperado",protocol:"Respuesta SMTP inesperada",recipient_policy:"Destinatario bloqueado por política temporal: solo @alemsi.cl y correos personales autorizados"};
+    return NextResponse.json({ok:false,errorType:delivery.errorType,error:labels[delivery.errorType]||"Error SMTP",blockedRecipients:delivery.blockedRecipients||[]},{status:delivery.errorType==="recipient_policy"?403:502});
   }
 
   return NextResponse.json({ok:true,status:delivery.status,email});
