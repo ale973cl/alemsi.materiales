@@ -84,8 +84,11 @@ export async function POST(request: Request) {
         detail: { module, event, provider: "smtp", status: delivery.status },
       });
     } else {
-      const status = attempts >= 5 ? "Fallido" : "Pendiente";
-      const lastError = `SMTP ${delivery.errorType}`;
+      const blocked = delivery.errorType === "recipient_policy";
+      const status = blocked || attempts >= 5 ? "Fallido" : "Pendiente";
+      const lastError = blocked
+        ? `Bloqueado por política de destinatarios: ${(delivery.blockedRecipients || []).join(", ")}`
+        : `SMTP ${delivery.errorType}`;
 
       await db
         .from("email_queue")
@@ -94,7 +97,7 @@ export async function POST(request: Request) {
 
       await db.from("email_events").insert({
         email_queue_id: item.id,
-        event_type: "failed",
+        event_type: blocked ? "blocked" : "failed",
         provider_message_id: null,
         detail: { module, event, provider: "smtp", status: lastError },
       });
@@ -103,7 +106,8 @@ export async function POST(request: Request) {
     results.push({
       id: item.id,
       ok: delivery.ok,
-      status: delivery.ok ? "Enviado" : attempts >= 5 ? "Fallido" : "Pendiente",
+      status: delivery.ok ? "Enviado" : delivery.errorType === "recipient_policy" || attempts >= 5 ? "Fallido" : "Pendiente",
+      errorType: delivery.ok ? null : delivery.errorType,
     });
   }
 
