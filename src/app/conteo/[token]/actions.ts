@@ -2,7 +2,7 @@
 import {createHash} from "crypto";
 import {createClient as createAdminClient} from "@supabase/supabase-js";
 
-function db(){if(!process.env.NEXT_PUBLIC_SUPABASE_URL||!process.env.SUPABASE_SECRET_KEY)throw new Error("Configuración privada incompleta");return createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.SUPABASE_SECRET_KEY,{auth:{persistSession:false}})}
+function db(){if(!process.env.NEXT_PUBLIC_SUPABASE_URL||!process.env.SUPABASE_SERVICE_ROLE_KEY)throw new Error("Configuración privada incompleta");return createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}})}
 function tokenHash(token:string){return createHash("sha256").update(token).digest("hex")}
 
 export async function submitSurveyToken(formData:FormData){

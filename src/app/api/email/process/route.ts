@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   }
 
   if (
-    !process.env.SUPABASE_SECRET_KEY ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY ||
     !process.env.SMTP_SERVER ||
     !process.env.SMTP_PORT ||
     !process.env.EMAIL_USER ||
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
   const db = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
     { auth: { persistSession: false } },
   );
 
