@@ -13,6 +13,8 @@ Rama auditada: `fix/conexion-y-limpieza-modulos`.
 
 Después de conectar `BackupModule`, ninguna pestaña declarada en `roleModules` cae en `ModuleInfo`. No se conectó ningún otro módulo durante esta auditoría.
 
-## Verificación automatizada temporal
+## Verificación de limpieza
 
-La rama incluye temporalmente `.github/workflows/fix-connection-audit.yml` para obtener evidencia reproducible de referencias, variables `process.env`, `npm run build` y `npx tsc --noEmit`. El workflow está restringido a esta rama de corrección y se retirará en la tarea final de verificación para no dejar infraestructura temporal en la rama que se revise para integración.
+Antes del borrado se buscó cada candidato legacy. Los archivos sin referencias reales se eliminaron en un commit independiente. Se conservaron `src/components/Common.tsx`, `src/lib/materiales-domain.ts` y `src/lib/materiales-store.ts` porque sí tenían referencias reales al momento de la auditoría, aunque fueran referencias del conjunto legacy; su eventual eliminación requiere decisión separada.
+
+Tras la limpieza, el build de Next.js 15.5.25 compiló correctamente y el comando de verificación ejecutó también `npx tsc --noEmit` sin errores. La navegación de los seis roles se validó contra `roleModules` y contra las ramas de render de `OperationalApp.tsx`; ninguno de sus tabs depende de los archivos eliminados.
