@@ -164,7 +164,12 @@ function personalAllowlist() {
   return new Set([...DEFAULT_PERSONAL_ALLOWLIST, ...extra]);
 }
 
+export function isEmailRecipientRestrictionActive() {
+  return process.env.VERCEL_ENV !== "production";
+}
+
 export function isAllowedEmailRecipient(email: string) {
+  if (!isEmailRecipientRestrictionActive()) return true;
   const value = String(email || "").trim().toLowerCase();
   return value.endsWith("@alemsi.cl") || personalAllowlist().has(value);
 }
