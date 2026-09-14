@@ -1,4 +1,6 @@
+import "server-only";
 import type {EmailModule} from "@/lib/email-engine";
+import {processQueuedEmailById} from "@/lib/email-delivery";
 
 type QueueInput={
   module:EmailModule;
@@ -31,7 +33,10 @@ export async function enqueueModuleEmail(supabase:any,input:QueueInput){
   if(!to.length)return{queued:false,reason:"Sin destinatarios configurados"};
   const idempotencyKey=input.idempotencyKey||`${input.module}:${input.event}:${input.relatedId}`;
   const {data:existing}=await supabase.from("email_queue").select("id,status").eq("idempotency_key",idempotencyKey).maybeSingle();
-  if(existing)return{queued:false,existing:true,id:existing.id,status:existing.status};
+  if(existing){
+    const delivery=existing.status==="Pendiente"?await processQueuedEmailById(existing.id):null;
+    return{queued:false,existing:true,id:existing.id,status:delivery?.status||existing.status,delivery};
+  }
   const payload={module:input.module,event:input.event,summary:input.summary,facts:input.facts||{},action_url:input.actionUrl||null,template_code:rule?.template_code||null};
   const {data,error}=await supabase.from("email_queue").insert({
     email_type:input.emailType,
@@ -47,5 +52,6 @@ export async function enqueueModuleEmail(supabase:any,input:QueueInput){
     status:"Pendiente"
   }).select("id,status").single();
   if(error)throw error;
-  return{queued:true,id:data.id,status:data.status};
+  const delivery=await processQueuedEmailById(data.id);
+  return{queued:true,id:data.id,status:delivery.status,delivery};
 }
