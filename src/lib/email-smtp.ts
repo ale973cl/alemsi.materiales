@@ -150,7 +150,11 @@ function normalizeRecipients(values: unknown): string[] {
   );
 }
 
-const DEFAULT_PERSONAL_ALLOWLIST = ["ale973@gmail.com"];
+const DEFAULT_PERSONAL_ALLOWLIST = [
+  "ale973@gmail.com",
+  "alejandrobalboas@gmail.com",
+  "araucaniashop@gmail.com",
+];
 
 function personalAllowlist() {
   const extra = String(process.env.EMAIL_ALLOWED_PERSONAL || "")
