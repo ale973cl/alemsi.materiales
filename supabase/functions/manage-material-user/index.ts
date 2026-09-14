@@ -42,6 +42,22 @@ Deno.serve(async(req:Request)=>{
   return json({ok:true,user_id:userId,email:profile.email});
  }
 
+ if(action==="bulk_set_temp_password"){
+  const temporaryPassword=String(body.temporary_password||"");
+  if(temporaryPassword.length<8)return json({error:"La clave temporal debe tener al menos 8 caracteres"},400);
+  const {data:profiles,error:profilesError}=await admin.from("user_profiles").select("id,full_name,email,role,active").eq("active",true);
+  if(profilesError)return json({error:profilesError.message},500);
+  const results:any[]=[];
+  for(const profile of profiles||[]){
+   const {error:authError}=await admin.auth.admin.updateUserById(profile.id,{password:temporaryPassword,email_confirm:true});
+   results.push({id:profile.id,email:profile.email,role:profile.role,ok:!authError,error:authError?.message||null});
+  }
+  const failed=results.filter(item=>!item.ok);
+  await admin.from("activity_log").insert({actor_id:actor.id,actor_name:actorProfile.full_name||actorProfile.email,module:"Usuarios",action:"Activó credenciales temporales",entity_table:"user_profiles",entity_id:actor.id,new_data:{total:results.length,correctos:results.length-failed.length,fallidos:failed.length},observation:"Se asignó la clave temporal común a todos los perfiles activos con cuenta Auth."});
+  if(failed.length)return json({error:`No se pudieron actualizar ${failed.length} usuarios`,results},500);
+  return json({ok:true,count:results.length,results});
+ }
+
  if(action==="update"){
   if(!fullName||!/^\S+@\S+\.\S+$/.test(email)||!roles.includes(role))return json({error:"Nombre, correo y perfil válido son obligatorios"},400);
   const userId=String(body.user_id||"");if(!userId)return json({error:"Usuario obligatorio"},400);
