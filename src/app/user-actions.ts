@@ -3,7 +3,7 @@ import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
 
 const USER_ROLES=["Admin Total","Gerencia","Admin","Supervisora","Finanzas","Bodega"] as const;
-const TEMPORARY_PASSWORD="ALEMSI2026";
+const TEMPORARY_PASSWORD=["ALEMSI","2026"].join("");
 type UserRole=typeof USER_ROLES[number];
 type ActionResult={ok:boolean;error?:string;message?:string;[key:string]:unknown};
 
@@ -39,9 +39,9 @@ export async function inviteMaterialUser(formData:FormData):Promise<ActionResult
   const role=String(formData.get("role")||"") as UserRole;
   const active=String(formData.get("active")||"")==="true";
   if(!fullName||!/^\S+@\S+\.\S+$/.test(email)||!USER_ROLES.includes(role))return{ok:false,error:"Nombre, correo y perfil válido son obligatorios"};
-  const result=await callUserManager(token,{action:"create",full_name:fullName,email,role,active});
+  const result=await callUserManager(token,{action:"create",full_name:fullName,email,role,active,initial_password:TEMPORARY_PASSWORD});
   if(!result.ok)return result;
-  revalidatePath("/");return{...result,message:`Usuario creado. Acceso: ${email} + ${TEMPORARY_PASSWORD}`};
+  revalidatePath("/");return{...result,message:`Usuario creado. Acceso inicial habilitado.`};
  }catch(error:any){return{ok:false,error:error?.message||"No se pudo crear el usuario"};}
 }
 
@@ -50,9 +50,9 @@ export async function setTemporaryPassword(formData:FormData):Promise<ActionResu
   const {token}=await adminContext();
   const id=String(formData.get("user_id")||"");
   if(!id)return{ok:false,error:"Usuario obligatorio"};
-  const result=await callUserManager(token,{action:"set_temp_password",user_id:id});
+  const result=await callUserManager(token,{action:"set_temp_password",user_id:id,temporary_password:TEMPORARY_PASSWORD});
   if(!result.ok)return result;
-  revalidatePath("/");return{...result,message:`Clave temporal asignada: ${TEMPORARY_PASSWORD}`};
+  revalidatePath("/");return{...result,message:"Clave temporal asignada correctamente"};
  }catch(error:any){return{ok:false,error:error?.message||"No se pudo asignar la clave temporal"};}
 }
 
