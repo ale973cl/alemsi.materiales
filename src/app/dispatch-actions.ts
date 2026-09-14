@@ -58,7 +58,7 @@ export async function createCampaignDispatch(input:{surveyId:string}){
 }
 
 export async function registerDeliveryWithEmail(input:{dispatchId:string;recipientName:string;recipientRut:string;recipientRole?:string;recipientEmail:string;observations?:string;signature?:string;lines:{line_id:string;delivered_qty:number}[]}){
-  const {supabase,profile}=await ctx(["Admin Total","Admin","Bodega","Supervisora"]);
+  const {supabase,user,profile}=await ctx(["Admin Total","Admin","Bodega","Supervisora"]);
   const email=String(input.recipientEmail||"").trim().toLowerCase();
   if(!email||!email.includes("@"))throw new Error("Ingresa el correo de la persona que recibe");
   const {data:status,error}=await supabase.rpc("register_dispatch_delivery_v1",{p_dispatch_id:input.dispatchId,p_lines:input.lines,p_recipient_name:input.recipientName,p_recipient_rut:input.recipientRut,p_recipient_role:input.recipientRole||null,p_observations:input.observations||null,p_signature:input.signature||null});
@@ -69,7 +69,7 @@ export async function registerDeliveryWithEmail(input:{dispatchId:string;recipie
   const contract:any=Array.isArray(installation?.contracts)?installation.contracts[0]:installation?.contracts;
   const client:any=Array.isArray(contract?.clients)?contract.clients[0]:contract?.clients;
   const base=await origin();
-  await enqueueModuleEmail(supabase,{module:"dispatch",event:"signed_delivery_copy",emailType:"signed_delivery_copy",relatedTable:"dispatches",relatedId:input.dispatchId,subject:`Comprobante de entrega ${d?.internal_number||""} · ALEMSI`,summary:"Se registró la entrega de materiales. Este correo corresponde al respaldo informado por la persona que recibió.",to:[email],facts:{Cliente:client?.legal_name||"—",Contrato:contract?.name||"—",Instalación:installation?.name||"—",Receptor:input.recipientName,Estado:String(status||"Entregado")},actionUrl:base?`${base}/despachos/${input.dispatchId}/guia`:undefined,idempotencyKey:`signed-delivery:${input.dispatchId}:${String(status)}`});
-  await supabase.from("activity_log").insert({actor_name:profile.full_name||profile.email,module:"Despachos",action:"Registró correo de receptor",entity_table:"dispatches",entity_id:input.dispatchId,new_data:{recipient_email:email,email_queued:true}});
+  await enqueueModuleEmail(supabase,{module:"dispatch",event:"signed_delivery_copy",emailType:"signed_delivery_copy",relatedTable:"dispatches",relatedId:input.dispatchId,subject:`Comprobante de entrega ${d?.internal_number||""} · ALEMSI`,summary:"Se registró la entrega de materiales. Este correo corresponde al respaldo informado por la persona que recibió.",to:[email],facts:{Cliente:client?.legal_name||"—",Contrato:contract?.name||"—",Instalación:installation?.name||"—",Receptor:input.recipientName,Estado:String(status||"Entregado")},actionUrl:base?`${base}/despachos/${input.dispatchId}/guia`:null,idempotencyKey:`signed-delivery:${input.dispatchId}:${String(status)}`});
+  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Despachos",action:"Registró correo de receptor",entity_table:"dispatches",entity_id:input.dispatchId,new_data:{recipient_email:email,email_queued:true}});
   revalidatePath("/");return{ok:true,status:String(status)};
 }
