@@ -19,6 +19,8 @@ export async function createRegionalCampaign(formData: FormData) {
 
   const name = String(formData.get("name") || "").trim();
   const periodicity = String(formData.get("periodicity") || "");
+  const deliveryPeriod = String(formData.get("delivery_period") || "").trim();
+  const deliveryTemplate = String(formData.get("delivery_template") || "Entrega {PERIODO} · {INSTALACION}").trim();
   const installationIds = [...new Set(formData.getAll("installation_ids").map(value => String(value)).filter(Boolean))];
   const allowedPeriodicities = ["Mensual", "Bimensual", "Trimestral", "Cuatrimestral", "Semestral", "Personalizada"];
 
@@ -38,8 +40,6 @@ export async function createRegionalCampaign(formData: FormData) {
     throw new Error("Una o más instalaciones seleccionadas ya no están activas");
   }
 
-  // Protección real contra duplicidad: la UI también bloquea estas instalaciones,
-  // pero el servidor vuelve a validar para impedir doble campaña por reintentos o pestañas antiguas.
   const { data: occupied, error: occupiedError } = await supabase
     .from("campaign_installations")
     .select("installation_id,campaigns!inner(id,status)")
@@ -52,7 +52,15 @@ export async function createRegionalCampaign(formData: FormData) {
 
   const clientIds = [...new Set(installations.map((item: any) => item.contracts?.client_id).filter(Boolean))];
   const regions = [...new Set(installations.map((item: any) => String(item.region || "Sin región").trim()))];
-  const label = JSON.stringify({ name, periodicity, clientCount: clientIds.length, regionCount: regions.length, regions });
+  const label = JSON.stringify({
+    name,
+    periodicity,
+    deliveryPeriod,
+    deliveryTemplate: deliveryTemplate || "Entrega {PERIODO} · {INSTALACION}",
+    clientCount: clientIds.length,
+    regionCount: regions.length,
+    regions,
+  });
 
   const { data: campaign, error } = await supabase
     .from("campaigns")
