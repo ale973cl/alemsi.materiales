@@ -14,10 +14,10 @@ Deno.serve(async(req:Request)=>{
  if(!actorProfile?.active||actorProfile.role!=="Admin Total")return json({error:"Solo Admin Total puede administrar usuarios"},403);
  const body=await req.json();const action=String(body.action||"");
  const fullName=String(body.full_name||"").trim(),email=String(body.email||"").trim().toLowerCase(),role=String(body.role||""),active=body.active!==false;
- if(!fullName||!/^\S+@\S+\.\S+$/.test(email)||!roles.includes(role))return json({error:"Nombre, correo y perfil válido son obligatorios"},400);
  const admin=createClient(url,service,{auth:{persistSession:false,autoRefreshToken:false}});
 
  if(action==="invite"){
+  if(!fullName||!/^\S+@\S+\.\S+$/.test(email)||!roles.includes(role))return json({error:"Nombre, correo y perfil válido son obligatorios"},400);
   const options:any={data:{full_name:fullName}};if(body.redirect_to)options.redirectTo=String(body.redirect_to);
   const {data:invited,error:inviteError}=await admin.auth.admin.inviteUserByEmail(email,options);
   if(inviteError)return json({error:inviteError.message},400);
@@ -28,7 +28,21 @@ Deno.serve(async(req:Request)=>{
   return json({ok:true,id:invitedUser.id,email,role,active});
  }
 
+ if(action==="set_temp_password"){
+  const userId=String(body.user_id||"");
+  const temporaryPassword=String(body.temporary_password||"");
+  if(!userId)return json({error:"Usuario obligatorio"},400);
+  if(temporaryPassword.length<8)return json({error:"La clave temporal debe tener al menos 8 caracteres"},400);
+  const {data:profile,error:profileError}=await admin.from("user_profiles").select("id,full_name,email,role,active").eq("id",userId).single();
+  if(profileError||!profile)return json({error:"Usuario no encontrado"},404);
+  const {error:authError}=await admin.auth.admin.updateUserById(userId,{password:temporaryPassword,email_confirm:true});
+  if(authError)return json({error:authError.message},400);
+  await admin.from("activity_log").insert({actor_id:actor.id,actor_name:actorProfile.full_name||actorProfile.email,module:"Usuarios",action:"Asignó clave temporal",entity_table:"user_profiles",entity_id:userId,new_data:{email:profile.email,role:profile.role},observation:"Clave temporal configurada por Admin Total."});
+  return json({ok:true,user_id:userId,email:profile.email});
+ }
+
  if(action==="update"){
+  if(!fullName||!/^\S+@\S+\.\S+$/.test(email)||!roles.includes(role))return json({error:"Nombre, correo y perfil válido son obligatorios"},400);
   const userId=String(body.user_id||"");if(!userId)return json({error:"Usuario obligatorio"},400);
   const {data:oldProfile,error:oldError}=await admin.from("user_profiles").select("id,full_name,email,role,active").eq("id",userId).single();
   if(oldError||!oldProfile)return json({error:"Usuario no encontrado"},404);
