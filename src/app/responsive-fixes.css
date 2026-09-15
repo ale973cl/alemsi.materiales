@@ -114,6 +114,12 @@ input,select,textarea,button{max-width:100%}
   .materialProfileDedicated article{grid-template-columns:1fr!important;gap:8px;padding:11px}
   .materialProfileIdentity,.materialProfileNotes,.materialProfileDedicated button{grid-column:1!important;grid-row:auto!important}
   .materialProfileDedicated button{width:100%}
+  .dispatchModule{min-width:0;overflow:hidden}
+  .dispatchModule>section{max-width:100%;min-width:0}
+  .dispatchModule>section>div:last-child>div{grid-template-columns:1fr!important;gap:7px!important;align-items:start!important;padding:12px!important;min-width:0!important}
+  .dispatchModule>section>div:last-child>div>div{min-width:0;width:100%;overflow-wrap:normal;word-break:normal;white-space:normal}
+  .dispatchModule>section>div:last-child>div>div:last-child{display:block!important}
+  .dispatchModule>section>div:last-child>div button{width:100%;min-height:40px}
   table{min-width:680px}
 }
 
