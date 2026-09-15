@@ -73,3 +73,11 @@ export async function registerDeliveryWithEmail(input:{dispatchId:string;recipie
   await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Despachos",action:"Registró correo de receptor",entity_table:"dispatches",entity_id:input.dispatchId,new_data:{recipient_email:email,email_queued:true}});
   revalidatePath("/");return{ok:true,status:String(status)};
 }
+
+export async function createComplementaryDispatch(input:{parentDispatchId:string}){
+  const {supabase}=await ctx(["Admin Total","Admin","Bodega"]);
+  const {data,error}=await supabase.rpc("create_complementary_dispatch_v1",{p_parent_dispatch_id:input.parentDispatchId});
+  if(error)throw new Error(error.message);
+  revalidatePath("/");
+  return{ok:true,id:String(data)};
+}
