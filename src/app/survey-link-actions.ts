@@ -31,7 +31,8 @@ export async function createSurveyAccessLink(input:{campaign_id:string;installat
     target=String((access||[]).map((x:any)=>x.user_profiles).flat().find((p:any)=>p?.active&&p?.role==="Supervisora"&&p?.email)?.email||"").trim().toLowerCase();
   }
   if(input.mode==="email"&&!target)throw new Error("No hay correo de supervisora asignado. Ingresa un correo antes de enviar.");
-  const token=randomBytes(32).toString("base64url");const hash=tokenHash(token);const hours=Math.min(168,Math.max(1,Number(input.valid_hours||72)));const expires=new Date(Date.now()+hours*3600000).toISOString();
+  // 12 bytes = 96 bits de entropía y 16 caracteres base64url: corto para mensajería sin volverlo predecible.
+  const token=randomBytes(12).toString("base64url");const hash=tokenHash(token);const hours=Math.min(168,Math.max(1,Number(input.valid_hours||72)));const expires=new Date(Date.now()+hours*3600000).toISOString();
   const {error:updateError}=await supabase.from("campaign_installations").update({survey_token_hash:hash,survey_token_expires_at:expires,survey_token_email:target||null,survey_token_created_at:new Date().toISOString(),survey_token_created_by:user.id,survey_token_used_at:null}).eq("campaign_id",campaignId).eq("installation_id",installationId);
   if(updateError)throw updateError;
   const origin=await appOrigin();if(!origin)throw new Error("No se pudo determinar la URL de la aplicación");const link=`${origin}/conteo/${token}`;
