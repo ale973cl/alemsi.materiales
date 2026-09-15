@@ -7,8 +7,8 @@ function tokenHash(token:string){return createHash("sha256").update(token).diges
 type SubmittedLine={material_id:string;physical_remainder:number;condition?:"Bueno"|"Regular"|"Malo"|null;input_unit?:string|null;new_closed_qty?:number|null;used_qty?:number|null};
 
 export async function submitSurveyToken(formData:FormData){
-  const token=String(formData.get("token")||"");const submitted=JSON.parse(String(formData.get("lines")||"[]")) as SubmittedLine[];
-  if(!token)throw new Error("Link inválido");const supabase=db();const hash=tokenHash(token);
+  const token=String(formData.get("token")||"");const informedBy=String(formData.get("informed_by")||"").trim();const submitted=JSON.parse(String(formData.get("lines")||"[]")) as SubmittedLine[];
+  if(!token)throw new Error("Link inválido");if(informedBy.length<3)throw new Error("Indica el nombre de la persona que entrega la información");if(informedBy.length>120)throw new Error("El nombre informado es demasiado largo");const supabase=db();const hash=tokenHash(token);
   const {data:membership,error}=await supabase.from("campaign_installations").select("campaign_id,installation_id,status,survey_token_expires_at,survey_token_used_at,installations(contract_id,name)").eq("survey_token_hash",hash).maybeSingle();
   if(error||!membership)throw new Error("El link no es válido o fue reemplazado");
   if(membership.survey_token_used_at||membership.status==="Completada")throw new Error("Este link ya fue utilizado");
@@ -24,6 +24,6 @@ export async function submitSurveyToken(formData:FormData){
   const confirmedAt=new Date().toISOString();const {error:confirmError}=await supabase.from("surveys").update({status:"Confirmada",confirmed_at:confirmedAt,shortage_net:shortageNet}).eq("id",survey.id);if(confirmError)throw confirmError;
   const {error:completeError}=await supabase.from("campaign_installations").update({status:"Completada",completed_at:confirmedAt,survey_token_used_at:confirmedAt}).eq("campaign_id",membership.campaign_id).eq("installation_id",membership.installation_id).eq("survey_token_hash",hash).is("survey_token_used_at",null);if(completeError)throw completeError;
   const detail=submitted.map(line=>({material_id:line.material_id,physical_remainder:Number(line.physical_remainder||0),condition:line.condition||null,input_unit:line.input_unit||null,new_closed_qty:line.new_closed_qty==null?null:Number(line.new_closed_qty),used_qty:line.used_qty==null?null:Number(line.used_qty)}));
-  await supabase.from("activity_log").insert({actor_name:"Acceso por link seguro",module:"Levantamientos",action:"Confirmar levantamiento por token",entity_table:"surveys",entity_id:survey.id,new_data:{campaign_id:membership.campaign_id,installation_id:membership.installation_id,confirmed_at:confirmedAt,shortage_net:shortageNet,lines,detail},observation:"Conteo confirmado mediante link temporal de acceso"});
+  await supabase.from("activity_log").insert({actor_name:informedBy,module:"Levantamientos",action:"Confirmar levantamiento por token",entity_table:"surveys",entity_id:survey.id,new_data:{campaign_id:membership.campaign_id,installation_id:membership.installation_id,informed_by:informedBy,confirmed_at:confirmedAt,shortage_net:shortageNet,lines,detail},observation:`Conteo informado por ${informedBy} mediante link temporal de acceso`});
   return{ok:true,installation:inst?.name||"Instalación"};
 }
