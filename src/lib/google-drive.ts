@@ -1,7 +1,10 @@
 import "server-only";
 import {createSign} from "node:crypto";
 
-const DRIVE_SCOPE="https://www.googleapis.com/auth/drive.file";
+// La cuenta de servicio trabaja exclusivamente dentro de la carpeta raíz que
+// ALEMSI le comparte como Editor. El scope drive permite acceder a esa carpeta
+// compartida; drive.file puede no verla cuando fue creada por otro usuario.
+const DRIVE_SCOPE="https://www.googleapis.com/auth/drive";
 const TOKEN_URL="https://oauth2.googleapis.com/token";
 const DRIVE_FILES_URL="https://www.googleapis.com/drive/v3/files";
 const DRIVE_UPLOAD_URL="https://www.googleapis.com/upload/drive/v3/files";
@@ -28,6 +31,14 @@ async function accessToken(){
   return String(data.access_token);
 }
 function q(value:string){return value.replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
+async function assertRootAccess(token:string,rootFolderId:string){
+  const response=await fetch(`${DRIVE_FILES_URL}/${encodeURIComponent(rootFolderId)}?fields=id,name,mimeType,capabilities(canAddChildren)&supportsAllDrives=true`,{headers:{authorization:`Bearer ${token}`},cache:"no-store"});
+  const data:any=await response.json();
+  if(!response.ok)throw new Error(`Google Drive carpeta raíz: ${data.error?.message||response.status}`);
+  if(data.mimeType!=="application/vnd.google-apps.folder")throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID no corresponde a una carpeta");
+  if(data.capabilities?.canAddChildren===false)throw new Error("La cuenta de servicio no tiene permiso Editor en la carpeta raíz de Drive");
+  return data;
+}
 async function findFolder(token:string,parentId:string,name:string){
   const query=`'${q(parentId)}' in parents and name = '${q(name)}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
   const url=`${DRIVE_FILES_URL}?q=${encodeURIComponent(query)}&fields=files(id,name)&pageSize=1&supportsAllDrives=true&includeItemsFromAllDrives=true`;
@@ -43,6 +54,7 @@ async function ensureFolder(token:string,parentId:string,name:string){
 function safeName(value:string){return(value||"Sin nombre").replace(/[\\/:*?"<>|]/g,"-").replace(/\s+/g," ").trim().slice(0,120)||"Sin nombre"}
 export async function archiveGuidePdf(input:{pdf:Uint8Array|Buffer;filename:string;client:string;contract?:string|null;campaign?:string|null;year?:string|number|null}){
   const {rootFolderId}=env(),token=await accessToken();
+  await assertRootAccess(token,rootFolderId);
   let parent=rootFolderId;
   for(const part of [safeName(input.client),safeName(input.contract||"Sin contrato"),safeName(String(input.year||new Date().getFullYear())),safeName(input.campaign||"Sin campaña"),"Guías"]){parent=await ensureFolder(token,parent,part)}
   const boundary=`alemsi_${Date.now()}_${Math.random().toString(16).slice(2)}`;
