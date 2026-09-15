@@ -61,17 +61,35 @@ export async function registerDeliveryWithEmail(input:{dispatchId:string;recipie
   const {supabase,user,profile}=await ctx(["Admin Total","Admin","Bodega","Supervisora"]);
   const email=String(input.recipientEmail||"").trim().toLowerCase();
   if(!email||!email.includes("@"))throw new Error("Ingresa el correo de la persona que recibe");
+
+  // El cierre físico es la operación principal. Si esto falla, no se continúa.
   const {data:status,error}=await supabase.rpc("register_dispatch_delivery_v1",{p_dispatch_id:input.dispatchId,p_lines:input.lines,p_recipient_name:input.recipientName,p_recipient_rut:input.recipientRut,p_recipient_role:input.recipientRole||null,p_observations:input.observations||null,p_signature:input.signature||null});
   if(error)throw new Error(error.message);
-  await supabase.from("dispatches").update({recipient_email:email,email_status:"Pendiente"}).eq("id",input.dispatchId);
-  const {data:d}=await supabase.from("dispatches").select("id,internal_number,installations(name,contracts(name,clients(legal_name)))").eq("id",input.dispatchId).single();
-  const installation:any=Array.isArray((d as any)?.installations)?(d as any).installations[0]:(d as any)?.installations;
-  const contract:any=Array.isArray(installation?.contracts)?installation.contracts[0]:installation?.contracts;
-  const client:any=Array.isArray(contract?.clients)?contract.clients[0]:contract?.clients;
-  const base=await origin();
-  await enqueueModuleEmail(supabase,{module:"dispatch",event:"signed_delivery_copy",emailType:"signed_delivery_copy",relatedTable:"dispatches",relatedId:input.dispatchId,subject:`Comprobante de entrega ${d?.internal_number||""} · ALEMSI`,summary:"Se registró la entrega de materiales. Este correo corresponde al respaldo informado por la persona que recibió.",to:[email],facts:{Cliente:client?.legal_name||"—",Contrato:contract?.name||"—",Instalación:installation?.name||"—",Receptor:input.recipientName,Estado:String(status||"Entregado")},actionUrl:base?`${base}/despachos/${input.dispatchId}/guia`:null,idempotencyKey:`signed-delivery:${input.dispatchId}:${String(status)}`});
-  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Despachos",action:"Registró correo de receptor",entity_table:"dispatches",entity_id:input.dispatchId,new_data:{recipient_email:email,email_queued:true}});
-  revalidatePath("/");return{ok:true,status:String(status)};
+
+  // Desde aquí, PDF/correo son respaldo secundario: nunca deben derribar una entrega ya registrada.
+  let emailStatus="Pendiente";
+  let emailError:string|null=null;
+  try{
+    const {error:updateError}=await supabase.from("dispatches").update({recipient_email:email,email_status:"Pendiente"}).eq("id",input.dispatchId);
+    if(updateError)throw updateError;
+
+    const {data:d,error:dispatchLoadError}=await supabase.from("dispatches").select("id,internal_number,installations(name,contracts(name,clients(legal_name)))").eq("id",input.dispatchId).single();
+    if(dispatchLoadError)throw dispatchLoadError;
+    const installation:any=Array.isArray((d as any)?.installations)?(d as any).installations[0]:(d as any)?.installations;
+    const contract:any=Array.isArray(installation?.contracts)?installation.contracts[0]:installation?.contracts;
+    const client:any=Array.isArray(contract?.clients)?contract.clients[0]:contract?.clients;
+    const base=await origin();
+    const queued=await enqueueModuleEmail(supabase,{module:"dispatch",event:"signed_delivery_copy",emailType:"signed_delivery_copy",relatedTable:"dispatches",relatedId:input.dispatchId,subject:`Comprobante de entrega ${d?.internal_number||""} · ALEMSI`,summary:"Se registró la entrega de materiales. Este correo corresponde al respaldo informado por la persona que recibió.",to:[email],facts:{Cliente:client?.legal_name||"—",Contrato:contract?.name||"—",Instalación:installation?.name||"—",Receptor:input.recipientName,Estado:String(status||"Entregado")},actionUrl:base?`${base}/despachos/${input.dispatchId}/guia`:null,idempotencyKey:`signed-delivery:${input.dispatchId}:${String(status)}`});
+    emailStatus=String((queued as any)?.status||(queued as any)?.delivery?.status||"Pendiente");
+  }catch(mailError){
+    emailError=mailError instanceof Error?mailError.message:String(mailError);
+    console.error("DISPATCH_DELIVERY_EMAIL_ERROR",{dispatchId:input.dispatchId,error:emailError});
+    await supabase.from("dispatches").update({recipient_email:email,email_status:"Pendiente"}).eq("id",input.dispatchId);
+  }
+
+  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Despachos",action:"Registró entrega y correo de receptor",entity_table:"dispatches",entity_id:input.dispatchId,new_data:{recipient_email:email,email_status:emailStatus,email_error:emailError}});
+  revalidatePath("/");
+  return{ok:true,status:String(status),emailStatus,emailPending:emailStatus!=="Enviado"};
 }
 
 export async function createComplementaryDispatch(input:{parentDispatchId:string}){
