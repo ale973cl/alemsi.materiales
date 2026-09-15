@@ -21,7 +21,7 @@ const location=(d:Dispatch)=>d.installations||{};
 const contract=(d:Dispatch)=>location(d).contracts||{};
 const client=(d:Dispatch)=>contract(d).clients||{};
 const guideName=(d:Dispatch)=>d.internal_number||d.guide_number||"Guía interna";
-const stageForStatus=(status:string)=>["Borrador","Pendiente"].includes(status)?"Guías pendientes":["En preparación","Listo para despacho"].includes(status)?"Designar ruta":status==="En tránsito"?"En tránsito":status==="Entregado conforme"?"Entregadas":["Entrega parcial","Entrega con observaciones","Rechazado/No entregado"].includes(status)?"Pendientes material":"Otros";
+const stageForStatus=(status:string)=>["Borrador","Pendiente"].includes(status)?"Guías pendientes":["En preparación","Listo para despacho"].includes(status)?"Designar ruta":status==="En tránsito"?"En tránsito":["Entregado conforme","Entrega con observaciones"].includes(status)?"Entregadas":["Entrega parcial","Rechazado/No entregado"].includes(status)?"Pendientes material":"Otros";
 
 export default function DispatchDeliveryModule({dispatches,clients,materials,role,users,currentUser}:{dispatches:Dispatch[];clients:ClientInstallationGroup[];materials:MaterialCatalogRow[];role:string;users:RouteUser[];currentUser:{id:string;full_name?:string|null}}){
  const router=useRouter();
