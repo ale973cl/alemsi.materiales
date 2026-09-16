@@ -1,6 +1,10 @@
+import {randomBytes} from "node:crypto";
 import {NextResponse} from "next/server";
 
+export const runtime="nodejs";
+
 const DRIVE_SCOPE="https://www.googleapis.com/auth/drive.file";
+const STATE_COOKIE="google_drive_oauth_state";
 
 function config(request:Request){
   const clientId=process.env.GOOGLE_DRIVE_OAUTH_CLIENT_ID?.trim();
@@ -13,6 +17,7 @@ function config(request:Request){
 export async function GET(request:Request){
   try{
     const {clientId,redirectUri}=config(request);
+    const state=randomBytes(32).toString("base64url");
     const url=new URL("https://accounts.google.com/o/oauth2/v2/auth");
     url.searchParams.set("client_id",clientId);
     url.searchParams.set("redirect_uri",redirectUri);
@@ -21,9 +26,13 @@ export async function GET(request:Request){
     url.searchParams.set("access_type","offline");
     url.searchParams.set("prompt","consent");
     url.searchParams.set("include_granted_scopes","true");
-    return NextResponse.redirect(url);
+    url.searchParams.set("state",state);
+    const response=NextResponse.redirect(url);
+    response.cookies.set(STATE_COOKIE,state,{httpOnly:true,secure:true,sameSite:"lax",path:"/api/google-drive/oauth",maxAge:600});
+    response.headers.set("Cache-Control","no-store");
+    return response;
   }catch(error){
-    console.error("GOOGLE_DRIVE_OAUTH_START_ERROR",error);
-    return NextResponse.json({ok:false,error:error instanceof Error?error.message:"No se pudo iniciar Google Drive OAuth"},{status:500});
+    console.error("GOOGLE_DRIVE_OAUTH_START_ERROR",error instanceof Error?error.message:"OAuth start error");
+    return NextResponse.json({ok:false,error:"No se pudo iniciar Google Drive OAuth"},{status:500,headers:{"Cache-Control":"no-store"}});
   }
 }
