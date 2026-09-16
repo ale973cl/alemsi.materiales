@@ -20,7 +20,7 @@ function normalizePrivateKey(raw:string){
     if(typeof parsed==="string")value=parsed;
     else if(parsed&&typeof parsed.private_key==="string")value=parsed.private_key;
   }catch{
-    const field=value.match(/["']?private_key["']?\s*:\s*("(?:\\.|[^"\\])*")\s*,?/s);
+    const field=value.match(/["']?private_key["']?\s*:\s*("(?:\\.|[^"\\])*")\s*,?/);
     if(field){
       try{value=JSON.parse(field[1])}catch{value=field[1].slice(1,-1)}
     }
