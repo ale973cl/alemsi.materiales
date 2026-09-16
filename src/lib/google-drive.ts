@@ -8,8 +8,8 @@ function env(){
   const clientId=process.env.GOOGLE_DRIVE_OAUTH_CLIENT_ID?.trim();
   const clientSecret=process.env.GOOGLE_DRIVE_OAUTH_CLIENT_SECRET?.trim();
   const refreshToken=process.env.GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN?.trim();
-  const rootFolderId=process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim();
-  if(!clientId||!clientSecret||!refreshToken||!rootFolderId)throw new Error("Google Drive OAuth no está configurado");
+  const rootFolderId=process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim()||null;
+  if(!clientId||!clientSecret||!refreshToken)throw new Error("Google Drive OAuth no está configurado");
   return{clientId,clientSecret,refreshToken,rootFolderId};
 }
 
@@ -26,8 +26,25 @@ async function assertRootAccess(token:string,rootFolderId:string){
   const data:any=await response.json();
   if(!response.ok)throw new Error(`Google Drive carpeta raíz: ${data.error?.message||response.status}`);
   if(data.mimeType!=="application/vnd.google-apps.folder")throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID no corresponde a una carpeta");
-  if(data.capabilities?.canAddChildren===false)throw new Error("La cuenta de servicio no tiene permiso Editor en la carpeta raíz de Drive");
+  if(data.capabilities?.canAddChildren===false)throw new Error("La cuenta OAuth no puede crear archivos en la carpeta raíz de Drive");
   return data;
+}
+async function resolveRootFolder(token:string,configuredId:string|null){
+  if(configuredId){
+    try{
+      await assertRootAccess(token,configuredId);
+      return configuredId;
+    }catch(error){
+      console.warn("GOOGLE_DRIVE_ROOT_FALLBACK",{reason:error instanceof Error?error.message:String(error)});
+    }
+  }
+  const rootName=safeName(process.env.GOOGLE_DRIVE_ROOT_FOLDER_NAME?.trim()||"ALEMSI Materiales - Documentos",80);
+  const existing=await findFolder(token,"root",rootName);
+  if(existing)return existing;
+  const response=await fetch(`${DRIVE_FILES_URL}?fields=id,name,webViewLink&supportsAllDrives=true`,{method:"POST",headers:{authorization:`Bearer ${token}`,"content-type":"application/json"},body:JSON.stringify({name:rootName,mimeType:"application/vnd.google-apps.folder"}),cache:"no-store"});
+  const data:any=await response.json();
+  if(!response.ok||!data.id)throw new Error(`Google Drive crear carpeta raíz: ${data.error?.message||response.status}`);
+  return String(data.id);
 }
 async function findFolder(token:string,parentId:string,name:string){
   const query=`'${q(parentId)}' in parents and name = '${q(name)}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
@@ -51,8 +68,8 @@ function archiveParts(input:{client:string;contract?:string|null;campaign?:strin
 }
 export async function archiveGuidePdf(input:{pdf:Uint8Array|Buffer;filename:string;client:string;contract?:string|null;campaign?:string|null;region?:string|null;year?:string|number|null;archiveDate?:string|Date|null}){
   const {rootFolderId}=env(),token=await accessToken();
-  await assertRootAccess(token,rootFolderId);
-  let parent=rootFolderId;
+  const resolvedRootFolderId=await resolveRootFolder(token,rootFolderId);
+  let parent=resolvedRootFolderId;
   for(const part of archiveParts(input)){parent=await ensureFolder(token,parent,part)}
   const boundary=`alemsi_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   const metadata=JSON.stringify({name:safeName(input.filename),parents:[parent]});
