@@ -1,5 +1,5 @@
 import "server-only";
-import {createSign} from "node:crypto";
+import {createPrivateKey,createSign} from "node:crypto";
 
 // La cuenta de servicio trabaja exclusivamente dentro de la carpeta raíz que
 // ALEMSI le comparte como Editor. El scope drive permite acceder a esa carpeta
@@ -9,12 +9,47 @@ const TOKEN_URL="https://oauth2.googleapis.com/token";
 const DRIVE_FILES_URL="https://www.googleapis.com/drive/v3/files";
 const DRIVE_UPLOAD_URL="https://www.googleapis.com/upload/drive/v3/files";
 
+function normalizePrivateKey(raw:string){
+  let value=raw.trim();
+
+  // Acepta el JSON completo de Google, un string JSON o el valor aislado de
+  // private_key. Esto evita que las comillas/escapes copiados desde el JSON
+  // lleguen a OpenSSL como parte de la clave.
+  try{
+    const parsed=JSON.parse(value);
+    if(typeof parsed==="string")value=parsed;
+    else if(parsed&&typeof parsed.private_key==="string")value=parsed.private_key;
+  }catch{
+    const field=value.match(/["']?private_key["']?\s*:\s*("(?:\\.|[^"\\])*")\s*,?/s);
+    if(field){
+      try{value=JSON.parse(field[1])}catch{value=field[1].slice(1,-1)}
+    }
+  }
+
+  value=value
+    .replace(/^["']|["'],?$/g,"")
+    .replace(/\\r\\n/g,"\n")
+    .replace(/\\n/g,"\n")
+    .replace(/\r\n?/g,"\n")
+    .trim();
+
+  if(!value.includes("-----BEGIN PRIVATE KEY-----")||!value.includes("-----END PRIVATE KEY-----")){
+    throw new Error("GOOGLE_DRIVE_PRIVATE_KEY no contiene una clave PEM válida");
+  }
+
+  try{
+    return createPrivateKey({key:value,format:"pem"});
+  }catch{
+    throw new Error("GOOGLE_DRIVE_PRIVATE_KEY tiene formato PEM inválido; vuelva a copiar private_key desde el JSON de Google Cloud");
+  }
+}
+
 function env(){
   const email=process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL?.trim();
-  const privateKey=process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g,"\n").trim();
+  const privateKeyRaw=process.env.GOOGLE_DRIVE_PRIVATE_KEY;
   const rootFolderId=process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim();
-  if(!email||!privateKey||!rootFolderId)throw new Error("Google Drive no está configurado");
-  return{email,privateKey,rootFolderId};
+  if(!email||!privateKeyRaw||!rootFolderId)throw new Error("Google Drive no está configurado");
+  return{email,privateKey:normalizePrivateKey(privateKeyRaw),rootFolderId};
 }
 function b64url(value:string|Buffer){return Buffer.from(value).toString("base64url")}
 async function accessToken(){
