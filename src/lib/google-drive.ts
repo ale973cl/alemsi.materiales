@@ -1,68 +1,23 @@
 import "server-only";
-import {createPrivateKey,createSign} from "node:crypto";
 
-// La cuenta de servicio trabaja exclusivamente dentro de la carpeta raíz que
-// ALEMSI le comparte como Editor. El scope drive permite acceder a esa carpeta
-// compartida; drive.file puede no verla cuando fue creada por otro usuario.
-const DRIVE_SCOPE="https://www.googleapis.com/auth/drive";
 const TOKEN_URL="https://oauth2.googleapis.com/token";
 const DRIVE_FILES_URL="https://www.googleapis.com/drive/v3/files";
 const DRIVE_UPLOAD_URL="https://www.googleapis.com/upload/drive/v3/files";
 
-function normalizePrivateKey(raw:string){
-  let value=raw.trim();
-
-  // Acepta el JSON completo de Google, un string JSON o el valor aislado de
-  // private_key. Esto evita que las comillas/escapes copiados desde el JSON
-  // lleguen a OpenSSL como parte de la clave.
-  try{
-    const parsed=JSON.parse(value);
-    if(typeof parsed==="string")value=parsed;
-    else if(parsed&&typeof parsed.private_key==="string")value=parsed.private_key;
-  }catch{
-    const field=value.match(/["']?private_key["']?\s*:\s*("(?:\\.|[^"\\])*")\s*,?/);
-    if(field){
-      try{value=JSON.parse(field[1])}catch{value=field[1].slice(1,-1)}
-    }
-  }
-
-  value=value
-    .replace(/^["']|["'],?$/g,"")
-    .replace(/\\r\\n/g,"\n")
-    .replace(/\\n/g,"\n")
-    .replace(/\r\n?/g,"\n")
-    .trim();
-
-  if(!value.includes("-----BEGIN PRIVATE KEY-----")||!value.includes("-----END PRIVATE KEY-----")){
-    throw new Error("GOOGLE_DRIVE_PRIVATE_KEY no contiene una clave PEM válida");
-  }
-
-  try{
-    return createPrivateKey({key:value,format:"pem"});
-  }catch{
-    throw new Error("GOOGLE_DRIVE_PRIVATE_KEY tiene formato PEM inválido; vuelva a copiar private_key desde el JSON de Google Cloud");
-  }
-}
-
 function env(){
-  const email=process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL?.trim();
-  const privateKeyRaw=process.env.GOOGLE_DRIVE_PRIVATE_KEY;
+  const clientId=process.env.GOOGLE_DRIVE_OAUTH_CLIENT_ID?.trim();
+  const clientSecret=process.env.GOOGLE_DRIVE_OAUTH_CLIENT_SECRET?.trim();
+  const refreshToken=process.env.GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN?.trim();
   const rootFolderId=process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim();
-  if(!email||!privateKeyRaw||!rootFolderId)throw new Error("Google Drive no está configurado");
-  return{email,privateKey:normalizePrivateKey(privateKeyRaw),rootFolderId};
+  if(!clientId||!clientSecret||!refreshToken||!rootFolderId)throw new Error("Google Drive OAuth no está configurado");
+  return{clientId,clientSecret,refreshToken,rootFolderId};
 }
-function b64url(value:string|Buffer){return Buffer.from(value).toString("base64url")}
+
 async function accessToken(){
-  const {email,privateKey}=env(),now=Math.floor(Date.now()/1000);
-  const header=b64url(JSON.stringify({alg:"RS256",typ:"JWT"}));
-  const claims=b64url(JSON.stringify({iss:email,scope:DRIVE_SCOPE,aud:TOKEN_URL,iat:now,exp:now+3600}));
-  const unsigned=`${header}.${claims}`;
-  const signer=createSign("RSA-SHA256");signer.update(unsigned);signer.end();
-  const assertion=`${unsigned}.${b64url(signer.sign(privateKey))}`;
-  const body=new URLSearchParams({grant_type:"urn:ietf:params:oauth:grant-type:jwt-bearer",assertion});
-  const response=await fetch(TOKEN_URL,{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body,cache:"no-store"});
+  const {clientId,clientSecret,refreshToken}=env();
+  const response=await fetch(TOKEN_URL,{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:clientId,client_secret:clientSecret,refresh_token:refreshToken,grant_type:"refresh_token"}),cache:"no-store"});
   const data:any=await response.json();
-  if(!response.ok||!data.access_token)throw new Error(`Google Drive auth: ${data.error_description||data.error||response.status}`);
+  if(!response.ok||!data.access_token)throw new Error(`Google Drive OAuth: ${data.error_description||data.error||response.status}`);
   return String(data.access_token);
 }
 function q(value:string){return value.replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
@@ -86,12 +41,19 @@ async function ensureFolder(token:string,parentId:string,name:string){
   const response=await fetch(`${DRIVE_FILES_URL}?fields=id,name,webViewLink&supportsAllDrives=true`,{method:"POST",headers:{authorization:`Bearer ${token}`,"content-type":"application/json"},body:JSON.stringify({name,mimeType:"application/vnd.google-apps.folder",parents:[parentId]}),cache:"no-store"});
   const data:any=await response.json();if(!response.ok||!data.id)throw new Error(`Google Drive crear carpeta: ${data.error?.message||response.status}`);return String(data.id);
 }
-function safeName(value:string){return(value||"Sin nombre").replace(/[\\/:*?"<>|]/g,"-").replace(/\s+/g," ").trim().slice(0,120)||"Sin nombre"}
-export async function archiveGuidePdf(input:{pdf:Uint8Array|Buffer;filename:string;client:string;contract?:string|null;campaign?:string|null;year?:string|number|null}){
+function safeName(value:string,max=120){return(value||"Sin nombre").replace(/[\\/:*?"<>|]/g,"-").replace(/\s+/g," ").trim().slice(0,max)||"Sin nombre"}
+function monthName(value:Date){const name=new Intl.DateTimeFormat("es-CL",{month:"long",timeZone:"America/Santiago"}).format(value);return name.charAt(0).toUpperCase()+name.slice(1)}
+function archiveParts(input:{client:string;contract?:string|null;campaign?:string|null;region?:string|null;year?:string|number|null;archiveDate?:string|Date|null}){
+  const date=input.archiveDate?new Date(input.archiveDate):new Date();
+  const safeDate=Number.isNaN(date.getTime())?new Date():date;
+  const regionCampaign=[input.region,input.campaign].filter(Boolean).join(" - ")||"Sin región - Sin campaña";
+  return[safeName(input.client,80),safeName(input.contract||"Sin contrato",80),safeName(String(input.year||safeDate.getFullYear()),20),safeName(regionCampaign,100),safeName(`${monthName(safeDate)} - Guías`,40)];
+}
+export async function archiveGuidePdf(input:{pdf:Uint8Array|Buffer;filename:string;client:string;contract?:string|null;campaign?:string|null;region?:string|null;year?:string|number|null;archiveDate?:string|Date|null}){
   const {rootFolderId}=env(),token=await accessToken();
   await assertRootAccess(token,rootFolderId);
   let parent=rootFolderId;
-  for(const part of [safeName(input.client),safeName(input.contract||"Sin contrato"),safeName(String(input.year||new Date().getFullYear())),safeName(input.campaign||"Sin campaña"),"Guías"]){parent=await ensureFolder(token,parent,part)}
+  for(const part of archiveParts(input)){parent=await ensureFolder(token,parent,part)}
   const boundary=`alemsi_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   const metadata=JSON.stringify({name:safeName(input.filename),parents:[parent]});
   const prefix=Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/pdf\r\n\r\n`);
