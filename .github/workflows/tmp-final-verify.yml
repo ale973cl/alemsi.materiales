@@ -1,0 +1,22 @@
+name: tmp final verify
+
+on:
+  push:
+    branches:
+      - tmp/final-verify
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install clean
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Build
+        run: npm run build
+      - name: TypeScript
+        run: npx tsc --noEmit
