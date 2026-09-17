@@ -1,0 +1,26 @@
+name: tmp lock sync
+
+on:
+  push:
+    branches:
+      - tmp/lock-sync-run
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: npm install
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: verify clean npm ci
+        run: |
+          rm -rf node_modules
+          npm ci --ignore-scripts --no-audit --no-fund
+      - name: upload lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: synced-lock
+          path: package-lock.json
