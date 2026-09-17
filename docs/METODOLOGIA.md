@@ -24,12 +24,13 @@ Documento de consulta rápida. El estado puntual vive en `/STATE.md`; las decisi
 `Perfil de materiales → Campaña → Toma/Levantamiento → Carencia → Consolidado → Abastecimiento → OC → Recepción/Factura → Inventario → Despacho → Guía → Entrega → Pendientes → Histórico/Costos → Finanzas/Reportes`
 
 ## 4. Roles y pestañas
-Fuente de permisos vigente: `visibleModules()` / `roleModules` del código actual. Todo cambio debe validarse contra los 6 roles.
+Fuente de permisos vigente: `visibleModules()` / `roleModules` del código actual. Todo cambio debe validarse contra los 7 roles.
 
 - **Admin Total:** todos los módulos, incluido Respaldos.
 - **Gerencia:** Inicio · Clientes/Contratos · Maestro · Cotejo/Diferencias · Consolidado/Abastecimiento · Kits · OC · Pendientes · Histórico/Costos.
 - **Admin:** todos los módulos operativos y administrativos salvo Respaldos.
 - **Finanzas:** Inicio · OC · Ingreso Mercadería · Pendientes · Histórico/Costos.
+- **Operaciones:** Inicio · Campañas · Levantamientos · Abastecimiento · Órdenes de compra · Recepción · Inventario · Guías/despacho/entregas.
 - **Bodega:** Inicio · Ingreso Mercadería · Guías/Despachos · Pendientes · Histórico/Costos.
 - **Supervisora:** Inicio · Levantamiento · Cotejo/Diferencias · Pendientes · Histórico/Costos.
 

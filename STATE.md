@@ -3,22 +3,21 @@
 
 ## Estado actual
 - **Rama activa:** `integracion/limpieza-en-finanzas`
-- **Último commit:** `HEAD` — `docs: corregir regla de bloqueo de campaña en METODOLOGIA (sin concepto de ciclo)`.
+- **Último commit:** `HEAD` — `docs: documentar rol Operaciones en METODOLOGIA`.
 - **Preview desplegado:** `https://alemsi-materiales-git-integracion-limpieza-en-finanzas-alemsi.vercel.app`
 - **Fecha de última actualización:** 2026-09-17
 
 ## Última tarea completada
-- **Qué se hizo:** Se corrigió `docs/METODOLOGIA.md` para establecer la regla de negocio real: una instalación con cualquier campaña en estado `Abierta` no puede agregarse a otra, sin concepto de ciclo; una entrega excepcional se resuelve con guía independiente. No se modificó la validación de campañas.
+- **Qué se hizo:** Se documentó `Operaciones` como séptimo rol oficial en `docs/METODOLOGIA.md`, con Inicio, Campañas, Levantamientos, Abastecimiento, Órdenes de compra, Recepción, Inventario y Guías/despacho/entregas. No se modificó la lógica de permisos.
 - **Archivos tocados:** `docs/METODOLOGIA.md`, `STATE.md`.
-- **Cómo se probó:** Revisión documental contra la lógica ya auditada del servidor y la interfaz; no hubo cambio de comportamiento.
+- **Cómo se probó:** Revisión documental contra `roleModules` y la decisión de cierre; la conexión física de la pestaña Inventario queda para la Tarea 4.
 - **Build y tsc:** Build ✅ / `npx tsc --noEmit` ✅ de la validación previa; verificación final completa pendiente de Tarea 7.
 
 ## Siguiente paso
-- Tarea 3: documentar `Operaciones` como séptimo rol oficial en `docs/METODOLOGIA.md`, sin alterar permisos.
+- Tarea 4: conectar `InventoryModule.tsx` como pestaña propia `Inventario` para Admin Total, Gerencia, Bodega y Operaciones, separada de Recepción.
 
 ## Pendientes conocidos
 - [ ] Fusionar `integracion/limpieza-en-finanzas` hacia `feat/finanzas-ui-desde-estable` solo después de la revisión manual final; no fusionar automáticamente.
-- [ ] Documentar `Operaciones` como séptimo rol oficial; actualmente no tiene usuarios asignados en Supabase.
 - [ ] Conectar `InventoryModule.tsx` como pestaña propia `Inventario` para Admin Total, Gerencia, Bodega y Operaciones.
 - [ ] Validar de extremo a extremo los 7 roles y sus pestañas para confirmar que ninguna ruta autorizada cae en pantalla genérica.
 - [ ] Revalidar despacho completo, especialmente entrega parcial → pendiente → guía con cantidades realmente entregadas, firma/recepción y comportamiento móvil.
