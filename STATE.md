@@ -3,22 +3,22 @@
 
 ## Estado actual
 - **Rama activa:** `fix/login-correo-o-perfil`
-- **Último commit:** `HEAD` — `fix: presentar ALEMSI Materiales como ERP en enlaces compartidos`.
+- **Último commit:** `HEAD` — `fix: unificar acceso dinámico por correo o perfil`.
 - **Preview desplegado:** pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-17
 
 ## Última tarea completada
-- **Qué se hizo:** Se eliminó la descripción pública `Demo editable de control de materiales` de los metadatos raíz. El sitio se identifica ahora como `ALEMSI Materiales`, con descripción institucional de ERP de gestión de materiales y abastecimiento. Se agregaron metadatos Open Graph y Twitter para mejorar la vista previa al compartir enlaces por WhatsApp y otras aplicaciones. No se modificó autenticación, Supabase, roles ni lógica operacional.
-- **Archivos tocados:** `src/app/layout.tsx`, `STATE.md`.
-- **Cómo se probó:** revisión estructural del metadata de Next.js; la vista previa real de WhatsApp debe validarse una vez desplegada la rama porque WhatsApp puede conservar caché de enlaces anteriores.
+- **Qué se hizo:** Se reemplazó el alias Gerencia dependiente de una variable de entorno por resolución dinámica de los 7 roles oficiales: Admin Total, Gerencia, Admin, Finanzas, Operaciones, Bodega y Supervisora. El servidor consulta `user_profiles` con la clave privada ya existente, considera solo usuarios activos y usa el correo real para autenticar con Supabase Auth. El alias funciona únicamente cuando hay exactamente un usuario activo en el rol; si hay más de uno, exige correo individual para preservar trazabilidad. El acceso directo por correo se mantiene sin cambios.
+- **Archivos tocados:** `src/app/login/actions.ts`, `src/app/login/page.tsx`, `STATE.md`.
+- **Cómo se probó:** revisión estructural: no hay correos hardcodeados ni variables por usuario; la clave privada permanece solo en servidor; el flujo final continúa usando `signInWithPassword` de Supabase Auth. Prueba funcional en Preview pendiente.
 - **Build y tsc:** pendientes del deployment/CI de esta rama.
 
 ## Siguiente paso
-- Configurar en Vercel `LOGIN_GERENCIA_EMAIL` con el correo real de la única cuenta que representará el acceso simplificado Gerencia para Preview y Production. Desplegar esta rama y probar: `gerencia` + contraseña, correo + contraseña, contraseña incorrecta, Admin Total y vista previa del enlace compartido. Solo después promover los commits validados a Production.
+- Desplegar Preview y probar: correo normal; alias de un rol con un único usuario activo; contraseña incorrecta; rol inexistente; y comportamiento de un rol con más de un usuario activo. Validar además la vista previa compartida como `ALEMSI Materiales`. Solo después promover los cambios validados a Production.
 
 ## Pendientes conocidos
-- [ ] Validar LOGIN-01 en Preview y promover únicamente después de las cuatro pruebas de autenticación.
-- [ ] Validar en WhatsApp que el enlace desplegado muestre `ALEMSI Materiales` y no `Demo editable`; si WhatsApp conserva la vista anterior, probar con URL nueva o esperar actualización de caché.
+- [ ] Validar LOGIN-01 dinámico en Preview antes de Production.
+- [ ] Validar en WhatsApp que el enlace desplegado muestre `ALEMSI Materiales` y no `Demo editable`; WhatsApp puede conservar caché de enlaces anteriores.
 - [ ] Corregir el generador de links de conteo para usar el dominio estable de Production y no el hostname temporal del deployment.
 - [ ] Revisar `PDI Angol · Cuartel 2`: el token público abre correctamente pero no encuentra materiales autorizados; comprobar primero el perfil de materiales de la instalación.
 - [ ] Revisar Finanzas por perfil: navegación compacta, resumen/prefiltros dinámicos, facturas/pagos y OC comprometidas sin inventar estados financieros inexistentes.
@@ -35,5 +35,5 @@
 5. **Despacho:** preparar → tránsito → entrega → parcial genera saldo/complementaria → guía refleja entregado.
 6. **Respaldos:** solo Admin Total; ZIP CSV/JSON mediante claves seguras de servidor.
 7. **Roles y navegación:** 7 roles oficiales; cada uno ve solo sus módulos autorizados.
-8. **Login:** correo sigue funcionando; alias `gerencia` solo resuelve la cuenta configurada y nunca sustituye Supabase Auth.
+8. **Login:** correo funciona siempre; alias de rol se resuelve dinámicamente solo con exactamente un usuario activo y nunca sustituye Supabase Auth.
 9. **Enlaces compartidos:** metadata público identifica el sistema como `ALEMSI Materiales`, ERP de gestión de materiales y abastecimiento; no debe presentarse como demo.
