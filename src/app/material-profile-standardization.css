@@ -21,5 +21,12 @@
 .profileSaveBar button:first-of-type{background:#edf5f6!important;color:var(--navy)!important;border:1px solid #d7e5e9!important}
 .contractTitle>.contractActions{flex-wrap:wrap;justify-content:flex-end}
 .contractTitle>.contractActions button{min-width:118px}
+
+/* Regla integral de vistas: una actividad principal por pantalla.
+   Al abrir Nueva campaña, la lista de campañas existentes no continúa debajo. */
+.campaignModule:has(>form.campaignForm)>.campaignList{display:none!important}
+.campaignModule:has(>form.campaignForm)>.campaignLegend{margin-bottom:10px}
+.campaignModule:has(>form.campaignForm)>form.campaignForm{margin-top:12px}
+
 @media(max-width:900px){.profileToolbarStandard{grid-template-columns:1fr!important}.profileToolbarActions{display:grid;grid-template-columns:1fr 1fr}.profileToolbarActions button{width:100%;min-width:0}.profileSaveBar{bottom:6px}}
 @media(max-width:560px){.profileToolbarActions{grid-template-columns:1fr}.profileSaveBar{display:grid;grid-template-columns:1fr 1fr}.profileSaveBar span{grid-column:1/-1;margin:0}.profileSaveBar button{width:100%;min-width:0}}
