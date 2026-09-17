@@ -3,26 +3,28 @@
 
 ## Estado actual
 - **Rama activa:** `integracion/limpieza-en-finanzas`
-- **Último commit:** `HEAD` — merge de `fix/conexion-y-limpieza-modulos` sobre la base `cd194b59a654e08a689faac87fa24a151651f63d`; el SHA final se verifica en GitHub al cerrar este mismo commit.
-- **Preview desplegado:** `https://alemsi-materiales-git-integracion-limpieza-en-finanzas-alemsi.vercel.app` — READY para el commit de integración.
+- **Último commit:** `ece56830fb95bb7aec21af9247b5c856de324811` — `ci: ejecutar typecheck real con entorno compatible` (HEAD verificado antes de este commit de actualización de STATE)
+- **Preview desplegado:** `https://alemsi-materiales-git-integracion-limpieza-en-finanzas-alemsi.vercel.app` — READY para la integración validada.
 - **Fecha de última actualización:** 2026-09-17
 
 ## Última tarea completada
-- **Qué se hizo:** Integración controlada de `fix/conexion-y-limpieza-modulos` en la línea de Finanzas; se restaura `middleware.ts`, se elimina `proxy.ts`, se conecta `BackupModule`, se retiran módulos legacy sin referencias nuevas detectadas y se unifica la clave privada de Supabase en `SUPABASE_SERVICE_ROLE_KEY`.
-- **Archivos tocados:** infraestructura de sesión/configuración, `src/components/OperationalApp.tsx`, conteo por token, documentación de auditoría, eliminación de archivos legacy y actualización de continuidad/decisiones.
-- **Cómo se probó:** Vercel ejecutó `npm run build` sobre la rama de integración y quedó READY; Next.js 15.5.25 completó su validación de tipos. Se auditó estructuralmente navegación de roles/Respaldos y los circuitos definidos en este STATE contra el código fusionado.
-- **Build y tsc:** Build ✅ / validación de tipos de Next ✅ / `npx tsc --noEmit` ⚠️ no ejecutado como comando separado porque los conectores disponibles no exponen una consola del checkout remoto.
+- **Qué se hizo:** Investigación de rol `Operaciones`, alcance real del concepto de ciclo, estado de `InventoryModule.tsx` y ejecución independiente real de `npx tsc --noEmit`; no se modificó lógica de negocio.
+- **Archivos tocados:** `STATE.md`; se creó temporalmente `.github/workflows/typecheck-integracion.yml` para ejecutar el typecheck real y se retira en este mismo cierre.
+- **Cómo se probó:** historial Git y archivos reales de la rama; consulta SQL directa a Supabase para roles y esquema; GitHub Actions ejecutó `npx tsc --noEmit` sobre `integracion/limpieza-en-finanzas`; Preview de Vercel continúa READY.
+- **Build y tsc:** `npm run build` ✅ (Vercel, Next.js 15.5.25) / `npx tsc --noEmit` ✅ (GitHub Actions, ejecución independiente real, exit 0)
 
 ## Siguiente paso
-- Revisar manualmente el Preview de `integracion/limpieza-en-finanzas` y, solo si la revisión es conforme, fusionar hacia `feat/finanzas-ui-desde-estable`.
+- Revisar manualmente los hallazgos pendientes y decidirlos antes de fusionar `integracion/limpieza-en-finanzas` hacia `feat/finanzas-ui-desde-estable`.
 
 ## Pendientes conocidos
-- [ ] Fusionar `integracion/limpieza-en-finanzas` hacia `feat/finanzas-ui-desde-estable` tras revisión manual.
-- [ ] Ejecutar `npx tsc --noEmit` de forma independiente en un checkout/CI con consola antes de promover la rama.
-- [ ] Validar de extremo a extremo los 6 roles y sus pestañas para confirmar que ninguna ruta autorizada cae en pantalla genérica.
+- [ ] Fusionar `integracion/limpieza-en-finanzas` hacia `feat/finanzas-ui-desde-estable` solo tras revisión manual y resolución de los hallazgos abiertos.
+- [ ] Definir el destino del rol `Operaciones`: el rol técnico fue introducido en `dd46e0f632443150434d7efbca2dfe6e779e0136`; hoy ve Inicio, Campañas, Levantamientos, Abastecimiento, OC, Recepción y Despacho; Supabase no tiene usuarios reales con ese rol.
+- [ ] Definir el concepto de `ciclo` de campaña: no existe columna/tabla `cycle`/`ciclo` ni discriminador de ciclo en la lógica; el bloqueo actual impide que una instalación participe en cualquier otra campaña `Abierta`.
+- [ ] Decidir la conexión de `InventoryModule.tsx`: fue creado en `e19b773d7a6e4443d1f223fbeb8c058c498d4fea`, contiene una vista funcional de stock/Kardex/conteo físico y no presenta TODO o funciones incompletas, pero actualmente no está importado/renderizado desde la navegación.
+- [ ] Sincronizar `package-lock.json` con `package.json`: el primer intento de CI con `npm ci` detectó que faltan `pdf-lib@1.17.1`, `@pdf-lib/standard-fonts@1.0.0`, `@pdf-lib/upng@1.0.1` y `tslib@1.14.1` en el lockfile. No se corrigió en esta tarea.
+- [ ] Validar de extremo a extremo los 6 roles oficiales y sus pestañas para confirmar que ninguna ruta autorizada cae en pantalla genérica.
 - [ ] Revalidar despacho completo, especialmente entrega parcial → pendiente → guía con cantidades realmente entregadas, firma/recepción y comportamiento móvil.
 - [ ] Probar manualmente Respaldos con Admin Total y la clave real antes de cerrar esa etapa.
-- [ ] Revisar `InventoryModule.tsx`, detectado como posible componente huérfano sin import real localizado en el árbol actual; no eliminar sin auditoría separada.
 
 ## Circuitos que deben seguir funcionando (probar tras cualquier cambio en estos módulos)
 1. Campaña: crear campaña → seleccionar instalaciones → verificar que una instalación ya en campaña activa aparezca bloqueada → cerrar campaña
