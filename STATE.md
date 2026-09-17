@@ -3,7 +3,7 @@
 
 ## Estado actual
 - **Rama activa:** `feat/finanzas-ui-desde-estable`
-- **Último commit:** `f9eb38171684ab8b8f8892d49171cb7bd90708d3` — `docs: establecer continuidad y metodologia del proyecto` (HEAD verificado antes de crear este STATE)
+- **Último commit:** `7152db3ac62bb1d2ea0594a7b7041b47a1abc9d7` — `docs: crear DECISIONES.md` (HEAD real verificado antes de este commit de sincronización)
 - **Preview desplegado:** `https://alemsi-materiales-git-feat-finanzas-ui-desde-estable-alemsi.vercel.app` — READY para `f9eb38171684ab8b8f8892d49171cb7bd90708d3`
 - **Fecha de última actualización:** 2026-09-17
 
@@ -14,7 +14,7 @@
 - **Build y tsc:** ❌ (Build de Vercel ✅; `npx tsc --noEmit` no fue verificado por separado en esta sesión)
 
 ## Siguiente paso
-- Completar la documentación permanente del proyecto en `docs/METODOLOGIA.md` y `docs/DECISIONES.md`, sin programar funcionalidad nueva.
+- Auditar el linaje y decidir si `feat/finanzas-ui-desde-estable` debe incorporar los arreglos de `fix/conexion-y-limpieza-modulos` antes de continuar con Finanzas.
 
 ## Pendientes conocidos
 - [ ] Validar de extremo a extremo los 6 roles y sus pestañas para confirmar que ninguna ruta autorizada cae en pantalla genérica.
