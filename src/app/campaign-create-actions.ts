@@ -42,23 +42,9 @@ export async function createRegionalCampaign(formData: FormData):Promise<Campaig
     return {ok:false,error:"Una o más instalaciones seleccionadas ya no están activas"};
   }
 
-  const clientIds = [...new Set(installations.map((item: any) => item.contracts?.client_id).filter(Boolean))];
-
-  // Regla de campaña: un cliente completo solo puede pertenecer a una campaña abierta.
-  // Se valida en servidor para evitar duplicidad aunque dos usuarios trabajen al mismo tiempo.
-  const { data: activeClientLinks, error: activeClientError } = await supabase
-    .from("campaign_installations")
-    .select("installation_id,campaigns!inner(id,label,status),installations!inner(id,contracts!inner(client_id))")
-    .eq("campaigns.status", "Abierta");
-  if (activeClientError) return {ok:false,error:activeClientError.message};
-
-  const occupiedClientIds = new Set((activeClientLinks||[]).map((item:any)=>item.installations?.contracts?.client_id).filter(Boolean));
-  const conflictingClientIds = clientIds.filter(id=>occupiedClientIds.has(id));
-  if (conflictingClientIds.length) {
-    return {ok:false,error:`${conflictingClientIds.length} cliente(s) ya pertenecen a una campaña activa. Debes cerrar esa campaña antes de incorporarlos a otra.`};
-  }
-
-  // Segunda protección por instalación para conservar la regla histórica del circuito.
+  // Regla única: la misma instalación no puede pertenecer simultáneamente a dos campañas abiertas.
+  // Un mismo cliente sí puede participar en varias campañas activas mediante instalaciones distintas,
+  // incluso en regiones o fechas operativas diferentes.
   const { data: occupied, error: occupiedError } = await supabase
     .from("campaign_installations")
     .select("installation_id,campaigns!inner(id,status)")
@@ -66,9 +52,10 @@ export async function createRegionalCampaign(formData: FormData):Promise<Campaig
     .eq("campaigns.status", "Abierta");
   if (occupiedError) return {ok:false,error:occupiedError.message};
   if (occupied?.length) {
-    return {ok:false,error:`${occupied.length} instalación(es) ya pertenecen a una campaña activa. Actualiza la pantalla y selecciona solo instalaciones disponibles.`};
+    return {ok:false,error:`${occupied.length} instalación(es) ya pertenecen a una campaña activa. Esa misma instalación no puede contarse en dos campañas simultáneamente.`};
   }
 
+  const clientIds = [...new Set(installations.map((item: any) => item.contracts?.client_id).filter(Boolean))];
   const regions = [...new Set(installations.map((item: any) => String(item.region || "Sin región").trim()))];
   const label = JSON.stringify({
     name,
