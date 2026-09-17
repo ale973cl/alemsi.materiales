@@ -3,21 +3,22 @@
 
 ## Estado actual
 - **Rama activa:** `fix/login-correo-o-perfil`
-- **Último commit:** `HEAD` — `fix: permitir acceso de Gerencia por perfil o correo`.
+- **Último commit:** `HEAD` — `fix: presentar ALEMSI Materiales como ERP en enlaces compartidos`.
 - **Preview desplegado:** pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-17
 
 ## Última tarea completada
-- **Qué se hizo:** Se mantuvo el acceso existente por correo y contraseña y se agregó `gerencia` como identificador simplificado. El alias se resuelve exclusivamente en servidor mediante `LOGIN_GERENCIA_EMAIL`; la contraseña sigue validándose con Supabase Auth y los permisos continúan saliendo del perfil real de Supabase. No se agregó autenticación paralela ni selector manual de rol.
-- **Archivos tocados:** `src/app/login/actions.ts`, `src/app/login/page.tsx`, `STATE.md`.
-- **Cómo se probó:** revisión estructural del flujo: correo → Supabase Auth sin cambio; `gerencia` → variable segura de servidor → correo real → Supabase Auth. Prueba funcional en Preview pendiente de configurar `LOGIN_GERENCIA_EMAIL`.
+- **Qué se hizo:** Se eliminó la descripción pública `Demo editable de control de materiales` de los metadatos raíz. El sitio se identifica ahora como `ALEMSI Materiales`, con descripción institucional de ERP de gestión de materiales y abastecimiento. Se agregaron metadatos Open Graph y Twitter para mejorar la vista previa al compartir enlaces por WhatsApp y otras aplicaciones. No se modificó autenticación, Supabase, roles ni lógica operacional.
+- **Archivos tocados:** `src/app/layout.tsx`, `STATE.md`.
+- **Cómo se probó:** revisión estructural del metadata de Next.js; la vista previa real de WhatsApp debe validarse una vez desplegada la rama porque WhatsApp puede conservar caché de enlaces anteriores.
 - **Build y tsc:** pendientes del deployment/CI de esta rama.
 
 ## Siguiente paso
-- Configurar en Vercel `LOGIN_GERENCIA_EMAIL` con el correo real de la única cuenta que representará el acceso simplificado Gerencia, para Preview y Production. Probar en Preview: `gerencia` + contraseña, correo + contraseña, contraseña incorrecta y acceso Admin Total. Solo después promover este commit a Production.
+- Configurar en Vercel `LOGIN_GERENCIA_EMAIL` con el correo real de la única cuenta que representará el acceso simplificado Gerencia para Preview y Production. Desplegar esta rama y probar: `gerencia` + contraseña, correo + contraseña, contraseña incorrecta, Admin Total y vista previa del enlace compartido. Solo después promover los commits validados a Production.
 
 ## Pendientes conocidos
 - [ ] Validar LOGIN-01 en Preview y promover únicamente después de las cuatro pruebas de autenticación.
+- [ ] Validar en WhatsApp que el enlace desplegado muestre `ALEMSI Materiales` y no `Demo editable`; si WhatsApp conserva la vista anterior, probar con URL nueva o esperar actualización de caché.
 - [ ] Corregir el generador de links de conteo para usar el dominio estable de Production y no el hostname temporal del deployment.
 - [ ] Revisar `PDI Angol · Cuartel 2`: el token público abre correctamente pero no encuentra materiales autorizados; comprobar primero el perfil de materiales de la instalación.
 - [ ] Revisar Finanzas por perfil: navegación compacta, resumen/prefiltros dinámicos, facturas/pagos y OC comprometidas sin inventar estados financieros inexistentes.
@@ -35,3 +36,4 @@
 6. **Respaldos:** solo Admin Total; ZIP CSV/JSON mediante claves seguras de servidor.
 7. **Roles y navegación:** 7 roles oficiales; cada uno ve solo sus módulos autorizados.
 8. **Login:** correo sigue funcionando; alias `gerencia` solo resuelve la cuenta configurada y nunca sustituye Supabase Auth.
+9. **Enlaces compartidos:** metadata público identifica el sistema como `ALEMSI Materiales`, ERP de gestión de materiales y abastecimiento; no debe presentarse como demo.
