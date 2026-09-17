@@ -1,0 +1,51 @@
+name: tmp inventory connect
+
+on:
+  push:
+    branches:
+      - tmp/inventory-connect
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch OperationalApp
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/components/OperationalApp.tsx')
+          s=p.read_text()
+          old='import BackupModule from "@/components/modules/BackupModule";'
+          new=old+'\nimport InventoryModule from "@/components/modules/InventoryModule";'
+          if old not in s: raise SystemExit('import anchor not found')
+          s=s.replace(old,new,1)
+          old='const roleModules:Record<string,string[]>={"Admin Total":["inicio","maestros","campañas","levantamientos","abastecimiento","oc","finanzas","recepcion","despacho","auditoria","respaldos"],"Gerencia":["inicio","maestros","campañas","levantamientos","abastecimiento","oc","finanzas","recepcion","despacho","auditoria"],"Admin":["inicio","maestros","campañas","levantamientos","abastecimiento","oc","recepcion","despacho"],"Finanzas":["finanzas"],"Operaciones":["inicio","campañas","levantamientos","abastecimiento","oc","recepcion","despacho"],"Bodega":["inicio","recepcion","despacho"],"Supervisora":["inicio","levantamientos","abastecimiento","recepcion","despacho"]};'
+          new='const roleModules:Record<string,string[]>={"Admin Total":["inicio","maestros","campañas","levantamientos","abastecimiento","oc","finanzas","recepcion","inventario","despacho","auditoria","respaldos"],"Gerencia":["inicio","maestros","campañas","levantamientos","abastecimiento","oc","finanzas","recepcion","inventario","despacho","auditoria"],"Admin":["inicio","maestros","campañas","levantamientos","abastecimiento","oc","recepcion","despacho"],"Finanzas":["finanzas"],"Operaciones":["inicio","campañas","levantamientos","abastecimiento","oc","recepcion","inventario","despacho"],"Bodega":["inicio","recepcion","inventario","despacho"],"Supervisora":["inicio","levantamientos","abastecimiento","recepcion","despacho"]};'
+          if old not in s: raise SystemExit('roleModules anchor not found')
+          s=s.replace(old,new,1)
+          old='const labels:Record<string,string>={inicio:"Inicio",maestros:"Maestros",campañas:"Campañas",levantamientos:"Levantamientos",abastecimiento:"Necesidades y abastecimiento",oc:"Órdenes de compra",finanzas:"Finanzas",recepcion:"Recepción e inventario",despacho:"Guías, despacho y entregas",auditoria:"Auditoría",respaldos:"Respaldos"};'
+          new='const labels:Record<string,string>={inicio:"Inicio",maestros:"Maestros",campañas:"Campañas",levantamientos:"Levantamientos",abastecimiento:"Necesidades y abastecimiento",oc:"Órdenes de compra",finanzas:"Finanzas",recepcion:"Recepción",inventario:"Inventario",despacho:"Guías, despacho y entregas",auditoria:"Auditoría",respaldos:"Respaldos"};'
+          if old not in s: raise SystemExit('labels anchor not found')
+          s=s.replace(old,new,1)
+          old='{tab==="recepcion"&&<ConnectedReceiptModule role={profile.role}/>} {tab==="despacho"&&<DispatchDeliveryModule'
+          new='{tab==="recepcion"&&<ConnectedReceiptModule role={profile.role}/>} {tab==="inventario"&&<InventoryModule role={profile.role}/>} {tab==="despacho"&&<DispatchDeliveryModule'
+          if old not in s: raise SystemExit('render anchor not found')
+          s=s.replace(old,new,1)
+          old="!['inicio','maestros','campañas','levantamientos','abastecimiento','oc','finanzas','recepcion','despacho','auditoria','respaldos'].includes(tab)"
+          new="!['inicio','maestros','campañas','levantamientos','abastecimiento','oc','finanzas','recepcion','inventario','despacho','auditoria','respaldos'].includes(tab)"
+          if old not in s: raise SystemExit('fallback anchor not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+      - name: Commit patched file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/OperationalApp.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "tmp: conectar inventario [skip ci]"
+          git push
