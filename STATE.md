@@ -3,22 +3,21 @@
 
 ## Estado actual
 - **Rama activa:** `integracion/limpieza-en-finanzas`
-- **Último commit:** `HEAD` — `feat: conectar InventoryModule como pestaña Inventario`.
+- **Último commit:** `HEAD` — `docs: registrar decisiones de cierre de integración`.
 - **Preview desplegado:** `https://alemsi-materiales-git-integracion-limpieza-en-finanzas-alemsi.vercel.app`
 - **Fecha de última actualización:** 2026-09-17
 
 ## Última tarea completada
-- **Qué se hizo:** Se conectó `InventoryModule.tsx` como pestaña independiente `Inventario`, separada de `Recepción`. Es visible para Admin Total, Gerencia, Bodega y Operaciones. La etiqueta combinada `Recepción e inventario` se separó en `Recepción` e `Inventario`; no se alteró el componente de Recepción ni la lógica interna de Inventario.
-- **Archivos tocados:** `src/components/OperationalApp.tsx`, `STATE.md`.
-- **Cómo se probó:** Auditoría de navegación: `InventoryModule` se importa y renderiza en `tab === "inventario"`; `roleModules` incluye `inventario` solo para Admin Total, Gerencia, Operaciones y Bodega; la pantalla genérica excluye el tab nuevo.
+- **Qué se hizo:** Se agregaron a `docs/DECISIONES.md` tres decisiones de cierre: bloqueo de campaña sin concepto de ciclo, `Operaciones` como séptimo rol oficial y conexión de `InventoryModule.tsx` como pestaña independiente `Inventario`.
+- **Archivos tocados:** `docs/DECISIONES.md`, `STATE.md`.
+- **Cómo se probó:** Revisión de consistencia contra `docs/METODOLOGIA.md` y `src/components/OperationalApp.tsx` actuales.
 - **Build y tsc:** Verificación final real pendiente de Tarea 7.
 
 ## Siguiente paso
-- Tarea 5: registrar en `docs/DECISIONES.md` las decisiones de campaña, rol Operaciones e Inventario.
+- Tarea 6: anotar el pendiente de guía excepcional sin investigarlo ni construirlo.
 
 ## Pendientes conocidos
 - [ ] Fusionar `integracion/limpieza-en-finanzas` hacia `feat/finanzas-ui-desde-estable` solo después de la revisión manual final; no fusionar automáticamente.
-- [ ] Registrar las decisiones de cierre en `docs/DECISIONES.md`.
 - [ ] Validar de extremo a extremo los 7 roles y sus pestañas para confirmar que ninguna ruta autorizada cae en pantalla genérica.
 - [ ] Revalidar despacho completo, especialmente entrega parcial → pendiente → guía con cantidades realmente entregadas, firma/recepción y comportamiento móvil.
 - [ ] Probar manualmente Respaldos con Admin Total y la clave real antes de cerrar esa etapa.
