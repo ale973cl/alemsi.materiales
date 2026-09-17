@@ -15,7 +15,7 @@ Documento de consulta rápida. El estado puntual vive en `/STATE.md`; las decisi
 - **Límite duro:** no permitir solicitar más que la carencia calculada.
 - **Presupuesto:** control gerencial; estados Dentro de presupuesto / Cerca del límite / Sobre presupuesto / Presupuesto no configurado.
 - **Presupuesto excedido:** ALERTA, nunca bloqueo de campaña, abastecimiento u OC.
-- **Campañas:** una instalación no puede estar en dos campañas activas del mismo ciclo; bloquear en interfaz y revalidar en servidor antes de crear.
+- **Campañas:** mientras una instalación tenga una campaña en estado `Abierta`, no puede agregarse a ninguna otra campaña, sin importar el período. Se considera abastecida hasta que esa campaña se cierre. Una entrega excepcional dentro de ese período se resuelve con una guía de despacho independiente, no creando ni reabriendo una campaña para esa instalación. Bloquear en interfaz y revalidar en servidor antes de crear.
 - **Inventario:** existencia deriva de movimientos reales; todo ajuste debe quedar trazado.
 - **Entrega parcial:** genera pendiente; la guía debe reflejar solo lo realmente entregado.
 - **Datos reales:** no inventar clientes, contratos, instalaciones, materiales, precios, condiciones de pago ni relaciones.

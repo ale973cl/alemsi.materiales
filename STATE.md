@@ -3,22 +3,21 @@
 
 ## Estado actual
 - **Rama activa:** `integracion/limpieza-en-finanzas`
-- **Último commit:** `HEAD` — `fix: sincronizar package-lock.json con dependencias de pdf-lib`.
+- **Último commit:** `HEAD` — `docs: corregir regla de bloqueo de campaña en METODOLOGIA (sin concepto de ciclo)`.
 - **Preview desplegado:** `https://alemsi-materiales-git-integracion-limpieza-en-finanzas-alemsi.vercel.app`
 - **Fecha de última actualización:** 2026-09-17
 
 ## Última tarea completada
-- **Qué se hizo:** Se sincronizó `package-lock.json` con `package.json` mediante `npm install`, incorporando `pdf-lib@1.17.1` y sus dependencias `@pdf-lib/standard-fonts@1.0.0`, `@pdf-lib/upng@1.0.1` y `tslib@1.14.1`.
-- **Archivos tocados:** `package-lock.json`, `STATE.md`.
-- **Cómo se probó:** En runner limpio con Node 22 se ejecutó `npm install`, luego se eliminó `node_modules` y `npm ci --ignore-scripts --no-audit --no-fund` completó correctamente (`added 60 packages in 7s`).
-- **Build y tsc:** Build ✅ (validación previa de integración) / `npx tsc --noEmit` ✅ (validación previa independiente); verificación final completa pendiente de Tarea 7.
+- **Qué se hizo:** Se corrigió `docs/METODOLOGIA.md` para establecer la regla de negocio real: una instalación con cualquier campaña en estado `Abierta` no puede agregarse a otra, sin concepto de ciclo; una entrega excepcional se resuelve con guía independiente. No se modificó la validación de campañas.
+- **Archivos tocados:** `docs/METODOLOGIA.md`, `STATE.md`.
+- **Cómo se probó:** Revisión documental contra la lógica ya auditada del servidor y la interfaz; no hubo cambio de comportamiento.
+- **Build y tsc:** Build ✅ / `npx tsc --noEmit` ✅ de la validación previa; verificación final completa pendiente de Tarea 7.
 
 ## Siguiente paso
-- Tarea 2: corregir en `METODOLOGIA.md` la regla de bloqueo de campañas para eliminar el concepto de ciclo, sin modificar código de validación.
+- Tarea 3: documentar `Operaciones` como séptimo rol oficial en `docs/METODOLOGIA.md`, sin alterar permisos.
 
 ## Pendientes conocidos
 - [ ] Fusionar `integracion/limpieza-en-finanzas` hacia `feat/finanzas-ui-desde-estable` solo después de la revisión manual final; no fusionar automáticamente.
-- [ ] Formalizar en documentación la regla real de bloqueo de campañas: cualquier campaña `Abierta` bloquea a la instalación, sin concepto de ciclo.
 - [ ] Documentar `Operaciones` como séptimo rol oficial; actualmente no tiene usuarios asignados en Supabase.
 - [ ] Conectar `InventoryModule.tsx` como pestaña propia `Inventario` para Admin Total, Gerencia, Bodega y Operaciones.
 - [ ] Validar de extremo a extremo los 7 roles y sus pestañas para confirmar que ninguna ruta autorizada cae en pantalla genérica.
