@@ -1,62 +1,68 @@
 # METODOLOGÍA — ALEMSI Materiales
 
-Documento compacto de reglas permanentes. El estado puntual vive en `/STATE.md`; las decisiones históricas viven en `/docs/DECISIONES.md`.
+Documento de consulta rápida. El estado puntual vive en `/STATE.md`; las decisiones históricas se agregan en `/docs/DECISIONES.md`.
 
-## 1. Jerarquía funcional
-`Cliente → Contrato → Instalación → Materiales configurados`.
+## 1. Jerarquía
+`Cliente → Contrato → Instalación → Materiales`
 
-- Cliente: identidad legal; RUT prevalece sobre similitud de nombre.
-- Contrato: define marco económico/operativo.
-- Instalación: unidad física operativa del contrato; nombre solo no es identificador suficiente.
-- Materiales: catálogo maestro + configuración por instalación (cantidad, periodicidad, límite, excepción).
+- Un cliente puede tener varios contratos independientes.
+- Cada contrato tiene sus propias instalaciones, materiales, presupuesto y campañas.
+- No duplicar clientes por licitación/contrato.
+- La configuración de materiales por instalación define cantidades, periodicidad, límites y excepciones.
 
 ## 2. Reglas de negocio no negociables
-- **Carencia:** `máximo autorizado − remanente utilizable`; es límite duro. Nunca permitir solicitar sobre la carencia calculada.
-- **Presupuesto:** exceder presupuesto genera **alerta gerencial**, nunca bloqueo automático de abastecimiento/OC.
-- **Campañas:** una instalación no puede pertenecer a dos campañas activas al mismo tiempo.
-- **Inventario:** disponibilidad deriva de movimientos reales; no editar stock silenciosamente. Todo ajuste debe ser trazable.
-- **Entrega:** una entrega parcial genera saldo pendiente; la guía refleja solo lo efectivamente entregado.
-- **Datos:** no inventar clientes, contratos, instalaciones, precios, plazos de pago ni relaciones. Leer fuente real.
+- **Carencia:** `máximo autorizado − remanente físico`.
+- **Límite duro:** no permitir solicitar más que la carencia calculada.
+- **Presupuesto:** control gerencial; estados Dentro de presupuesto / Cerca del límite / Sobre presupuesto / Presupuesto no configurado.
+- **Presupuesto excedido:** ALERTA, nunca bloqueo de campaña, abastecimiento u OC.
+- **Campañas:** una instalación no puede estar en dos campañas activas del mismo ciclo; bloquear en interfaz y revalidar en servidor antes de crear.
+- **Inventario:** existencia deriva de movimientos reales; todo ajuste debe quedar trazado.
+- **Entrega parcial:** genera pendiente; la guía debe reflejar solo lo realmente entregado.
+- **Datos reales:** no inventar clientes, contratos, instalaciones, materiales, precios, condiciones de pago ni relaciones.
 
-## 3. Flujo operativo completo
-`Cliente/Contrato/Instalación → Configuración materiales → Campaña → Levantamiento/remanente → Carencia → Cotejo → Consolidado/Abastecimiento → OC → Recepción → Inventario → Guías/Despacho → Preparar → En tránsito → Entrega total/parcial → Pendientes → Histórico/Costos → Finanzas/Reportes`.
+## 3. Flujo operativo
+`Perfil de materiales → Campaña → Toma/Levantamiento → Carencia → Consolidado → Abastecimiento → OC → Recepción/Factura → Inventario → Despacho → Guía → Entrega → Pendientes → Histórico/Costos → Finanzas/Reportes`
 
-## 4. Roles y visibilidad actual
-Fuente vigente: `visibleModules()` en `src/lib/materiales-store.ts`.
+## 4. Roles y pestañas
+Fuente de permisos vigente: `visibleModules()` / `roleModules` del código actual. Todo cambio debe validarse contra los 6 roles.
 
-- **Supervisora:** Inicio · Levantamiento · Cotejo/Diferencias · Pendientes · Histórico/Costos.
+- **Admin Total:** todos los módulos, incluido Respaldos.
 - **Gerencia:** Inicio · Clientes/Contratos · Maestro · Cotejo/Diferencias · Consolidado/Abastecimiento · Kits · OC · Pendientes · Histórico/Costos.
+- **Admin:** todos los módulos operativos y administrativos salvo Respaldos.
 - **Finanzas:** Inicio · OC · Ingreso Mercadería · Pendientes · Histórico/Costos.
 - **Bodega:** Inicio · Ingreso Mercadería · Guías/Despachos · Pendientes · Histórico/Costos.
-- **Admin:** todos los módulos operativos y administrativos salvo Respaldos.
-- **Admin Total:** todos los módulos, incluido Respaldos.
+- **Supervisora:** Inicio · Levantamiento · Cotejo/Diferencias · Pendientes · Histórico/Costos.
 
-Si se cambia la matriz de permisos, actualizar este documento y probar los 6 roles en la misma tarea.
+Regla: cada rol ve solo sus pestañas autorizadas y ninguna ruta autorizada puede caer en pantalla genérica.
 
 ## 5. Lenguaje visual
-Base vigente en `src/app/globals.css`.
-
-- Azul marino corporativo: cabeceras, navegación y acciones principales (`#073b5c` / `#0b2740`).
-- Turquesa/verde ALEMSI: selección, progreso, estados activos y acentos (`#159a9c`, mint `#71d5ce`).
-- Fondo general claro (`#f3f7f8`); paneles/tarjetas blancas.
-- Peligro/error: rojo (`#b42318`).
-- Advertencia/pendiente: amarillo suave; éxito/confirmado: verde suave; información/activo: turquesa suave.
-- Radios: controles ~8–10 px; tarjetas/paneles ~12–14 px; pills/estados redondeados tipo cápsula.
-- Evitar fondo negro. Mantener legibilidad móvil y jerarquía sobria/técnica.
+- Texto principal: `#173650` / `#0b2f4a`.
+- Acento teal: `#5daea2` / `#79bdb1`.
+- Bordes: `#c8dce8`.
+- Fondo: blanco, con superficies claras.
+- Tarjetas: radio `12–14px`.
+- Botones/píldoras: radio `999px` cuando sean acciones o estados tipo cápsula.
+- Títulos y badges: peso `700–800`.
+- Estados: sin campaña = gris; en campaña = amarillo/naranjo; toma en proceso = azul; toma completada = turquesa/verde; parcial = combinado.
+- Mantener interfaz clara, pocos clics, textos en español simple y funcionamiento móvil.
 
 ## 6. Reglas de trabajo
 - Leer `STATE.md` antes de tocar código.
-- Verificar rama, HEAD y Preview; GitHub/Vercel ganan sobre memoria conversacional.
-- No reconstruir la aplicación ni reemplazar módulos completos para resolver cambios puntuales.
-- No duplicar botones, rutas, pantallas, fuentes de datos ni circuitos.
-- Leer archivo actual y SHA antes de modificarlo.
-- Un cambio mínimo y trazable por tarea.
-- **Un commit por tarea**; `STATE.md` se actualiza en ese mismo commit.
-- No tocar `main` ni Production salvo instrucción expresa.
-- Mantener Supabase como fuente real de negocio; evitar estados paralelos locales.
-- Probar circuito completo afectado, no solo el componente modificado.
-- Verificar móvil cuando la tarea toque UI.
-- Si build o tsc fallan, la tarea no se considera cerrada.
+- Verificar rama, último commit y Preview antes de modificar; GitHub/Vercel prevalecen sobre memoria conversacional.
+- No reconstruir la aplicación.
+- No reemplazar módulos completos para resolver cambios puntuales.
+- No duplicar botones, pantallas, rutas, consultas ni circuitos.
+- Leer el archivo actual y verificar su SHA antes de modificarlo.
+- No cambiar esquema de Supabase sin autorización explícita.
+- Supabase es la única fuente de datos de negocio.
+- Un commit por tarea.
+- `STATE.md` se actualiza en el MISMO commit que cualquier cambio de código.
+- No tocar `main`; el dueño revisa y fusiona.
+- Antes de borrar un archivo, buscar referencias reales relativas y por alias; si tiene referencias, no borrar.
+- Probar el circuito completo afectado y los roles relacionados.
+- Verificar móvil cuando la tarea toque interfaz.
+- Antes de cerrar: `npm run build` y `npx tsc --noEmit` deben pasar limpios.
+- Si código avanzó y `STATE.md` no, la tarea está incompleta.
 
-## 7. Criterio de cierre
-Una tarea termina cuando: cambio requerido funciona, persiste, deja el estado posterior correcto, no rompe circuitos relacionados, build/tsc pasan, Preview queda validado y `STATE.md` se actualiza en el mismo commit.
+## 7. Continuidad
+Cuando el usuario diga `seguimos` o `aplica la metodología maestra`, leer primero `STATE.md` y continuar desde su siguiente paso. Toda decisión técnica o de negocio nueva se agrega a `docs/DECISIONES.md` antes de cerrar la tarea.
