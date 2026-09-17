@@ -2,24 +2,27 @@
 <!-- Este archivo se actualiza en el MISMO commit que el cambio. Si el código avanzó y este archivo no, el commit está incompleto. -->
 
 ## Estado actual
-- **Rama activa:** `feat/finanzas-ui-desde-estable`
-- **Último commit:** `7152db3ac62bb1d2ea0594a7b7041b47a1abc9d7` — `docs: crear DECISIONES.md` (HEAD real verificado antes de este commit de sincronización)
-- **Preview desplegado:** `https://alemsi-materiales-git-feat-finanzas-ui-desde-estable-alemsi.vercel.app` — READY para `f9eb38171684ab8b8f8892d49171cb7bd90708d3`
+- **Rama activa:** `integracion/limpieza-en-finanzas`
+- **Último commit:** `HEAD` — merge de `fix/conexion-y-limpieza-modulos` sobre la base `cd194b59a654e08a689faac87fa24a151651f63d`; el SHA final se verifica en GitHub al cerrar este mismo commit.
+- **Preview desplegado:** `https://alemsi-materiales-git-integracion-limpieza-en-finanzas-alemsi.vercel.app` — READY para el commit de integración.
 - **Fecha de última actualización:** 2026-09-17
 
 ## Última tarea completada
-- **Qué se hizo:** Se estableció la estructura inicial de continuidad del proyecto; el último cambio funcional previo fue la vista de Inventario con stock, reservado, disponible, Kardex y ajuste trazable por conteo físico.
-- **Archivos tocados:** `STATE.md`; último cambio funcional previo en `src/components/modules/InventoryModule.tsx`.
-- **Cómo se probó:** GitHub y Vercel verificados; el Preview de la rama está READY para el HEAD previo `f9eb38171684ab8b8f8892d49171cb7bd90708d3`.
-- **Build y tsc:** ❌ (Build de Vercel ✅; `npx tsc --noEmit` no fue verificado por separado en esta sesión)
+- **Qué se hizo:** Integración controlada de `fix/conexion-y-limpieza-modulos` en la línea de Finanzas; se restaura `middleware.ts`, se elimina `proxy.ts`, se conecta `BackupModule`, se retiran módulos legacy sin referencias nuevas detectadas y se unifica la clave privada de Supabase en `SUPABASE_SERVICE_ROLE_KEY`.
+- **Archivos tocados:** infraestructura de sesión/configuración, `src/components/OperationalApp.tsx`, conteo por token, documentación de auditoría, eliminación de archivos legacy y actualización de continuidad/decisiones.
+- **Cómo se probó:** Vercel ejecutó `npm run build` sobre la rama de integración y quedó READY; Next.js 15.5.25 completó su validación de tipos. Se auditó estructuralmente navegación de roles/Respaldos y los circuitos definidos en este STATE contra el código fusionado.
+- **Build y tsc:** Build ✅ / validación de tipos de Next ✅ / `npx tsc --noEmit` ⚠️ no ejecutado como comando separado porque los conectores disponibles no exponen una consola del checkout remoto.
 
 ## Siguiente paso
-- Auditar el linaje y decidir si `feat/finanzas-ui-desde-estable` debe incorporar los arreglos de `fix/conexion-y-limpieza-modulos` antes de continuar con Finanzas.
+- Revisar manualmente el Preview de `integracion/limpieza-en-finanzas` y, solo si la revisión es conforme, fusionar hacia `feat/finanzas-ui-desde-estable`.
 
 ## Pendientes conocidos
+- [ ] Fusionar `integracion/limpieza-en-finanzas` hacia `feat/finanzas-ui-desde-estable` tras revisión manual.
+- [ ] Ejecutar `npx tsc --noEmit` de forma independiente en un checkout/CI con consola antes de promover la rama.
 - [ ] Validar de extremo a extremo los 6 roles y sus pestañas para confirmar que ninguna ruta autorizada cae en pantalla genérica.
 - [ ] Revalidar despacho completo, especialmente entrega parcial → pendiente → guía con cantidades realmente entregadas, firma/recepción y comportamiento móvil.
 - [ ] Probar manualmente Respaldos con Admin Total y la clave real antes de cerrar esa etapa.
+- [ ] Revisar `InventoryModule.tsx`, detectado como posible componente huérfano sin import real localizado en el árbol actual; no eliminar sin auditoría separada.
 
 ## Circuitos que deben seguir funcionando (probar tras cualquier cambio en estos módulos)
 1. Campaña: crear campaña → seleccionar instalaciones → verificar que una instalación ya en campaña activa aparezca bloqueada → cerrar campaña
