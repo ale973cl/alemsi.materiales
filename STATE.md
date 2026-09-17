@@ -3,22 +3,22 @@
 
 ## Estado actual
 - **Rama activa:** `integracion/limpieza-en-finanzas`
-- **Último commit:** `HEAD` — `docs: documentar rol Operaciones en METODOLOGIA`.
+- **Último commit:** `HEAD` — `feat: conectar InventoryModule como pestaña Inventario`.
 - **Preview desplegado:** `https://alemsi-materiales-git-integracion-limpieza-en-finanzas-alemsi.vercel.app`
 - **Fecha de última actualización:** 2026-09-17
 
 ## Última tarea completada
-- **Qué se hizo:** Se documentó `Operaciones` como séptimo rol oficial en `docs/METODOLOGIA.md`, con Inicio, Campañas, Levantamientos, Abastecimiento, Órdenes de compra, Recepción, Inventario y Guías/despacho/entregas. No se modificó la lógica de permisos.
-- **Archivos tocados:** `docs/METODOLOGIA.md`, `STATE.md`.
-- **Cómo se probó:** Revisión documental contra `roleModules` y la decisión de cierre; la conexión física de la pestaña Inventario queda para la Tarea 4.
-- **Build y tsc:** Build ✅ / `npx tsc --noEmit` ✅ de la validación previa; verificación final completa pendiente de Tarea 7.
+- **Qué se hizo:** Se conectó `InventoryModule.tsx` como pestaña independiente `Inventario`, separada de `Recepción`. Es visible para Admin Total, Gerencia, Bodega y Operaciones. La etiqueta combinada `Recepción e inventario` se separó en `Recepción` e `Inventario`; no se alteró el componente de Recepción ni la lógica interna de Inventario.
+- **Archivos tocados:** `src/components/OperationalApp.tsx`, `STATE.md`.
+- **Cómo se probó:** Auditoría de navegación: `InventoryModule` se importa y renderiza en `tab === "inventario"`; `roleModules` incluye `inventario` solo para Admin Total, Gerencia, Operaciones y Bodega; la pantalla genérica excluye el tab nuevo.
+- **Build y tsc:** Verificación final real pendiente de Tarea 7.
 
 ## Siguiente paso
-- Tarea 4: conectar `InventoryModule.tsx` como pestaña propia `Inventario` para Admin Total, Gerencia, Bodega y Operaciones, separada de Recepción.
+- Tarea 5: registrar en `docs/DECISIONES.md` las decisiones de campaña, rol Operaciones e Inventario.
 
 ## Pendientes conocidos
 - [ ] Fusionar `integracion/limpieza-en-finanzas` hacia `feat/finanzas-ui-desde-estable` solo después de la revisión manual final; no fusionar automáticamente.
-- [ ] Conectar `InventoryModule.tsx` como pestaña propia `Inventario` para Admin Total, Gerencia, Bodega y Operaciones.
+- [ ] Registrar las decisiones de cierre en `docs/DECISIONES.md`.
 - [ ] Validar de extremo a extremo los 7 roles y sus pestañas para confirmar que ninguna ruta autorizada cae en pantalla genérica.
 - [ ] Revalidar despacho completo, especialmente entrega parcial → pendiente → guía con cantidades realmente entregadas, firma/recepción y comportamiento móvil.
 - [ ] Probar manualmente Respaldos con Admin Total y la clave real antes de cerrar esa etapa.
@@ -30,4 +30,4 @@
 4. Recepción: recibir contra OC → verificar que la diferencia quede registrada → que genere entrada de inventario
 5. Despacho: preparar → tránsito → completar entrega → entrega parcial genera pendiente → guía refleja lo realmente entregado
 6. Respaldos: Admin Total → descargar ZIP con clave real
-7. Roles: que cada uno de los 7 roles oficiales vea solo sus pestañas y ninguna caiga en pantalla genérica
+7. Roles y navegación: los 7 roles ven solo sus pestañas; Inventario aparece para Admin Total, Gerencia, Bodega y Operaciones y no cae en pantalla genérica
