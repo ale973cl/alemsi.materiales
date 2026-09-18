@@ -3,21 +3,21 @@
 
 ## Estado actual
 - **Rama activa:** `recovery/estable-login-9c0a88a`
-- **Último commit:** `HEAD` — `chore: fijar punto estable de recuperación`.
-- **Preview desplegado:** pendiente de Vercel.
+- **Último commit:** `HEAD` — `fix: permitir aproximación superior controlada en OC`.
+- **Preview desplegado:** recuperación conectada; nuevo Preview pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-18
 
 ## Última tarea completada
-- **Qué se hizo:** Se creó una rama limpia de recuperación exactamente desde el commit estable `9c0a88a45f645890a38c10b3cf33a804c55fedee` (`fix: unificar acceso dinámico por correo o perfil`). No se incorporaron los cambios posteriores de spinner ni responsive, porque los últimos Preview presentaron pérdida de carga de Campañas, OC y otros datos. Las ramas posteriores se conservan solo como referencia.
-- **Archivos tocados:** `STATE.md`.
-- **Cómo se probó:** se verificó en GitHub que el commit base existe y corresponde al login dinámico acordado como último punto conocido estable. La prueba funcional de conexión y carga de datos debe realizarse en el Preview de esta rama.
+- **Qué se hizo:** Se corrigió la incompatibilidad entre la aproximación de compra y la validación del servidor. La necesidad/carencia conserva su valor real decimal, pero la cantidad de OC para el saldo pendiente puede llegar como máximo a su entero superior (ceil). La interfaz propone ese entero al usar “Tomar todo pendiente”, restringe la cantidad a enteros y el servidor revalida el mismo máximo. No se modificó la fórmula de carencia ni el esquema de Supabase.
+- **Archivos tocados:** `src/app/supply-actions.ts`, `src/components/modules/ConsolidatedSupplyModule.tsx`, `STATE.md`.
+- **Cómo se probó:** se aisló en logs de Vercel el error real `La cantidad seleccionada supera el saldo pendiente (0.75)` (digest `3714015892`) en el Preview de recuperación. Validación funcional del nuevo commit pendiente de Preview.
 - **Build y tsc:** pendientes del deployment/CI de esta rama.
 
 ## Siguiente paso
-- Desplegar esta rama en Preview y validar primero la conexión funcional: iniciar sesión y comprobar que carguen Campañas, Levantamientos, OC, Recepción y Despacho. No reincorporar ninguna mejora posterior hasta que esta base quede validada.
+- Desplegar el nuevo commit en Preview y repetir la OC con necesidad `0,75`: debe proponer/aceptar `1`, crear el borrador sin error de Server Components y conservar `0,75` como necesidad original. Luego verificar que Campañas, Levantamientos, OC, Recepción y Despacho continúen cargando.
 
 ## Pendientes conocidos
-- [ ] Validar en Preview que la base `9c0a88a` vuelva a cargar datos reales desde Supabase.
+- [x] Validado que la rama de recuperación carga datos reales desde Supabase; el error observado provenía de la validación de cantidad OC.\n- [ ] Validar en Preview la aproximación OC `0,75 → 1` sin error de Server Components.
 - [ ] Reincorporar después, de forma aislada y validada, el spinner `Ingresando…` en escritorio y móvil.
 - [ ] Reincorporar después las mejoras responsive de Campañas, Clientes, detalle Cliente y Matriz Material × Instalación.
 - [ ] Eliminar el texto explicativo inferior de la Matriz cuando se retome su mejora.
@@ -32,7 +32,7 @@
 ## Circuitos que deben seguir funcionando
 1. **Campaña:** crear campaña → instalación en campaña `Abierta` queda bloqueada para otra → cierre libera instalación.
 2. **Levantamiento:** `carencia = máximo autorizado − remanente`, limitada a cero; no permitir necesidad superior a carencia.
-3. **Abastecimiento → OC:** cantidad no supera saldo pendiente; presupuesto excedido ALERTA pero NO bloquea.
+3. **Abastecimiento → OC:** necesidad original se conserva; la cantidad OC puede aproximarse hacia arriba hasta `ceil(saldo pendiente)`; presupuesto excedido ALERTA pero NO bloquea.
 4. **Recepción:** recibir contra OC → diferencias → cotejo financiero → movimientos positivos de inventario.
 5. **Despacho:** preparar → tránsito → entrega → parcial genera saldo/complementaria → guía refleja entregado.
 6. **Respaldos:** solo Admin Total; ZIP CSV/JSON mediante claves seguras de servidor.

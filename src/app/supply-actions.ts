@@ -16,6 +16,7 @@ async function supplyContext(){
 
 const totals=(net:number,vatRate=19)=>{const vat=Math.round(net*vatRate/100);return{net,vat,total:net+vat,vatRate}};
 const folioFromId=(id:string)=>`OC-${new Date().toISOString().slice(0,10).replaceAll("-","")}-${id.slice(0,6).toUpperCase()}`;
+const maxOrderQty=(pending:number)=>Math.ceil(Math.max(Number(pending||0),0));
 
 export async function createPurchaseOrderFromConsolidated(formData:FormData){
   const {supabase,user,profile}=await supplyContext();
@@ -56,7 +57,7 @@ export async function createPurchaseOrderFromConsolidated(formData:FormData){
   const orderedByMaterial=new Map<string,number>();
   if(orderIds.length){const {data:oldLines,error:oldLinesError}=await supabase.from("purchase_order_lines").select("material_id,ordered_qty").in("purchase_order_id",orderIds);if(oldLinesError)throw oldLinesError;for(const line of oldLines||[])if(line.material_id)orderedByMaterial.set(line.material_id,Number(orderedByMaterial.get(line.material_id)||0)+Number(line.ordered_qty||0))}
 
-  for(const item of chosen){const source=required.get(item.material_id);if(!source)throw new Error("Uno de los productos ya no tiene necesidad confirmada");const pending=Math.max(source.qty-Number(orderedByMaterial.get(item.material_id)||0),0);if(item.qty>pending)throw new Error(`La cantidad seleccionada supera el saldo pendiente (${pending})`)}
+  for(const item of chosen){const source=required.get(item.material_id);if(!source)throw new Error("Uno de los productos ya no tiene necesidad confirmada");const pending=Math.max(source.qty-Number(orderedByMaterial.get(item.material_id)||0),0);const allowed=maxOrderQty(pending);if(item.qty>allowed)throw new Error(`La cantidad seleccionada supera el máximo permitido para el saldo pendiente (${pending}; máximo OC ${allowed})`)}
 
   const {data:runLines,error:runLinesError}=await supabase.from("supply_lines").select("id,material_id,required_qty").eq("supply_run_id",run.id);
   if(runLinesError)throw runLinesError;
