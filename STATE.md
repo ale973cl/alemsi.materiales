@@ -14,11 +14,11 @@
 - **Build y tsc:** pendientes del deployment/CI de esta rama.
 
 ## Siguiente paso
-- Desplegar el nuevo commit en Preview y repetir la OC con necesidad `0,75`: debe proponer/aceptar `1`, crear el borrador sin error de Server Components y conservar `0,75` como necesidad original. Luego verificar que Campañas, Levantamientos, OC, Recepción y Despacho continúen cargando.
+- Validar en Preview Login y generación de OC en PC/móvil: el loader debe aparecer inmediatamente, bloquear doble clic y finalizar con la respuesta real. Repetir además OC `0,75 → 1`. Si queda estable, extender el mismo componente a Guardar, Enviar, Confirmar, Cargar y Procesar sin modificar reglas de negocio.
 
 ## Pendientes conocidos
 - [x] Validado que la rama de recuperación carga datos reales desde Supabase; el error observado provenía de la validación de cantidad OC.\n- [ ] Validar en Preview la aproximación OC `0,75 → 1` sin error de Server Components.
-- [ ] Reincorporar después, de forma aislada y validada, el spinner `Ingresando…` en escritorio y móvil.
+- [x] Reincorporado `Ingresando…` y loader corporativo en Login y OC; pendiente validación en Preview PC/móvil.
 - [ ] Reincorporar después las mejoras responsive de Campañas, Clientes, detalle Cliente y Matriz Material × Instalación.
 - [ ] Eliminar el texto explicativo inferior de la Matriz cuando se retome su mejora.
 - [ ] Revalidar Supervisora únicamente sobre un Preview conectado y estable.

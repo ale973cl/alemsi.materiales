@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useState} from "react";
 import {useRouter} from "next/navigation";
 import {createFreePurchaseOrder,createPurchaseOrderFromConsolidated} from "@/app/supply-actions";
+import AlemsiActionButton from "@/components/ui/AlemsiActionButton";
 
 type Material={id?:string;name?:string|null;family?:string|null;presentation?:string|null;unit?:string|null;supplier_code?:string|null};
 type SurveyLine={id?:string;material_id:string;shortage_qty?:number|null;unit_net_price?:number|null;materials?:Material|null};
@@ -81,7 +82,7 @@ export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}
     <button type="button" className="linkBtn" onClick={()=>setFreeLines(current=>[...current,emptyFreeLine()])}>+ Agregar concepto</button>
     <div className="surveyCampaignFilters" style={{marginTop:12}}><label>Condiciones de la OC<textarea rows={3} value={conditions} onChange={e=>setConditions(e.target.value)}/></label><label>Observaciones<textarea rows={3} value={observations} onChange={e=>setObservations(e.target.value)}/></label></div>
     <div className="campaignMetrics" style={{marginTop:12}}><span><b>{money(freeNet)}</b><small>Neto</small></span><span><b>{money(freeVat)}</b><small>IVA 19%</small></span><span><b>{money(freeNet+freeVat)}</b><small>Total</small></span></div>
-    <div className="campaignCardHead" style={{marginTop:12}}><span><small>La OC queda disponible para revisión y posterior envío al proveedor.</small></span><button type="button" disabled={freeSaving} onClick={createFreeOrder}>{freeSaving?"Generando...":"Generar OC manual"}</button></div>
+    <div className="campaignCardHead" style={{marginTop:12}}><span><small>La OC queda disponible para revisión y posterior envío al proveedor.</small></span><AlemsiActionButton type="button" loading={freeSaving} loadingText="Generando OC…" onClick={createFreeOrder}>Generar OC manual</AlemsiActionButton></div>
     {freeMessage&&<p className="note"><b>{freeMessage}</b></p>}
    </section>
   </div>}
@@ -100,7 +101,7 @@ export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}
       {showInstallationDetail&&<div className="ocInstallationDetail">{installations.filter(x=>x.lines.length).map(group=><article className="campaignCard" key={group.installation_id}><div className="campaignCardHead"><span><b>{group.name}</b><small>{group.client} · {group.contract}{group.region?` · ${group.region}`:""}</small></span><strong>{group.lines.length} líneas</strong></div><div className="table">{group.lines.map((line:SurveyLine)=><div className="row" key={line.id||line.material_id}><span><b>{line.materials?.name||"Material"}</b><small>{line.materials?.family||"Sin familia"}</small></span><b>{Number(line.shortage_qty||0)}</b></div>)}</div></article>)}</div>}
       <label>Proveedor<select value={supplierId} onChange={e=>setSupplierId(e.target.value)}><option value="">Seleccionar proveedor para esta OC</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.legal_name}</option>)}</select></label>
       <div className="table" style={{marginTop:12}}>{visibleRows.map(row=>{const ordered=Number(orderedByMaterial.get(row.material_id)||0);const pending=Math.max(Number(row.qty||0)-ordered,0);return <div className="row" key={`oc-${row.material_id}`}><span><b>{row.material?.name||"Material"}</b><small>{familyName(row)} · Necesidad {row.qty} · Ya en OC {ordered} · Pendiente {pending}</small></span><label>Cantidad OC<input type="number" min="0" max={Math.ceil(pending)} step="1" value={quantities[row.material_id]??""} disabled={pending<=0} onChange={e=>setQuantities(current=>({...current,[row.material_id]:Number(e.target.value)}))}/></label><label>Precio neto<input type="number" min="0" step="any" value={prices[row.material_id]??row.unit_net_price??0} onChange={e=>setPrices(current=>({...current,[row.material_id]:Number(e.target.value)}))}/></label></div>})}</div>
-      <div className="campaignCardHead" style={{marginTop:12}}><span><small>Total neto de esta OC</small><b>{money(orderTotal)}</b></span><button type="button" disabled={saving} onClick={createOrder}>{saving?"Generando...":"Generar OC en borrador"}</button></div>
+      <div className="campaignCardHead" style={{marginTop:12}}><span><small>Total neto de esta OC</small><b>{money(orderTotal)}</b></span><AlemsiActionButton type="button" loading={saving} loadingText="Generando OC…" onClick={createOrder}>Generar OC en borrador</AlemsiActionButton></div>
       {message&&<p className="note"><b>{message}</b></p>}
      </>}
     </>}
