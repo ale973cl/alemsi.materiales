@@ -3,29 +3,29 @@
 
 ## Estado actual
 - **Rama activa:** `fix/campanas-mobile-ui`
-- **Último commit:** `HEAD` — `fix: estandarizar tarjetas de campañas en móvil`.
+- **Último commit:** `HEAD` — `fix: corregir responsive de campañas clientes y matriz`.
 - **Preview desplegado:** pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-18
 
 ## Última tarea completada
-- **Qué se hizo:** Se estandarizó únicamente la presentación compartida de las tarjetas de Campañas. Los botones Abrir campaña y Administrar campaña usan el mismo ancho y altura en móvil; las cuatro métricas conservan la cuadrícula 2×2 con altura, separación y alineación uniformes; se separó visualmente el número de su etiqueta. No se modificaron campañas, estados, permisos, datos ni acciones.
+- **Qué se hizo:** Se amplió la estandarización móvil solicitada sobre las vistas que presentaban cortes y superposiciones reales en Android. Campañas separa número y etiqueta sin sobrescritura; las tarjetas de Clientes reorganizan logo, nombre, estado, resumen y cantidad en bloques que no desbordan; el encabezado de cliente/contrato pasa a una composición vertical en móvil; y la Matriz Material × Instalación reduce la columna fija Material a 170 px en teléfono y mantiene columnas de instalación de 135 px dentro de un contenedor con desplazamiento horizontal real. La página queda contenida al ancho del teléfono y el desplazamiento lateral se reserva a la matriz.
 - **Archivos tocados:** `src/app/globals.css`, `STATE.md`.
-- **Cómo se probó:** revisión estructural del componente compartido `CampaignsModule`; la regla CSS aplica a la misma vista para todos los perfiles autorizados. Prueba visual en Preview pendiente.
+- **Cómo se probó:** revisión estructural contra `CampaignsModule`, `ClientsMasterView` y `ClientInstallationsModule`; no se modificaron componentes, acciones, datos, permisos ni reglas de negocio. Prueba visual en Preview Android y escritorio pendiente.
 - **Build y tsc:** pendientes del deployment/CI de esta rama.
 
 ## Siguiente paso
-- Validar en Preview las tarjetas de varias campañas en teléfono y escritorio, comprobando números de uno y dos dígitos, y confirmar que Abrir campaña y Administrar campaña mantengan dimensiones y separación consistentes.
+- Validar en Preview Android: (1) métricas de Campañas sin letras superpuestas; (2) tarjetas de Clientes y detalle Registro Civil completamente dentro de pantalla; (3) Matriz con columna Material visible y desplazamiento horizontal suficiente para recorrer todas las instalaciones. Revisar también escritorio antes de promover.
 
 ## Pendientes conocidos
-- [ ] Validar estandarización visual de Campañas en Preview móvil y escritorio.
-- [ ] Validar indicador de carga del login de la rama `fix/login-indicador-carga`; no mezclar ambas tareas.
+- [ ] Validar responsive de Campañas, Clientes, detalle Cliente y Matriz en Preview móvil y escritorio.
+- [ ] Validar indicador de carga del login de la rama `fix/login-indicador-carga`; no mezclar su promoción.
 - [ ] Validar en WhatsApp que el enlace desplegado muestre `ALEMSI Materiales` y no `Demo editable`.
-- [ ] Corregir el generador de links de conteo para usar el dominio estable de Production y no el hostname temporal del deployment.
-- [ ] Revisar `PDI Angol · Cuartel 2`: el token público abre correctamente pero no encuentra materiales autorizados.
-- [ ] Revisar Finanzas por perfil: navegación compacta, resumen/prefiltros dinámicos, facturas/pagos y OC comprometidas sin inventar estados financieros inexistentes.
-- [ ] Verificar si el sistema permite hoy crear una guía de despacho excepcional para una instalación que ya tiene campaña abierta.
-- [ ] Resolver/confirmar alcance operativo del rol `Operaciones` en acciones de Levantamientos y Abastecimiento/OC.
-- [ ] Confirmar alerta explícita de los cuatro estados presupuestarios en Abastecimiento → OC; presupuesto alerta y nunca bloquea.
+- [ ] Corregir el generador de links de conteo para usar el dominio estable de Production.
+- [ ] Revisar `PDI Angol · Cuartel 2`: token público abre pero no encuentra materiales autorizados.
+- [ ] Revisar Finanzas por perfil sin inventar estados financieros inexistentes.
+- [ ] Verificar guía de despacho excepcional para instalación con campaña abierta.
+- [ ] Resolver/confirmar alcance operativo del rol `Operaciones` en Levantamientos y Abastecimiento/OC.
+- [ ] Confirmar los cuatro estados presupuestarios en Abastecimiento → OC; presupuesto alerta y nunca bloquea.
 - [ ] Revalidar despacho completo manualmente, especialmente entrega parcial → pendiente → guía, firma/recepción y móvil.
 
 ## Circuitos que deben seguir funcionando
