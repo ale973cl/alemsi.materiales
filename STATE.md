@@ -2,22 +2,22 @@
 <!-- Este archivo se actualiza en el MISMO commit que el cambio. Si el código avanzó y este archivo no, el commit está incompleto. -->
 
 ## Estado actual
-- **Rama activa:** `fix/login-correo-o-perfil`
-- **Último commit:** `HEAD` — `fix: unificar acceso dinámico por correo o perfil`.
+- **Rama activa:** `fix/login-indicador-carga`
+- **Último commit:** `HEAD` — `fix: mostrar estado de carga al ingresar`.
 - **Preview desplegado:** pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-17
 
 ## Última tarea completada
-- **Qué se hizo:** Se reemplazó el alias Gerencia dependiente de una variable de entorno por resolución dinámica de los 7 roles oficiales: Admin Total, Gerencia, Admin, Finanzas, Operaciones, Bodega y Supervisora. El servidor consulta `user_profiles` con la clave privada ya existente, considera solo usuarios activos y usa el correo real para autenticar con Supabase Auth. El alias funciona únicamente cuando hay exactamente un usuario activo en el rol; si hay más de uno, exige correo individual para preservar trazabilidad. El acceso directo por correo se mantiene sin cambios.
-- **Archivos tocados:** `src/app/login/actions.ts`, `src/app/login/page.tsx`, `STATE.md`.
-- **Cómo se probó:** revisión estructural: no hay correos hardcodeados ni variables por usuario; la clave privada permanece solo en servidor; el flujo final continúa usando `signInWithPassword` de Supabase Auth. Prueba funcional en Preview pendiente.
+- **Qué se hizo:** Se cerró la promoción del login dinámico y metadata ERP a Production. Como mejora aislada de experiencia de usuario, el formulario de acceso ahora muestra un indicador animado y el texto `Ingresando…` mientras el servidor autentica y carga la aplicación; el botón queda temporalmente desactivado para evitar dobles envíos. No se modificó autenticación, roles, Supabase ni carga de datos.
+- **Archivos tocados:** `src/app/login/LoginForm.tsx`, `src/app/login/page.tsx`, `src/app/globals.css`, `STATE.md`.
+- **Cómo se probó:** revisión estructural del estado `pending` de Server Action mediante `useFormStatus`; prueba funcional en Preview pendiente.
 - **Build y tsc:** pendientes del deployment/CI de esta rama.
 
 ## Siguiente paso
-- Desplegar Preview y probar: correo normal; alias de un rol con un único usuario activo; contraseña incorrecta; rol inexistente; y comportamiento de un rol con más de un usuario activo. Validar además la vista previa compartida como `ALEMSI Materiales`. Solo después promover los cambios validados a Production.
+- Validar en Preview que al pulsar Ingresar aparezca inmediatamente el indicador, el botón quede bloqueado durante la espera y el login siga funcionando por correo y por alias de perfil. Después ejecutar/corroborar build y TypeScript antes de promover.
 
 ## Pendientes conocidos
-- [ ] Validar LOGIN-01 dinámico en Preview antes de Production.
+- [ ] Validar indicador de carga del login en Preview, escritorio y teléfono.
 - [ ] Validar en WhatsApp que el enlace desplegado muestre `ALEMSI Materiales` y no `Demo editable`; WhatsApp puede conservar caché de enlaces anteriores.
 - [ ] Corregir el generador de links de conteo para usar el dominio estable de Production y no el hostname temporal del deployment.
 - [ ] Revisar `PDI Angol · Cuartel 2`: el token público abre correctamente pero no encuentra materiales autorizados; comprobar primero el perfil de materiales de la instalación.
