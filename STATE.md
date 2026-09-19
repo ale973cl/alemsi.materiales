@@ -2,8 +2,8 @@
 <!-- Este archivo se actualiza en el MISMO commit que el cambio. Si el código avanzó y este archivo no, el commit está incompleto. -->
 
 ## Estado actual
-- **Rama activa:** `recovery/estable-login-9c0a88a`
-- **Último commit:** este commit — `fix: fijar dominio de conteo y reconciliar auditoría`.
+- **Rama activa:** `feat/carga-masiva-perfil-materiales`
+- **Último commit:** este commit — `feat: agregar carga masiva de materiales autorizados`.
 - **Preview desplegado:** el Preview anterior del commit `a449e6c` está READY; el Preview de este commit queda pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-19
 
