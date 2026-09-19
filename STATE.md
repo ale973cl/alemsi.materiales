@@ -3,18 +3,25 @@
 
 ## Estado actual
 - **Rama activa:** `recovery/estable-login-9c0a88a`
-- **Último commit:** este commit — `fix: corregir sintaxis del despliegue de rutas`.
+- **Último commit:** este commit — `docs: inventariar funciones y riesgos estructurales`.
 - **Preview desplegado:** el Preview anterior del commit `a449e6c` está READY; el Preview de este commit queda pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-19
 
 ## Última tarea completada
-- **Qué se hizo:** Se corrigió el flujo operativo de rutas sin cambiar esquema: loader ALEMSI en carga y acciones de rutas, prioridad visual de la ruta En tránsito, pestaña Rutas listas, cierre automático de ruta cuando todas sus guías terminan y revalidación servidor para impedir que una guía sea asociada a más de una ruta activa. También se incorporó loader corporativo a disponibilidad de guías, guardado de ruta, despacho extraordinario y registro de entrega.
-- **Archivos tocados:** `DeliveryRoutesModule.tsx`, `DispatchDeliveryModule.tsx`, `route-actions.ts`, `dispatch-actions.ts`, `DeliveryRegistrationModal.tsx`, `STATE.md`.
-- **Cómo se probó:** revisión estática del circuito ruta → preparación → tránsito → entrega → cierre y consulta de datos reales de prueba que confirmó asociaciones duplicadas históricas. Preview/build pendiente tras commit.
-- **Build y tsc:** se corrigieron separadores de línea literales que impedían compilar el commit anterior; nuevo deployment pendiente de validación.
+- **Qué se hizo:** Auditoría profunda inicial de arquitectura, funciones, seguridad, permisos, XYZ, logística y navegación. Se contrastó código vigente, documentación y esquema real de Supabase sin modificar datos ni esquema.
+- **Archivos tocados:** `docs/AUDITORIA_PROFUNDA_2026-09-19.md`, `STATE.md`.
+- **Cómo se probó:** inspección del árbol completo, Server Actions/API principales, módulos, roles y tablas reales de permisos/alcance en Supabase.
+- **Build y tsc:** no aplica cambio de código ejecutable; la auditoría es documental. El último build de código sigue sujeto a validación independiente.
 
 ## Siguiente paso
-- Validar el nuevo Preview en escritorio/notebook/móvil y continuar incrementalmente con navegación contextual módulo → sección → detalle → volver, sin duplicar módulos. Corregir primero los casos donde una acción abre contenido fuera del área visible. Después resolver el acceso de Supervisora a sus campañas/instalaciones y la lista visible de OC disponibles en Recepción.
+- Completar el inventario/auditoría profunda documentado en `docs/AUDITORIA_PROFUNDA_2026-09-19.md`: referencias legacy, XYZ restante, RLS/permisos y funciones por circuito. Luego cotejar utilidad/visualización, limpiar controladamente y recién después ordenar navegación contextual y matriz de permisos.
+
+## Auditoría estructural
+- [x] Creado inventario inicial de funciones, riesgos, permisos y navegación en `docs/AUDITORIA_PROFUNDA_2026-09-19.md`.
+- [ ] Completar búsqueda exhaustiva de referencias legacy antes de borrar archivos.
+- [ ] Auditar RLS contra permisos funcionales y alcances existentes.
+- [ ] Resolver contradicción Preview: `SUPABASE_SECRET_KEY` obsoleta y rol Operaciones ausente.
+- [ ] Cotejar función → rol → permiso → alcance → siguiente paso operativo antes del rediseño de navegación.
 
 ## Pendientes conocidos
 - [x] Validado que la rama de recuperación carga datos reales desde Supabase.
