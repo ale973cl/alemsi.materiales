@@ -27,3 +27,72 @@
 .alemsiRhombusTop{left:31%;top:1%;background:#4a90e2}.alemsiRhombusRight{right:1%;top:31%;background:#9bbbe1}.alemsiRhombusBottom{left:31%;bottom:1%;background:#0e385d}.alemsiRhombusLeft{left:1%;top:31%;background:#4ecdc4}
 .loginSubmit{width:100%;min-height:44px}
 @media(prefers-reduced-motion:reduce){.alemsiLoadingMark{animation-duration:3.2s}}
+
+
+/* ALEMSI · marco responsive operacional 2026-09-18
+   Mantiene los módulos existentes y prioriza el área útil en notebook, tablet y móvil. */
+.portalTop{height:76px;padding:6px clamp(14px,2vw,24px)}
+.portalTop img{width:190px;height:auto;max-height:64px}
+.portalBody{min-height:calc(100vh - 76px)}
+.portalBody>aside{padding:14px 10px;position:sticky;top:0;height:calc(100vh - 76px);overflow-y:auto}
+.productTitle{padding:8px 10px 12px}
+.nav{padding:9px 10px;margin:2px 0}
+.workspace{padding:clamp(14px,2vw,24px);max-width:1440px}
+.pageHead{margin-bottom:14px;min-height:42px}
+.pageHead h1{font-size:clamp(24px,2.2vw,30px)}
+.panel{padding:clamp(14px,1.8vw,20px)}
+.catalogIntro{gap:12px}
+.catalogIntro p{line-height:1.4}
+.surveyEditor,.receiptEditor,.actionCard,.newContractPanel{scroll-margin-top:92px}
+.note,[role="status"]{scroll-margin-top:92px}
+button,input,select,textarea{max-width:100%}
+
+@media(max-width:1180px){
+ .portalBody{grid-template-columns:220px minmax(0,1fr)}
+ .workspace{padding:18px}
+ .panel{padding:18px}
+ .cards{gap:10px}
+ .pageHead{margin-bottom:12px}
+ .catalogFilters{grid-template-columns:minmax(220px,2fr) minmax(150px,1fr) minmax(150px,1fr) auto}
+}
+
+@media(max-width:900px){
+ .portalTop{height:64px;padding:5px 12px;position:sticky;top:0;z-index:30}
+ .portalTop img{width:150px;max-height:54px}
+ .portalBody{display:block;min-height:calc(100vh - 64px)}
+ .portalBody>aside{display:flex;height:auto;overflow-x:auto;overflow-y:hidden;padding:6px 8px;position:sticky;top:64px;z-index:25;gap:4px;border-bottom:1px solid #244c64}
+ .productTitle{display:none}
+ .nav{flex:0 0 auto;white-space:nowrap;width:auto;padding:8px 10px;margin:0}
+ .workspace{padding:12px;max-width:none}
+ .pageHead{position:sticky;top:108px;z-index:20;background:var(--bg);padding:8px 2px;margin:0 0 10px}
+ .pageHead .eyebrow{display:none}
+ .pageHead h1{font-size:21px;margin:0}
+ .live{padding:6px 9px}
+ .panel{padding:14px;border-radius:12px}
+ .catalogIntro{align-items:flex-start}
+ .surveyEditor,.receiptEditor,.actionCard,.newContractPanel,.note,[role="status"]{scroll-margin-top:160px}
+}
+
+@media(max-width:600px){
+ .portalTop{height:58px}
+ .portalTop img{width:128px;max-height:48px}
+ .userBox{grid-template-columns:1fr auto;gap:1px 7px}
+ .userBox .rank{display:none}
+ .userBox strong{font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .userBox small{font-size:10px}
+ .linkBtn{padding:7px 8px;font-size:11px}
+ .portalBody{min-height:calc(100vh - 58px)}
+ .portalBody>aside{top:58px}
+ .workspace{padding:9px}
+ .pageHead{top:100px;padding:7px 1px}
+ .pageHead h1{font-size:19px}
+ .live{display:none}
+ .panel{padding:12px}
+ .catalogIntro h2{font-size:17px;margin-bottom:5px}
+ .catalogIntro p{font-size:12px}
+ .catalogCount{margin-top:8px}
+ .masterActions,.userHeaderActions,.focusActions,.newContractActions,.dispatchActions{align-items:stretch}
+ .masterActions>*{flex:1 1 100%}
+ .surveyInstallationCard button{justify-self:stretch;width:100%}
+ .surveyEditor,.receiptEditor,.actionCard,.newContractPanel,.note,[role="status"]{scroll-margin-top:145px}
+}

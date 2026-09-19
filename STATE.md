@@ -3,25 +3,30 @@
 
 ## Estado actual
 - **Rama activa:** `recovery/estable-login-9c0a88a`
-- **Último commit:** `HEAD` — `fix: permitir aproximación superior controlada en OC`.
-- **Preview desplegado:** recuperación conectada; nuevo Preview pendiente de Vercel.
+- **Último commit:** este commit — `fix: compactar marco responsive operacional`.
+- **Preview desplegado:** el Preview anterior del commit `a449e6c` está READY; el Preview de este commit queda pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-18
 
 ## Última tarea completada
-- **Qué se hizo:** Se corrigió la incompatibilidad entre la aproximación de compra y la validación del servidor. La necesidad/carencia conserva su valor real decimal, pero la cantidad de OC para el saldo pendiente puede llegar como máximo a su entero superior (ceil). La interfaz propone ese entero al usar “Tomar todo pendiente”, restringe la cantidad a enteros y el servidor revalida el mismo máximo. No se modificó la fórmula de carencia ni el esquema de Supabase.
-- **Archivos tocados:** `src/app/supply-actions.ts`, `src/components/modules/ConsolidatedSupplyModule.tsx`, `STATE.md`.
-- **Cómo se probó:** se aisló en logs de Vercel el error real `La cantidad seleccionada supera el saldo pendiente (0.75)` (digest `3714015892`) en el Preview de recuperación. Validación funcional del nuevo commit pendiente de Preview.
-- **Build y tsc:** pendientes del deployment/CI de esta rama.
+- **Qué se hizo:** Se inició la corrección visual transversal sin reconstruir módulos. Se compactó la cabecera y navegación global, se redujo espacio no operativo, se mantuvo el contenido centrado en escritorio/notebook y se dejó navegación principal horizontal y sticky en tablet/móvil. Los bloques de operación y mensajes quedan preparados con margen de foco para permanecer visibles bajo las cabeceras. No se modificaron reglas de negocio, permisos ni esquema Supabase.
+- **Archivos tocados:** `src/app/globals.css`, `STATE.md`.
+- **Cómo se probó:** auditoría estática del marco global y de los módulos visibles por los 7 roles. Validación visual interactiva pendiente en el nuevo Preview para escritorio, notebook y móvil.
+- **Build y tsc:** pendientes del deployment/CI de este commit; no se declaran aprobados hasta verificarlos.
 
 ## Siguiente paso
-- Validar en Preview Login y generación de OC en PC/móvil: el loader debe aparecer inmediatamente, bloquear doble clic y finalizar con la respuesta real. Repetir además OC `0,75 → 1`. Si queda estable, extender el mismo componente a Guardar, Enviar, Confirmar, Cargar y Procesar sin modificar reglas de negocio.
+- Validar el nuevo Preview en escritorio/notebook/móvil y continuar incrementalmente con navegación contextual módulo → sección → detalle → volver, sin duplicar módulos. Corregir primero los casos donde una acción abre contenido fuera del área visible. Después resolver el acceso de Supervisora a sus campañas/instalaciones y la lista visible de OC disponibles en Recepción.
 
 ## Pendientes conocidos
-- [x] Validado que la rama de recuperación carga datos reales desde Supabase; el error observado provenía de la validación de cantidad OC.\n- [ ] Validar en Preview la aproximación OC `0,75 → 1` sin error de Server Components.
-- [x] Reincorporado `Ingresando…` y loader corporativo en Login y OC; pendiente validación en Preview PC/móvil.
-- [ ] Reincorporar después las mejoras responsive de Campañas, Clientes, detalle Cliente y Matriz Material × Instalación.
+- [x] Validado que la rama de recuperación carga datos reales desde Supabase.
+- [x] La incidencia OC `0,75 → 1` fue corregida y el usuario confirmó que el circuito real llegó hasta Guía/Entrega; no repetir ni alterar esa OC para probar.
+- [x] Reincorporado `Ingresando…` y loader corporativo en Login y OC; Preview `a449e6c` READY.
+- [ ] Validar visualmente el marco responsive transversal en escritorio, notebook, tablet y móvil.
+- [ ] Evolucionar navegación incrementalmente a módulo → sección → detalle → volver, manteniendo acceso directo a otra pestaña autorizada.
+- [ ] Garantizar que formularios, loaders, mensajes y resultados de acciones queden destacados dentro del área visible.
+- [ ] Revalidar y corregir Supervisora para que consulte solo campañas/instalaciones asignadas según permisos reales.
+- [ ] En Recepción mostrar automáticamente las OC con saldo disponibles, manteniendo búsqueda por OC/proveedor.
+- [ ] Reincorporar/mejorar responsive específico de Campañas, Clientes, detalle Cliente y Matriz Material × Instalación donde la validación visual lo requiera.
 - [ ] Eliminar el texto explicativo inferior de la Matriz cuando se retome su mejora.
-- [ ] Revalidar Supervisora únicamente sobre un Preview conectado y estable.
 - [ ] Corregir el generador de links de conteo para usar el dominio estable de Production.
 - [ ] Revisar `PDI Angol · Cuartel 2`: token público abre pero no encuentra materiales autorizados.
 - [ ] Revisar Finanzas por perfil sin inventar estados financieros inexistentes.
