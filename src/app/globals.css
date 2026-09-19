@@ -96,3 +96,10 @@ button,input,select,textarea{max-width:100%}
  .surveyInstallationCard button{justify-self:stretch;width:100%}
  .surveyEditor,.receiptEditor,.actionCard,.newContractPanel,.note,[role="status"]{scroll-margin-top:145px}
 }
+
+
+/* ALEMSI · estado corporativo transversal de espera */
+.alemsiLoadingState{display:flex;align-items:center;justify-content:center;gap:12px;min-height:76px;padding:16px;color:#173650;text-align:center}
+.alemsiLoadingState strong{font-weight:800}
+.alemsiLoadingOverlay{position:fixed;inset:0;z-index:9000;min-height:100dvh;background:rgba(255,255,255,.76);backdrop-filter:blur(1px)}
+@media(max-width:600px){.alemsiLoadingState{min-height:68px;padding:12px}.alemsiLoadingOverlay{padding:20px}}

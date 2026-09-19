@@ -3,15 +3,15 @@
 
 ## Estado actual
 - **Rama activa:** `recovery/estable-login-9c0a88a`
-- **Último commit:** este commit — `fix: compactar marco responsive operacional`.
+- **Último commit:** este commit — `feat: unificar carga corporativa operacional`.
 - **Preview desplegado:** el Preview anterior del commit `a449e6c` está READY; el Preview de este commit queda pendiente de Vercel.
-- **Fecha de última actualización:** 2026-09-18
+- **Fecha de última actualización:** 2026-09-19
 
 ## Última tarea completada
-- **Qué se hizo:** Se inició la corrección visual transversal sin reconstruir módulos. Se compactó la cabecera y navegación global, se redujo espacio no operativo, se mantuvo el contenido centrado en escritorio/notebook y se dejó navegación principal horizontal y sticky en tablet/móvil. Los bloques de operación y mensajes quedan preparados con margen de foco para permanecer visibles bajo las cabeceras. No se modificaron reglas de negocio, permisos ni esquema Supabase.
-- **Archivos tocados:** `src/app/globals.css`, `STATE.md`.
-- **Cómo se probó:** auditoría estática del marco global y de los módulos visibles por los 7 roles. Validación visual interactiva pendiente en el nuevo Preview para escritorio, notebook y móvil.
-- **Build y tsc:** pendientes del deployment/CI de este commit; no se declaran aprobados hasta verificarlos.
+- **Qué se hizo:** Se inició la unificación transversal de esperas reales con el indicador corporativo ALEMSI. Inventario, Recepción y Finanzas reutilizan el mismo componente de cuatro rombos para cargas; los guardados de conteo y recepción bloquean doble clic y muestran texto contextual. No se modificaron reglas de negocio, permisos ni esquema Supabase.
+- **Archivos tocados:** componente UI de carga, Inventario, Recepción, Finanzas, estilos globales y STATE.md.
+- **Cómo se probó:** revisión estática de estados loading/saving y operaciones async. Validación de Preview pendiente tras este commit.
+- **Build y tsc:** pendientes del deployment/CI; no se declaran aprobados hasta verificarlos.
 
 ## Siguiente paso
 - Validar el nuevo Preview en escritorio/notebook/móvil y continuar incrementalmente con navegación contextual módulo → sección → detalle → volver, sin duplicar módulos. Corregir primero los casos donde una acción abre contenido fuera del área visible. Después resolver el acceso de Supervisora a sus campañas/instalaciones y la lista visible de OC disponibles en Recepción.
