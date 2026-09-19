@@ -90,7 +90,8 @@ export async function registerDeliveryWithEmail(input:{dispatchId:string;recipie
     await supabase.from("dispatches").update({recipient_email:email,email_status:"Pendiente"}).eq("id",input.dispatchId);
   }
 
-  await closeFinishedRoutes(supabase,input.dispatchId);\n  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Despachos",action:"Registró entrega y correo de receptor",entity_table:"dispatches",entity_id:input.dispatchId,new_data:{recipient_email:email,email_status:emailStatus,email_error:emailError}});
+  await closeFinishedRoutes(supabase,input.dispatchId);
+  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Despachos",action:"Registró entrega y correo de receptor",entity_table:"dispatches",entity_id:input.dispatchId,new_data:{recipient_email:email,email_status:emailStatus,email_error:emailError}});
   revalidatePath("/");
   return{ok:true,status:String(status),emailStatus,emailPending:emailStatus!=="Enviado"};
 }

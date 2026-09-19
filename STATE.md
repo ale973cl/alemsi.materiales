@@ -3,7 +3,7 @@
 
 ## Estado actual
 - **Rama activa:** `recovery/estable-login-9c0a88a`
-- **Último commit:** este commit — `fix: estabilizar rutas activas y carga corporativa`.
+- **Último commit:** este commit — `fix: corregir sintaxis del despliegue de rutas`.
 - **Preview desplegado:** el Preview anterior del commit `a449e6c` está READY; el Preview de este commit queda pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-19
 
@@ -11,7 +11,7 @@
 - **Qué se hizo:** Se corrigió el flujo operativo de rutas sin cambiar esquema: loader ALEMSI en carga y acciones de rutas, prioridad visual de la ruta En tránsito, pestaña Rutas listas, cierre automático de ruta cuando todas sus guías terminan y revalidación servidor para impedir que una guía sea asociada a más de una ruta activa. También se incorporó loader corporativo a disponibilidad de guías, guardado de ruta, despacho extraordinario y registro de entrega.
 - **Archivos tocados:** `DeliveryRoutesModule.tsx`, `DispatchDeliveryModule.tsx`, `route-actions.ts`, `dispatch-actions.ts`, `DeliveryRegistrationModal.tsx`, `STATE.md`.
 - **Cómo se probó:** revisión estática del circuito ruta → preparación → tránsito → entrega → cierre y consulta de datos reales de prueba que confirmó asociaciones duplicadas históricas. Preview/build pendiente tras commit.
-- **Build y tsc:** pendientes del deployment/CI; no se declaran aprobados hasta verificarlos.
+- **Build y tsc:** se corrigieron separadores de línea literales que impedían compilar el commit anterior; nuevo deployment pendiente de validación.
 
 ## Siguiente paso
 - Validar el nuevo Preview en escritorio/notebook/móvil y continuar incrementalmente con navegación contextual módulo → sección → detalle → volver, sin duplicar módulos. Corregir primero los casos donde una acción abre contenido fuera del área visible. Después resolver el acceso de Supervisora a sus campañas/instalaciones y la lista visible de OC disponibles en Recepción.
@@ -22,7 +22,8 @@
 - [x] Reincorporado `Ingresando…` y loader corporativo en Login y OC; Preview `a449e6c` READY.
 - [ ] Validar visualmente el marco responsive transversal en escritorio, notebook, tablet y móvil.
 - [ ] Evolucionar navegación incrementalmente a módulo → sección → detalle → volver, manteniendo acceso directo a otra pestaña autorizada.
-- [ ] Completar la auditoría XYZ de loaders en los módulos restantes; Rutas/Despacho ya fue corregido en esta pasada.\n- [ ] Limpiar las rutas operacionales de prueba duplicadas después de validar el nuevo Preview, sin tocar maestros.
+- [ ] Completar la auditoría XYZ de loaders en los módulos restantes; Rutas/Despacho ya fue corregido en esta pasada.
+- [ ] Limpiar las rutas operacionales de prueba duplicadas después de validar el nuevo Preview, sin tocar maestros.
 - [ ] Revalidar y corregir Supervisora para que consulte solo campañas/instalaciones asignadas según permisos reales.
 - [ ] En Recepción mostrar automáticamente las OC con saldo disponibles, manteniendo búsqueda por OC/proveedor.
 - [ ] Reincorporar/mejorar responsive específico de Campañas, Clientes, detalle Cliente y Matriz Material × Instalación donde la validación visual lo requiera.

@@ -1,7 +1,8 @@
 "use client";
 
 import {useMemo,useRef,useState,useTransition} from "react";
-import {registerDeliveryWithEmail} from "@/app/dispatch-actions";\nimport AlemsiActionButton from "@/components/ui/AlemsiActionButton";
+import {registerDeliveryWithEmail} from "@/app/dispatch-actions";
+import AlemsiActionButton from "@/components/ui/AlemsiActionButton";
 
 type DispatchLine={id:string;required_qty:number|string;delivered_qty:number|string;pending_qty:number|string;materials?:{name?:string;unit?:string}};
 type Dispatch={id:string;internal_number?:string;guide_number?:string;installations?:any;dispatch_lines:DispatchLine[]};
