@@ -6,6 +6,9 @@ import {createClient} from "@/lib/supabase/server";
 import {enqueueModuleEmail} from "@/lib/email-queue";
 
 const PRE_OUTPUT=["Borrador","Pendiente","En preparación","Listo para despacho"];
+const ROUTE_FINAL_DISPATCH_STATUSES=["Entregado conforme","Entrega con observaciones","Entrega parcial","Rechazado/No entregado","Anulado"];
+async function closeFinishedRoutes(supabase:any,dispatchId:string){const {data:links}=await supabase.from("delivery_route_dispatches").select("route_id").eq("dispatch_id",dispatchId);for(const link of links||[]){const {data:route}=await supabase.from("delivery_routes").select("id,status,delivery_route_dispatches(dispatches(status))").eq("id",(link as any).route_id).single();if(!route||!["En tránsito","Parcialmente entregada"].includes(String((route as any).status)))continue;const routeLinks=((route as any).delivery_route_dispatches||[]) as any[];const statuses=routeLinks.map(x=>String(Array.isArray(x.dispatches)?x.dispatches[0]?.status:x.dispatches?.status||""));if(statuses.length&&statuses.every(status=>ROUTE_FINAL_DISPATCH_STATUSES.includes(status))){await supabase.from("delivery_routes").update({status:"Completada",updated_at:new Date().toISOString()}).eq("id",(route as any).id);}}
+}
 
 async function ctx(roles:string[]){
   const supabase=await createClient();
@@ -87,7 +90,7 @@ export async function registerDeliveryWithEmail(input:{dispatchId:string;recipie
     await supabase.from("dispatches").update({recipient_email:email,email_status:"Pendiente"}).eq("id",input.dispatchId);
   }
 
-  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Despachos",action:"Registró entrega y correo de receptor",entity_table:"dispatches",entity_id:input.dispatchId,new_data:{recipient_email:email,email_status:emailStatus,email_error:emailError}});
+  await closeFinishedRoutes(supabase,input.dispatchId);\n  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Despachos",action:"Registró entrega y correo de receptor",entity_table:"dispatches",entity_id:input.dispatchId,new_data:{recipient_email:email,email_status:emailStatus,email_error:emailError}});
   revalidatePath("/");
   return{ok:true,status:String(status),emailStatus,emailPending:emailStatus!=="Enviado"};
 }
