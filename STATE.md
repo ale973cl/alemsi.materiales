@@ -3,24 +3,25 @@
 
 ## Estado actual
 - **Rama activa:** `recovery/estable-login-9c0a88a`
-- **Último commit:** este commit — `docs: inventariar funciones y riesgos estructurales`.
+- **Último commit:** este commit — `fix: fijar dominio de conteo y reconciliar auditoría`.
 - **Preview desplegado:** el Preview anterior del commit `a449e6c` está READY; el Preview de este commit queda pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-19
 
 ## Última tarea completada
-- **Qué se hizo:** Auditoría profunda inicial de arquitectura, funciones, seguridad, permisos, XYZ, logística y navegación. Se contrastó código vigente, documentación y esquema real de Supabase sin modificar datos ni esquema.
-- **Archivos tocados:** `docs/AUDITORIA_PROFUNDA_2026-09-19.md`, `STATE.md`.
-- **Cómo se probó:** inspección del árbol completo, Server Actions/API principales, módulos, roles y tablas reales de permisos/alcance en Supabase.
-- **Build y tsc:** no aplica cambio de código ejecutable; la auditoría es documental. El último build de código sigue sujeto a validación independiente.
+- **Qué se hizo:** Reconciliación previa al inventario: se verificó el fix anterior, regla de campañas sin ciclo, permisos reales, variables de entorno y PDI Angol Cuartel 2. Se corrigió únicamente el origen de links `/conteo/[token]` para que use Production estable.
+- **Archivos tocados:** `src/app/survey-link-actions.ts`, `docs/DECISIONES.md`, `STATE.md`.
+- **Cómo se probó:** inspección de historial/commits, código vigente y consultas de solo lectura a Supabase; no se modificaron datos ni esquema.
+- **Build y tsc:** pendiente de validación del deployment/CI para este commit.
 
 ## Siguiente paso
-- Completar el inventario/auditoría profunda documentado en `docs/AUDITORIA_PROFUNDA_2026-09-19.md`: referencias legacy, XYZ restante, RLS/permisos y funciones por circuito. Luego cotejar utilidad/visualización, limpiar controladamente y recién después ordenar navegación contextual y matriz de permisos.
+- Antes de nuevas features, decidir/ejecutar la corrección pendiente de Operaciones en Levantamientos/Abastecimiento/OC y la visualización de los 4 estados presupuestarios en creación de OC; ambas NO estaban aplicadas en la rama auditada.
+- Completar después RLS/permisos y referencias legacy; no activar todavía la matriz configurable.
 
 ## Auditoría estructural
 - [x] Creado inventario inicial de funciones, riesgos, permisos y navegación en `docs/AUDITORIA_PROFUNDA_2026-09-19.md`.
 - [ ] Completar búsqueda exhaustiva de referencias legacy antes de borrar archivos.
-- [ ] Auditar RLS contra permisos funcionales y alcances existentes.
-- [ ] Resolver contradicción Preview: `SUPABASE_SECRET_KEY` obsoleta y rol Operaciones ausente.
+- [ ] Auditar RLS contra permisos funcionales y alcances existentes. Hallazgo actual: `user_module_permissions` y `user_scope_access` tienen 0 filas; `user_installation_access` solo conserva 4 filas históricas inactivas.
+- [ ] Resolver contradicción Preview/correo: `SUPABASE_SECRET_KEY` reapareció en `preview-profile-actions.ts` y `src/lib/email-delivery.ts`; rol Operaciones ausente en Preview.
 - [ ] Cotejar función → rol → permiso → alcance → siguiente paso operativo antes del rediseño de navegación.
 
 ## Pendientes conocidos
@@ -35,11 +36,11 @@
 - [ ] En Recepción mostrar automáticamente las OC con saldo disponibles, manteniendo búsqueda por OC/proveedor.
 - [ ] Reincorporar/mejorar responsive específico de Campañas, Clientes, detalle Cliente y Matriz Material × Instalación donde la validación visual lo requiera.
 - [ ] Eliminar el texto explicativo inferior de la Matriz cuando se retome su mejora.
-- [ ] Corregir el generador de links de conteo para usar el dominio estable de Production.
-- [ ] Revisar `PDI Angol · Cuartel 2`: token público abre pero no encuentra materiales autorizados.
+- [x] Corregido el generador de links de conteo: `/conteo/[token]` usa siempre `https://alemsi-materiales.vercel.app`.
+- [x] Diagnosticado `PDI Angol · Cuartel 2`: no hay configuración de materiales para el contrato PDI Angol en `contract_materials`, `installation_material_profiles` ni `client_materials`; requiere carga/configuración, no cambio del token.
 - [ ] Revisar Finanzas por perfil sin inventar estados financieros inexistentes.
-- [ ] Resolver/confirmar alcance operativo del rol `Operaciones` en Levantamientos y Abastecimiento/OC.
-- [ ] Confirmar los cuatro estados presupuestarios en Abastecimiento → OC; presupuesto alerta y nunca bloquea.
+- [ ] Corregir rol `Operaciones` en Levantamientos/Abastecimiento/OC: la navegación lo muestra, pero `survey-actions.ts`, `supply-actions.ts` y `purchase-order-actions.ts` todavía lo rechazan en servidor.
+- [ ] Implementar/confirmar visualmente los cuatro estados presupuestarios en Abastecimiento → OC: no existen coincidencias de esos estados en los componentes/acciones actuales de OC; la regla gerencial sí permanece documentada.
 - [ ] Revalidar despacho completo manualmente, especialmente entrega parcial → pendiente → guía, firma/recepción y móvil.
 
 ## Circuitos que deben seguir funcionando
@@ -52,3 +53,10 @@
 7. **Roles y navegación:** 7 roles oficiales; cada uno ve solo sus módulos autorizados.
 8. **Login:** correo funciona siempre; alias de rol se resuelve dinámicamente solo con exactamente un usuario activo y nunca sustituye Supabase Auth.
 9. **Enlaces compartidos:** metadata público identifica el sistema como `ALEMSI Materiales`.
+
+## Reconciliación 2026-09-19
+- No se encontró un commit que reúna el supuesto fix de link firmado de Respaldos + Operaciones completo + 4 estados de presupuesto. El módulo actual de Respaldos descarga el ZIP directamente por POST/blob y no usa link firmado temporal.
+- Ítem #52 era correcto: Operaciones está en navegación, pero no está autorizado en las Server Actions de Levantamientos, Abastecimiento y derivación de OC.
+- Ítem #64 era correcto: la regla de 4 estados existe en METODOLOGIA/DECISIONES, pero no está materializada en la creación de OC auditada.
+- METODOLOGIA.md sigue vigente: no existe “ciclo”; cualquier campaña Abierta bloquea la instalación.
+- Variables usadas y no documentadas en .env.example: SUPABASE_SECRET_KEY (obsoleta; 2 archivos), VERCEL_ENV, EMAIL_ALLOWED_PERSONAL, GOOGLE_DRIVE_OAUTH_CLIENT_ID, GOOGLE_DRIVE_OAUTH_CLIENT_SECRET, GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN, GOOGLE_DRIVE_ROOT_FOLDER_ID, GOOGLE_DRIVE_ROOT_FOLDER_NAME y SUPABASE_ANON_KEY en Edge Functions. Las variables de Google Drive/SMTP se investigan; no se corrigen en esta tarea.

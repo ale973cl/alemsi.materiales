@@ -1,6 +1,5 @@
 "use server";
 import {createHash,randomBytes} from "crypto";
-import {headers} from "next/headers";
 import {createClient} from "@/lib/supabase/server";
 import {enqueueModuleEmail} from "@/lib/email-queue";
 
@@ -13,8 +12,8 @@ async function managerContext(){
   return{supabase,user,profile};
 }
 
+const PRODUCTION_APP_ORIGIN="https://alemsi-materiales.vercel.app";
 function tokenHash(token:string){return createHash("sha256").update(token).digest("hex")}
-async function appOrigin(){const h=await headers();const host=h.get("x-forwarded-host")||h.get("host");const protocol=h.get("x-forwarded-proto")||"https";if(host)return `${protocol}://${host}`;return process.env.NEXT_PUBLIC_APP_URL||""}
 
 export async function createSurveyAccessLink(input:{campaign_id:string;installation_id:string;mode:"link"|"email";email?:string|null;valid_hours?:number}){
   const {supabase,user,profile}=await managerContext();
@@ -38,7 +37,7 @@ export async function createSurveyAccessLink(input:{campaign_id:string;installat
   const token=randomBytes(12).toString("base64url");const hash=tokenHash(token);const hours=Math.min(168,Math.max(1,Number(input.valid_hours||72)));const expires=new Date(Date.now()+hours*3600000).toISOString();
   const {error:updateError}=await supabase.from("campaign_installations").update({survey_token_hash:hash,survey_token_expires_at:expires,survey_token_email:target||null,survey_token_created_at:new Date().toISOString(),survey_token_created_by:user.id,survey_token_used_at:null}).eq("campaign_id",campaignId).eq("installation_id",installationId);
   if(updateError)throw updateError;
-  const origin=await appOrigin();if(!origin)throw new Error("No se pudo determinar la URL de la aplicación");const link=`${origin}/conteo/${token}`;
+  const link=`${PRODUCTION_APP_ORIGIN}/conteo/${token}`;
   const inst:any=Array.isArray((membership as any).installations)?(membership as any).installations[0]:(membership as any).installations;const contract:any=Array.isArray(inst?.contracts)?inst.contracts[0]:inst?.contracts;const client:any=Array.isArray(contract?.clients)?contract.clients[0]:contract?.clients;
   let emailStatus="link_only";let queueId:string|null=null;
   if(input.mode==="email"){
