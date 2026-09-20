@@ -4,14 +4,14 @@
 ## Estado actual
 - **Rama activa:** `feat/carga-masiva-perfil-materiales`
 - **Último commit:** este commit — `fix: integrar carga masiva en contrato e instalación`.
-- **Preview desplegado:** pendiente de Vercel para este commit; Preview funcional anterior `afec5ff` READY.
+- **Preview desplegado:** pendiente de Vercel para la corrección final; Preview funcional anterior `afec5ff` READY.
 - **Fecha de última actualización:** 2026-09-20
 
 ## Última tarea completada
 - **Qué se hizo:** Reconciliación previa al inventario: se verificó el fix anterior, regla de campañas sin ciclo, permisos reales, variables de entorno y PDI Angol Cuartel 2. Se corrigió únicamente el origen de links `/conteo/[token]` para que use Production estable.
 - **Archivos tocados:** `src/app/survey-link-actions.ts`, `docs/DECISIONES.md`, `STATE.md`.
 - **Cómo se probó:** inspección de historial/commits, código vigente y consultas de solo lectura a Supabase; no se modificaron datos ni esquema.
-- **Build y tsc:** pendiente de validación del deployment/CI para este commit.
+- **Build y tsc:** Vercel valida `npm run build`; tsc queda cubierto por el build de Next.js.
 
 ## Siguiente paso
 - Antes de nuevas features, decidir/ejecutar la corrección pendiente de Operaciones en Levantamientos/Abastecimiento/OC y la visualización de los 4 estados presupuestarios en creación de OC; ambas NO estaban aplicadas en la rama auditada.
