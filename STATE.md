@@ -3,9 +3,9 @@
 
 ## Estado actual
 - **Rama activa:** `feat/carga-masiva-perfil-materiales`
-- **Último commit:** este commit — `feat: agregar carga masiva de materiales autorizados`.
-- **Preview desplegado:** el Preview anterior del commit `a449e6c` está READY; el Preview de este commit queda pendiente de Vercel.
-- **Fecha de última actualización:** 2026-09-19
+- **Último commit:** este commit — `fix: integrar carga masiva en contrato e instalación`.
+- **Preview desplegado:** pendiente de Vercel para este commit; Preview funcional anterior `afec5ff` READY.
+- **Fecha de última actualización:** 2026-09-20
 
 ## Última tarea completada
 - **Qué se hizo:** Reconciliación previa al inventario: se verificó el fix anterior, regla de campañas sin ciclo, permisos reales, variables de entorno y PDI Angol Cuartel 2. Se corrigió únicamente el origen de links `/conteo/[token]` para que use Production estable.
