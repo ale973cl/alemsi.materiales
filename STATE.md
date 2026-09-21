@@ -3,17 +3,19 @@
 
 ## Estado actual
 - **Rama activa:** `fix/roles-oficiales-y-permisos`
-- **Último commit:** este commit — `feat: agregar excepciones individuales de funciones`.
+- **Último commit:** este commit — `fix: ajustar retorno de acción de permisos`.
 - **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; Preview de autorización base `a739b64` verificado READY; migración de Levantamientos/Abastecimiento `4323a3c` verificada SUCCESS; nueva UI de permisos pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** Confirmada la decisión B: el rol base es plantilla y Admin Total puede agregar o bloquear capacidades por usuario. Se incorporó `Funciones y permisos` en la ficha de Usuarios, separada de `Instalaciones asignadas`. Las excepciones se almacenan en `user_module_permissions` usando `module_code=capability`; ausencia de fila = heredar rol, `can_view=true` = permitir, `can_view=false` = bloquear. La propia cuenta Admin Total queda protegida. Aún no se usa esta tabla como fuente única de autorización operativa.
-- **Archivos tocados:** `src/app/user-permission-actions.ts`, `src/app/page.tsx`, `src/components/OperationalApp.tsx`, `src/components/modules/MastersModule.tsx`, `src/components/modules/UsersModule.tsx`, `STATE.md`.
-- **Cómo se probó:** Preview anterior `4323a3c` SUCCESS; nueva UI y persistencia pendientes de Vercel.
-- **Build y tsc:** Vercel pendiente; validación local independiente no disponible en esta sesión.
+- **Qué se hizo:** El build de `0bd0367` compiló JavaScript pero falló en TypeScript porque la Server Action `setUserCapabilityOverride` retornaba `{ok:true}` y React `<form action>` exige `void | Promise<void>`. Se corrigió exclusivamente el retorno a `void`; no cambió la lógica de permisos ni persistencia.
+- **Archivos tocados:** `src/app/user-permission-actions.ts`, `STATE.md`.
+- **Cómo se probó:** corrección directa del error TypeScript reportado por Vercel en `UsersModule.tsx:37`; nuevo deployment pendiente.
+- **Build y tsc:** Vercel pendiente para el commit de corrección.
 
 ## Siguiente paso
+- Confirmar Vercel READY. Luego probar visualmente `Funciones y permisos` con un usuario distinto de Admin Total y comprobar persistencia de heredar/permitir/bloquear.
+- Solo después conectar las excepciones a la autorización efectiva del servidor.
 - Confirmar Vercel READY y probar visualmente una excepción en un usuario que no sea Admin Total.
 - Después hacer que la autorización efectiva consulte `rol base + excepción individual`, manteniendo alcance de instalaciones separado y validación en servidor.
 - Confirmar Vercel READY para Levantamientos/Abastecimiento.
