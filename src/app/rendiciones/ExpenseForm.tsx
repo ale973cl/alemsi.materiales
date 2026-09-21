@@ -1,17 +1,14 @@
 "use client";
-import {useActionState,useEffect,useRef,useState} from "react";
+import {useRef,useState} from "react";
 import {useFormStatus} from "react-dom";
 import {addRenditionExpense,type RenditionExpenseResult} from "./actions";
 
 type ReadData={expense_date?:string;document_type?:string;provider_name?:string;provider_rut?:string;document_number?:string;description?:string;presented_amount?:number|null};
 const inputStyle={padding:"10px 12px",border:"1px solid #c8dce8",borderRadius:10,fontSize:16,width:"100%"};
-const initialState:RenditionExpenseResult={ok:false,message:""};
 function SaveButton(){const {pending}=useFormStatus();return <button disabled={pending} style={{padding:"11px 18px",borderRadius:999,fontWeight:800}}>{pending?"Guardando…":"Guardar gasto"}</button>}
 
 export default function ExpenseForm({renditionId}:{renditionId:string}){
- const [reading,setReading]=useState(false);const [message,setMessage]=useState("");const [preview,setPreview]=useState<string|null>(null);const [data,setData]=useState<ReadData>({document_type:"Boleta"});
- const [state,formAction]=useActionState(addRenditionExpense,initialState);const formRef=useRef<HTMLFormElement>(null);
- useEffect(()=>{if(state.ok){formRef.current?.reset();setData({document_type:"Boleta"});setPreview(null);setMessage("");}},[state.ok]);
+ const formRef=useRef<HTMLFormElement>(null);const [reading,setReading]=useState(false);const [saving,setSaving]=useState(false);const [message,setMessage]=useState("");const [saveResult,setSaveResult]=useState<RenditionExpenseResult|null>(null);const [preview,setPreview]=useState<string|null>(null);const [data,setData]=useState<ReadData>({document_type:"Boleta"});
  async function readReceipt(file:File){
   setMessage("");
   if(file.type==="application/pdf"){setMessage("El PDF se guardará como respaldo. Para lectura automática usa una foto JPG, PNG o WEBP.");return;}
@@ -21,7 +18,15 @@ export default function ExpenseForm({renditionId}:{renditionId:string}){
   finally{setReading(false);}
  }
  function selected(file?:File){if(!file)return;setPreview(file.type.startsWith("image/")?URL.createObjectURL(file):null);void readReceipt(file);}
- return <form ref={formRef} action={formAction} encType="multipart/form-data" style={{display:"grid",gap:10}}>
+ async function submit(fd:FormData){
+  if(saving)return;setSaving(true);setSaveResult(null);
+  try{
+   const result=await addRenditionExpense({ok:false,message:""},fd);setSaveResult(result);
+   if(result.ok){formRef.current?.reset();setData({document_type:"Boleta"});setPreview(null);setMessage("");}
+  }catch(e){setSaveResult({ok:false,message:e instanceof Error?e.message:"No se pudo guardar el gasto. Intenta nuevamente."});}
+  finally{setSaving(false);}
+ }
+ return <form ref={formRef} action={submit} encType="multipart/form-data" style={{display:"grid",gap:10}}>
   <input type="hidden" name="rendition_id" value={renditionId}/>
   <div style={{padding:14,border:"2px dashed #79bdb1",borderRadius:14,background:"#f5fbfa"}}><b>1. Foto o comprobante</b><p style={{margin:"5px 0 10px"}}>Toma la foto primero. El sistema intentará completar los datos.</p><input name="document_file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment" required onChange={e=>selected(e.target.files?.[0])}/>{preview&&<img src={preview} alt="Vista previa del comprobante" style={{display:"block",maxWidth:260,maxHeight:220,objectFit:"contain",marginTop:10,borderRadius:10}}/>}<div style={{marginTop:8,fontWeight:700}}>{reading?"Analizando comprobante…":message}</div></div>
   <b>2. Revisa los datos detectados</b>
@@ -33,7 +38,7 @@ export default function ExpenseForm({renditionId}:{renditionId:string}){
   <label>Categoría<select style={inputStyle} name="category" required defaultValue=""><option value="" disabled>Seleccionar categoría</option>{["Estacionamiento","Alojamiento","Colación/Alimentación","Compras/Materiales","Insumos varios","Movilización/Uber","Peajes","Otros"].map(x=><option key={x}>{x}</option>)}</select></label>
   <label>Descripción<input style={inputStyle} name="description" required value={data.description||""} onChange={e=>setData({...data,description:e.target.value})}/></label>
   <label>Total pagado<input style={inputStyle} name="presented_amount" type="number" min="1" step="1" required value={data.presented_amount??""} onChange={e=>setData({...data,presented_amount:Number(e.target.value)||null})}/></label>
-  {state.message&&<div role="status" style={{padding:"10px 12px",border:"1px solid #c8dce8",borderRadius:10,fontWeight:700}}>{state.message}</div>}
-  <SaveButton/>
+  {saveResult?.message&&<div role="status" style={{padding:"10px 12px",border:"1px solid #c8dce8",borderRadius:10,fontWeight:700}}>{saveResult.message}</div>}
+  <button disabled={saving||reading} style={{padding:"11px 18px",borderRadius:999,fontWeight:800}}>{saving?"Guardando…":"Guardar gasto"}</button>
  </form>
 }
