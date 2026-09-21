@@ -1,4 +1,5 @@
 "use client";
+import {CAPABILITIES,roleCan} from "@/lib/authorization";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useEffect,useMemo,useState,useTransition} from "react";
@@ -26,9 +27,9 @@ const stageForStatus=(status:string)=>["Borrador","Pendiente"].includes(status)?
 
 export default function DispatchDeliveryModule({dispatches,clients,materials,role,users,currentUser}:{dispatches:Dispatch[];clients:ClientInstallationGroup[];materials:MaterialCatalogRow[];role:string;users:RouteUser[];currentUser:{id:string;full_name?:string|null}}){
  const router=useRouter();
- const canOperate=["Admin Total","Admin","Operaciones","Bodega"].includes(role);
- const canAssignRoutes=["Admin Total","Gerencia","Admin","Operaciones","Bodega"].includes(role);
- const canDeliver=canOperate||role==="Supervisora";
+ const canOperate=roleCan(role,CAPABILITIES.DISPATCH_MANAGE);
+ const canAssignRoutes=roleCan(role,CAPABILITIES.ROUTE_MANAGE);
+ const canDeliver=roleCan(role,CAPABILITIES.DELIVERY_REGISTER);
  const canArchive=["Admin Total","Gerencia","Admin","Finanzas","Bodega"].includes(role);
  const stages=(canAssignRoutes?["Guías pendientes","Designar ruta","Preparar","En tránsito","Rutas listas","Entregadas","Pendientes material"]:["Preparar","En tránsito","Rutas listas","Entregadas","Pendientes material"]);
  const [active,setActive]=useState(stages[0]),[showNew,setShowNew]=useState(false),[delivery,setDelivery]=useState<Dispatch|null>(null),[complement,setComplement]=useState<Dispatch|null>(null),[notice,setNotice]=useState("");
@@ -83,7 +84,7 @@ function RoutePreparationModal({dispatches,users,currentUser,canAssign,close,don
  const [ordered,setOrdered]=useState(dispatches),[pending,setPending]=useState(false),[routeName,setRouteName]=useState("");
  const [plannedDate,setPlannedDate]=useState(new Date().toISOString().slice(0,10));
  const [prep,setPrep]=useState(currentUser.id),[delivery,setDelivery]=useState(currentUser.id);
- const activeUsers=users.filter(u=>u.active&&["Admin Total","Gerencia","Admin","Operaciones","Bodega","Supervisora"].includes(u.role));
+ const activeUsers=users.filter(u=>u.active&&roleCan(u.role,CAPABILITIES.ROUTE_ACCESS));
  const move=(index:number,delta:number)=>setOrdered(old=>{const next=[...old],target=index+delta;if(target<0||target>=next.length)return old;[next[index],next[target]]=[next[target],next[index]];return next});
  const loading=[...ordered].reverse();
  const printConsolidated=()=>{

@@ -1,10 +1,11 @@
 "use client";
+import {CAPABILITIES,roleCan} from "@/lib/authorization";
 import {useState,useTransition} from "react";
 import {queuePurchaseOrderEmail} from "@/app/purchase-order-email-actions";
 import {derivePurchaseOrderSafe} from "@/app/purchase-order-actions";
 const money=(n:number)=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n||0);
 export default function PurchaseOrdersModule({orders,role}:{orders:any[];role:string}){
- const canOperate=["Admin Total","Gerencia","Admin","Operaciones"].includes(role);
+ const canOperate=roleCan(role,CAPABILITIES.PURCHASE_ORDER_MANAGE);
  const [emailOrder,setEmailOrder]=useState<any|null>(null),[message,setMessage]=useState("");
  const [pending,start]=useTransition();
  const sendOrder=()=>{if(!emailOrder)return;const fd=new FormData();fd.set("purchase_order_id",emailOrder.id);setMessage("");start(async()=>{try{await queuePurchaseOrderEmail(fd);setMessage("Acción ejecutada por el motor de correos. En Preview los destinatarios externos quedan bloqueados por seguridad.")}catch(e:any){setMessage(e?.message||"No se pudo procesar el correo")}})};

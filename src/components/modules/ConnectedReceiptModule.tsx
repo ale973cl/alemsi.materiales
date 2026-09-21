@@ -1,4 +1,5 @@
 "use client";
+import {CAPABILITIES,roleCan} from "@/lib/authorization";
 import AlemsiActionButton,{AlemsiLoadingState} from "@/components/ui/AlemsiActionButton";
 import {useEffect,useMemo,useState} from "react";
 import {registerPurchaseOrderReceipt} from "@/app/receipt-actions";
@@ -12,7 +13,7 @@ export default function ConnectedReceiptModule({role}:{role:string}){
  const [qty,setQty]=useState<Record<string,number>>({}),[prices,setPrices]=useState<Record<string,number>>({});
  const [documentType,setDocumentType]=useState("Factura"),[documentFolio,setDocumentFolio]=useState(""),[documentDate,setDocumentDate]=useState(""),[documentNet,setDocumentNet]=useState(0),[documentVat,setDocumentVat]=useState(0),[documentTotal,setDocumentTotal]=useState(0);
  const [shipping,setShipping]=useState("Incluido"),[freight,setFreight]=useState(0),[observation,setObservation]=useState(""),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[message,setMessage]=useState("");
- const canReceive=["Admin Total","Gerencia","Admin","Operaciones","Bodega","Supervisora"].includes(role);
+ const canReceive=roleCan(role,CAPABILITIES.RECEIPT_REGISTER);
  const load=async()=>{setLoading(true);try{const response=await fetch("/api/receipts/context",{cache:"no-store"});const body=await response.json();if(!response.ok)throw new Error(body.error||"No se pudo cargar Recepción");setOrders(body.orders||[]);setReceipts(body.receipts||[])}catch(error:any){setMessage(error?.message||"No se pudo cargar Recepción")}finally{setLoading(false)}};
  useEffect(()=>{void load()},[]);
  const receivable=useMemo(()=>orders.filter(order=>(order.purchase_order_lines||[]).some(line=>line.material_id&&Number(line.pending_qty)>0)),[orders]);

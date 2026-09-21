@@ -3,19 +3,19 @@
 
 ## Estado actual
 - **Rama activa:** `fix/roles-oficiales-y-permisos`
-- **Último commit:** este commit — `fix: alinear Operaciones con recepción despacho y rutas`.
+- **Último commit:** este commit — `refactor: iniciar autorización centralizada`.
 - **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; nuevo Preview de recuperación pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** Se alineó `Operaciones` con Recepción, Despacho y Rutas, tanto en UI como en Server Actions. Operaciones puede registrar recepción, generar/preparar despachos, crear complementarias, registrar entrega y gestionar rutas; Supervisora mantiene entrega/ruta asignada sin administración general. No se cambió la lógica de inventario ni estados del circuito.
-- **Archivos tocados:** `src/app/receipt-actions.ts`, `src/app/dispatch-actions.ts`, `src/app/route-actions.ts`, `src/app/actions.ts`, `src/components/modules/DispatchDeliveryModule.tsx`, `STATE.md`.
-- **Cómo se probó:** revisión cruzada navegación → UI → Server Actions; Vercel/CI pendiente.
+- **Qué se hizo:** Se creó `src/lib/authorization.ts` como fuente compartida para navegación y capacidades visibles de OC, Recepción, Inventario, Despacho, Entrega y Rutas. La UI de Recepción ahora coincide con la autorización real del servidor: Gerencia y Supervisora pueden consultar, pero no registrar ingreso físico. No se activó `user_module_permissions` ni se modificó Supabase.
+- **Archivos tocados:** `src/lib/authorization.ts`, `src/components/OperationalApp.tsx`, `ConnectedReceiptModule.tsx`, `InventoryModule.tsx`, `PurchaseOrdersModule.tsx`, `DispatchDeliveryModule.tsx`, `STATE.md`.
+- **Cómo se probó:** equivalencia de módulos por rol y capacidades visibles; Vercel/CI pendiente.
 - **Build y tsc:** pendiente de validación del deployment/CI de este commit.
 
 ## Siguiente paso
-- Centralizar autorización para eliminar listas de roles dispersas, preservando exactamente los permisos vigentes ya reconciliados.
-- Después conectar gradualmente `Usuarios y perfiles` con capacidades configurables; no activar todavía `user_module_permissions` como fuente única.
+- Completar la migración de las Server Actions a la misma capa de capacidades, sin cambiar permisos efectivos.
+- Después conectar `Usuarios y perfiles` a una vista de Funciones y permisos; `user_module_permissions` sigue sin ser fuente única.
 
 ## Auditoría estructural
 - [x] Creado inventario inicial de funciones, riesgos, permisos y navegación en `docs/AUDITORIA_PROFUNDA_2026-09-19.md`.
