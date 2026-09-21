@@ -3,17 +3,19 @@
 
 ## Estado actual
 - **Rama activa:** `fix/roles-oficiales-y-permisos`
-- **Último commit:** este commit — `fix: compactar configuración de permisos`.
+- **Último commit:** este commit — `feat: separar levantamientos activos e históricos`.
 - **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; Preview de autorización base `a739b64` verificado READY; migración de Levantamientos/Abastecimiento `4323a3c` verificada SUCCESS; nueva UI de permisos pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** La sección extensa `Funciones y permisos` se convirtió en un bloque plegable `Configurar permisos`, cerrado por defecto. Solo al abrirlo muestra las capacidades y sus selectores. El aviso de protección de Admin Total queda dentro del bloque y deja de superponerse. No se modificó lógica de permisos ni Supabase.
-- **Archivos tocados:** `src/components/modules/UsersModule.tsx`, `STATE.md`.
-- **Cómo se probó:** ajuste estructural de UI sobre el componente actual; Vercel pendiente.
-- **Build y tsc:** Vercel pendiente para este ajuste.
+- **Qué se hizo:** Levantamientos se separa en `Activos` (campañas Abiertas) y `Realizados` (campañas Cerradas). Cada grupo dispone de `Instalaciones` y `Consolidado`. Las campañas cerradas quedan en solo consulta. El consolidado reutiliza levantamientos confirmados y muestra máximo autorizado, remanente y carencia sin duplicar datos.
+- **Archivos tocados:** `src/components/OperationalApp.tsx`, `STATE.md`.
+- **Cómo se probó:** revisión estructural sobre consultas existentes; pendiente Preview con datos reales y roles.
+- **Build y tsc:** pendiente validación de Vercel para este commit.
 
 ## Siguiente paso
+- Validar en Preview Levantamientos → Activos/Realizados → Instalaciones/Consolidado; campañas cerradas deben quedar solo consulta y filtros Región/Cliente deben respetar RLS.
+- Después implementar asignación masiva de instalaciones y alcance ampliado de Supervisora general sin mezclar consulta con tareas.
 - Confirmar Preview READY y revisar que la ficha quede compacta en notebook y teléfono.
 - Después probar persistencia de una excepción con un usuario distinto de Admin Total.
 - Confirmar Vercel READY. Luego probar visualmente `Funciones y permisos` con un usuario distinto de Admin Total y comprobar persistencia de heredar/permitir/bloquear.
