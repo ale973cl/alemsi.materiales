@@ -1,6 +1,7 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
+import {CAPABILITIES,roleCan} from "@/lib/authorization";
 
 type Selection={material_id:string;qty:number;unit_net_price:number};
 type FreeLine={description:string;qty:number;unit:string;unit_net_price:number;supplier_code?:string};
@@ -10,7 +11,7 @@ async function supplyContext(){
   const {data:{user}}=await supabase.auth.getUser();
   if(!user)throw new Error("Sesión no válida");
   const {data:profile}=await supabase.from("user_profiles").select("role,active,full_name,email").eq("id",user.id).single();
-  if(!profile?.active||!["Admin Total","Gerencia","Admin","Operaciones"].includes(profile.role))throw new Error("No autorizado para generar órdenes de compra");
+  if(!profile?.active||!roleCan(profile.role,CAPABILITIES.SUPPLY_MANAGE))throw new Error("No autorizado para generar órdenes de compra");
   return{supabase,user,profile};
 }
 
