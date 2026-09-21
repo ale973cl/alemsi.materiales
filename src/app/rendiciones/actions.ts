@@ -13,7 +13,7 @@ async function context(){
  const {data:profile}=await supabase.from("user_profiles").select("id,full_name,email,role,active").eq("id",user.id).single();
  if(!profile?.active) throw new Error("Usuario no habilitado.");
  const {data:allowed}=await supabase.rpc("has_additional_service_access",{p_service_code:"rendiciones"});
- if(!allowed) throw new Error("Rendiciones no está habilitado para este usuario.");
+ if(!allowed&&profile.role!=="Admin Total") throw new Error("Rendiciones no está habilitado para este usuario.");
  return {supabase,user,profile};
 }
 
