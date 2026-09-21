@@ -27,5 +27,5 @@ export async function setUserCapabilityOverride(formData:FormData){
  }
  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Usuarios",action:"Configurar función individual",entity_table:"user_module_permissions",entity_id:existing?.id||userId,new_data:{user_id:userId,capability,mode},observation:"El rol base sigue siendo la plantilla; esta fila representa una excepción individual."});
  revalidatePath("/");
- return{ok:true};
+ return;
 }
