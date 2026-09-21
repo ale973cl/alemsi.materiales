@@ -3,15 +3,15 @@
 
 ## Estado actual
 - **Rama activa:** `feat/carga-masiva-perfil-materiales`
-- **Último commit:** este commit — `fix: integrar carga masiva en contrato e instalación`.
-- **Preview desplegado:** pendiente de Vercel para la corrección final; Preview funcional anterior `afec5ff` READY.
+- **Último commit:** este commit — `fix: evitar doble descuento de reservas en inventario`.
+- **Preview desplegado:** pendiente de Vercel para este commit.
 - **Fecha de última actualización:** 2026-09-20
 
 ## Última tarea completada
-- **Qué se hizo:** Reconciliación previa al inventario: se verificó el fix anterior, regla de campañas sin ciclo, permisos reales, variables de entorno y PDI Angol Cuartel 2. Se corrigió únicamente el origen de links `/conteo/[token]` para que use Production estable.
-- **Archivos tocados:** `src/app/survey-link-actions.ts`, `docs/DECISIONES.md`, `STATE.md`.
-- **Cómo se probó:** inspección de historial/commits, código vigente y consultas de solo lectura a Supabase; no se modificaron datos ni esquema.
-- **Build y tsc:** Vercel valida `npm run build`; tsc queda cubierto por el build de Next.js.
+- **Qué se hizo:** Se corrigió el cálculo de Reservado en Inventario para no volver a descontar materiales que ya tienen salida física registrada. Solo los despachos previos a salida física (En preparación, Preparado, Listo para ruta) alimentan Reservado; En tránsito y Entrega parcial permanecen trazables por despacho/Kardex pero ya no reducen Disponible por segunda vez.
+- **Archivos tocados:** `src/app/api/inventory/context/route.ts`, `STATE.md`.
+- **Cómo se probó:** diagnóstico de solo lectura sobre WK-100, WK-550, Escobillón y Esponja confirmó movimientos físicos de despacho ya registrados y reservas provenientes de guías En tránsito.
+- **Build y tsc:** pendiente de Vercel para este commit.
 
 ## Siguiente paso
 - Antes de nuevas features, decidir/ejecutar la corrección pendiente de Operaciones en Levantamientos/Abastecimiento/OC y la visualización de los 4 estados presupuestarios en creación de OC; ambas NO estaban aplicadas en la rama auditada.
