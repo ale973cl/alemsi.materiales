@@ -22,7 +22,7 @@ const roles=[
  {value:"Supervisora",label:"Supervisora"},
 ];
 const roleLabel=(role:string)=>roles.find(item=>item.value===role)?.label||role;
-export default function UsersModule({users,clients,access,currentUserId,permissionOverrides}:{users:UserProfileRow[];clients:ClientInstallationGroup[];access:UserAccessRow[];currentUserId:string;permissionOverrides:UserPermissionOverride[];additionalServices:AdditionalServiceRow[];additionalServiceUserAccess:AdditionalServiceUserAccessRow[]}){
+export default function UsersModule({users,clients,access,currentUserId,permissionOverrides,additionalServices,additionalServiceUserAccess}:{users:UserProfileRow[];clients:ClientInstallationGroup[];access:UserAccessRow[];currentUserId:string;permissionOverrides:UserPermissionOverride[];additionalServices:AdditionalServiceRow[];additionalServiceUserAccess:AdditionalServiceUserAccessRow[]}){
  const [selected,setSelected]=useState(users[0]?.id||"");const [search,setSearch]=useState("");const [showNew,setShowNew]=useState(false);const [inviteMessage,setInviteMessage]=useState("");const [inviteBusy,setInviteBusy]=useState(false);const [editMessage,setEditMessage]=useState("");const [editBusy,setEditBusy]=useState(false);const [passwordBusy,setPasswordBusy]=useState(false);const [passwordMessage,setPasswordMessage]=useState("");const [testBusy,setTestBusy]=useState(false);const [testMessage,setTestMessage]=useState("");const user=users.find(item=>item.id===selected)||users[0];
  const assigned=new Set(access.filter(item=>item.user_id===user?.id&&item.active).map(item=>item.installation_id));
  const userOverrides=permissionOverrides.filter(item=>item.user_id===user?.id);
