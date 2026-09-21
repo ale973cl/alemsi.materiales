@@ -3,17 +3,19 @@
 
 ## Estado actual
 - **Rama activa:** `fix/roles-oficiales-y-permisos`
-- **Último commit:** este commit — `fix: ajustar retorno de acción de permisos`.
+- **Último commit:** este commit — `fix: compactar configuración de permisos`.
 - **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; Preview de autorización base `a739b64` verificado READY; migración de Levantamientos/Abastecimiento `4323a3c` verificada SUCCESS; nueva UI de permisos pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** El build de `0bd0367` compiló JavaScript pero falló en TypeScript porque la Server Action `setUserCapabilityOverride` retornaba `{ok:true}` y React `<form action>` exige `void | Promise<void>`. Se corrigió exclusivamente el retorno a `void`; no cambió la lógica de permisos ni persistencia.
-- **Archivos tocados:** `src/app/user-permission-actions.ts`, `STATE.md`.
-- **Cómo se probó:** corrección directa del error TypeScript reportado por Vercel en `UsersModule.tsx:37`; nuevo deployment pendiente.
-- **Build y tsc:** Vercel pendiente para el commit de corrección.
+- **Qué se hizo:** La sección extensa `Funciones y permisos` se convirtió en un bloque plegable `Configurar permisos`, cerrado por defecto. Solo al abrirlo muestra las capacidades y sus selectores. El aviso de protección de Admin Total queda dentro del bloque y deja de superponerse. No se modificó lógica de permisos ni Supabase.
+- **Archivos tocados:** `src/components/modules/UsersModule.tsx`, `STATE.md`.
+- **Cómo se probó:** ajuste estructural de UI sobre el componente actual; Vercel pendiente.
+- **Build y tsc:** Vercel pendiente para este ajuste.
 
 ## Siguiente paso
+- Confirmar Preview READY y revisar que la ficha quede compacta en notebook y teléfono.
+- Después probar persistencia de una excepción con un usuario distinto de Admin Total.
 - Confirmar Vercel READY. Luego probar visualmente `Funciones y permisos` con un usuario distinto de Admin Total y comprobar persistencia de heredar/permitir/bloquear.
 - Solo después conectar las excepciones a la autorización efectiva del servidor.
 - Confirmar Vercel READY y probar visualmente una excepción en un usuario que no sea Admin Total.
