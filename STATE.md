@@ -5,6 +5,9 @@
 - **Fecha:** 2026-09-21
 
 ## Última tarea completada
+- Reparado guardado de gastos en Rendiciones: los errores de Storage/DB ya no derriban la pantalla; se muestran dentro del formulario.
+- El formulario usa estado de Server Action y confirma éxito/error sin navegar a una pantalla de excepción.
+- Se mantiene rollback del gasto si falla el guardado o vínculo del comprobante.
 - Comprobante pasa a ser el primer paso del gasto.
 - Lector visual usa `OPENROUTER_API_KEY` solo en servidor y `openrouter/free` con entrada de imagen.
 - Lectura propone fecha, tipo/número de documento, proveedor, RUT, descripción y total; el usuario siempre puede corregir.
@@ -18,7 +21,7 @@
 - **Build:** deployment final Vercel `dpl_7FWS5qWssQ44YvP6sZFa8mhYSwdF` en BUILDING al cerrar esta actualización. `tsc --noEmit` local no disponible en esta sesión.
 
 ## Siguiente paso
-- Confirmar deployment READY.
+- Confirmar deployment READY del fix de guardado.
 - Prueba real desde Android: foto → “Analizando comprobante…” → datos autocompletados → corregir → guardar → recargar → Ver comprobante.
 - Luego enviar y probar observación/aprobación por línea y pago.
 - No avanzar Flota/Cotizaciones.
