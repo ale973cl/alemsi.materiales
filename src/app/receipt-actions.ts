@@ -5,7 +5,7 @@ import {createClient} from "@/lib/supabase/server";
 async function ctx(roles:string[]){const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)throw new Error("Sesión no válida");const {data:profile}=await supabase.from("user_profiles").select("role,active,full_name,email").eq("id",user.id).single();if(!profile?.active||!roles.includes(profile.role))throw new Error("No autorizado para esta operación");return{supabase,user,profile};}
 
 export async function registerPurchaseOrderReceipt(formData:FormData){
- const {supabase,user,profile}=await ctx(["Admin Total","Admin","Bodega"]);
+ const {supabase,user,profile}=await ctx(["Admin Total","Admin","Operaciones","Bodega"]);
  const purchaseOrderId=String(formData.get("purchase_order_id")||"").trim();
  const documentType=String(formData.get("document_type")||"").trim();
  const documentFolio=String(formData.get("document_folio")||"").trim();

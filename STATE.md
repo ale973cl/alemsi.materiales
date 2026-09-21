@@ -3,19 +3,19 @@
 
 ## Estado actual
 - **Rama activa:** `fix/roles-oficiales-y-permisos`
-- **Último commit:** este commit — `fix: alinear Operaciones con circuito de levantamiento y OC`.
+- **Último commit:** este commit — `fix: alinear Operaciones con recepción despacho y rutas`.
 - **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; nuevo Preview de recuperación pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** Se alineó el rol `Operaciones` con los módulos que ya ve en navegación: puede registrar levantamientos, generar links de conteo, generar OC desde abastecimiento/OC manual, enviar OC y derivar OC a Finanzas. No se cambió la lógica de carencia, cantidades, inventario, finanzas ni esquema Supabase.
-- **Archivos tocados:** `src/app/survey-actions.ts`, `src/app/survey-link-actions.ts`, `src/app/supply-actions.ts`, `src/app/purchase-order-actions.ts`, `src/app/purchase-order-email-actions.ts`, `src/components/modules/PurchaseOrdersModule.tsx`, `STATE.md`.
+- **Qué se hizo:** Se alineó `Operaciones` con Recepción, Despacho y Rutas, tanto en UI como en Server Actions. Operaciones puede registrar recepción, generar/preparar despachos, crear complementarias, registrar entrega y gestionar rutas; Supervisora mantiene entrega/ruta asignada sin administración general. No se cambió la lógica de inventario ni estados del circuito.
+- **Archivos tocados:** `src/app/receipt-actions.ts`, `src/app/dispatch-actions.ts`, `src/app/route-actions.ts`, `src/app/actions.ts`, `src/components/modules/DispatchDeliveryModule.tsx`, `STATE.md`.
 - **Cómo se probó:** revisión cruzada navegación → UI → Server Actions; Vercel/CI pendiente.
 - **Build y tsc:** pendiente de validación del deployment/CI de este commit.
 
 ## Siguiente paso
-- Revisar y corregir de forma aislada las contradicciones restantes de `Operaciones` en Recepción y Despacho/Rutas, distinguiendo participación de administración.
-- Después centralizar autorización antes de activar `user_module_permissions`; no activar todavía la matriz configurable.
+- Centralizar autorización para eliminar listas de roles dispersas, preservando exactamente los permisos vigentes ya reconciliados.
+- Después conectar gradualmente `Usuarios y perfiles` con capacidades configurables; no activar todavía `user_module_permissions` como fuente única.
 
 ## Auditoría estructural
 - [x] Creado inventario inicial de funciones, riesgos, permisos y navegación en `docs/AUDITORIA_PROFUNDA_2026-09-19.md`.

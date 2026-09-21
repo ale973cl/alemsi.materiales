@@ -1,8 +1,8 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
-const ROUTE_ROLES=["Admin Total","Gerencia","Admin","Bodega","Supervisora"];
-const ROUTE_MANAGERS=["Admin Total","Gerencia","Admin","Bodega"];
+const ROUTE_ROLES=["Admin Total","Gerencia","Admin","Operaciones","Bodega","Supervisora"];
+const ROUTE_MANAGERS=["Admin Total","Gerencia","Admin","Operaciones","Bodega"];
 const ACTIVE_ROUTE_STATUSES=["Asignada","Preparada","En tránsito","Parcialmente entregada"];
 async function routeCtx(){const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)throw new Error("Sesión no válida");const {data:profile}=await supabase.from("user_profiles").select("id,full_name,email,role,active").eq("id",user.id).single();if(!profile?.active||!ROUTE_ROLES.includes(profile.role))throw new Error("No autorizado para gestionar rutas");return{supabase,user,profile};}
 export async function getRouteContext(){const {supabase,user,profile}=await routeCtx();const [{data:users},{data:routes}]=await Promise.all([supabase.from("user_profiles").select("id,full_name,email,role,active").eq("active",true).order("full_name"),supabase.from("delivery_routes").select("id,route_name,planned_date,status,preparation_assignee_id,delivery_assignee_id,created_by,prepared_by,started_by,prepared_at,started_at,created_at,delivery_route_dispatches(dispatch_id,delivery_order,load_order)").neq("status","Anulada").order("created_at",{ascending:false})]);return{currentUser:{id:user.id,role:profile.role,name:profile.full_name||profile.email},users:users||[],routes:routes||[]};}
