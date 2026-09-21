@@ -1,4 +1,5 @@
-"use server";\nimport {CAPABILITIES,rolesFor} from "@/lib/authorization";
+"use server";
+import {CAPABILITIES,rolesFor} from "@/lib/authorization";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
 

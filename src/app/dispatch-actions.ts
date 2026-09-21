@@ -1,4 +1,5 @@
-"use server";\nimport {CAPABILITIES,rolesFor} from "@/lib/authorization";
+"use server";
+import {CAPABILITIES,rolesFor} from "@/lib/authorization";
 
 import {headers} from "next/headers";
 import {revalidatePath} from "next/cache";

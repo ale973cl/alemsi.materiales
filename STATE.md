@@ -3,14 +3,14 @@
 
 ## Estado actual
 - **Rama activa:** `fix/roles-oficiales-y-permisos`
-- **Último commit:** este commit — `refactor: aplicar autorización central en servidor`.
+- **Último commit:** este commit — `fix: corregir imports de autorización servidor`.
 - **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; nuevo Preview de recuperación pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** Las Server Actions de OC, Recepción, Inventario, Despacho, Entrega y Rutas consumen ahora la misma matriz de capacidades de `src/lib/authorization.ts` que la interfaz. Se eliminaron en este circuito las listas de roles duplicadas sin cambiar permisos efectivos ni reglas de negocio. No se activó `user_module_permissions` ni se modificó Supabase.
-- **Archivos tocados:** `src/lib/authorization.ts`, `src/app/purchase-order-actions.ts`, `src/app/purchase-order-email-actions.ts`, `src/app/receipt-actions.ts`, `src/app/inventory-actions.ts`, `src/app/dispatch-actions.ts`, `src/app/route-actions.ts`, `STATE.md`.
-- **Cómo se probó:** equivalencia UI → capacidad → Server Action para OC, Recepción, Inventario, Despacho, Entrega y Rutas; Vercel/CI pendiente.
+- **Qué se hizo:** Se corrigió un error de sintaxis introducido al migrar las Server Actions: cinco archivos contenían el texto literal `\\n` después de `"use server";`, lo que impedía compilar el Preview. La lógica de autorización central permanece sin cambios.
+- **Archivos tocados:** `src/app/receipt-actions.ts`, `src/app/inventory-actions.ts`, `src/app/dispatch-actions.ts`, `src/app/purchase-order-actions.ts`, `src/app/purchase-order-email-actions.ts`, `STATE.md`.
+- **Cómo se probó:** inspección directa de los archivos que fallaron tras el commit anterior; Vercel/CI pendiente.
 - **Build y tsc:** pendiente de validación del deployment/CI de este commit.
 
 ## Siguiente paso
