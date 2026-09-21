@@ -2,16 +2,16 @@
 <!-- Este archivo se actualiza en el MISMO commit que el cambio. Si el código avanzó y este archivo no, el commit está incompleto. -->
 
 ## Estado actual
-- **Rama activa:** `recovery/estable-login-9c0a88a`
-- **Último commit:** este commit — `fix: fijar dominio de conteo y reconciliar auditoría`.
-- **Preview desplegado:** el Preview anterior del commit `a449e6c` está READY; el Preview de este commit queda pendiente de Vercel.
-- **Fecha de última actualización:** 2026-09-19
+- **Rama activa:** `recovery/estable-20260920`
+- **Último commit:** este commit — `chore: recuperar última versión estable`.
+- **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; nuevo Preview de recuperación pendiente de Vercel.
+- **Fecha de última actualización:** 2026-09-20
 
 ## Última tarea completada
-- **Qué se hizo:** Reconciliación previa al inventario: se verificó el fix anterior, regla de campañas sin ciclo, permisos reales, variables de entorno y PDI Angol Cuartel 2. Se corrigió únicamente el origen de links `/conteo/[token]` para que use Production estable.
-- **Archivos tocados:** `src/app/survey-link-actions.ts`, `docs/DECISIONES.md`, `STATE.md`.
-- **Cómo se probó:** inspección de historial/commits, código vigente y consultas de solo lectura a Supabase; no se modificaron datos ni esquema.
-- **Build y tsc:** pendiente de validación del deployment/CI para este commit.
+- **Qué se hizo:** Se abandonó la rama experimental de carga masiva y se recuperó una rama nueva desde la última versión estable verificada `761e034`. No se arrastran los cambios de carga masiva ni la corrección posterior de Inventario; ambos quedan pendientes para rehacerlos aisladamente.
+- **Archivos tocados:** solo `STATE.md`; el código funcional corresponde exactamente a la base estable `761e034`.
+- **Cómo se probó:** la base `761e034` tiene deployment Vercel READY `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM`.
+- **Build y tsc:** pendiente del deployment de esta nueva rama; el mismo árbol funcional ya compiló READY en la base estable.
 
 ## Siguiente paso
 - Antes de nuevas features, decidir/ejecutar la corrección pendiente de Operaciones en Levantamientos/Abastecimiento/OC y la visualización de los 4 estados presupuestarios en creación de OC; ambas NO estaban aplicadas en la rama auditada.
