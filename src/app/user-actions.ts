@@ -2,7 +2,7 @@
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
 
-const USER_ROLES=["Admin Total","Gerencia","Admin","Supervisora","Finanzas","Bodega"] as const;
+const USER_ROLES=["Admin Total","Gerencia","Admin","Finanzas","Operaciones","Bodega","Supervisora"] as const;
 const TEMPORARY_PASSWORD=["ALEMSI","2026"].join("");
 type UserRole=typeof USER_ROLES[number];
 type ActionResult={ok:boolean;error?:string;message?:string;[key:string]:unknown};

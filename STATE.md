@@ -2,20 +2,20 @@
 <!-- Este archivo se actualiza en el MISMO commit que el cambio. Si el código avanzó y este archivo no, el commit está incompleto. -->
 
 ## Estado actual
-- **Rama activa:** `recovery/estable-20260920`
-- **Último commit:** este commit — `chore: recuperar última versión estable`.
+- **Rama activa:** `fix/roles-oficiales-y-permisos`
+- **Último commit:** este commit — `fix: normalizar roles oficiales de usuarios`.
 - **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; nuevo Preview de recuperación pendiente de Vercel.
-- **Fecha de última actualización:** 2026-09-20
+- **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** Se abandonó la rama experimental de carga masiva y se recuperó una rama nueva desde la última versión estable verificada `761e034`. No se arrastran los cambios de carga masiva ni la corrección posterior de Inventario; ambos quedan pendientes para rehacerlos aisladamente.
-- **Archivos tocados:** solo `STATE.md`; el código funcional corresponde exactamente a la base estable `761e034`.
-- **Cómo se probó:** la base `761e034` tiene deployment Vercel READY `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM`.
-- **Build y tsc:** pendiente del deployment de esta nueva rama; el mismo árbol funcional ya compiló READY en la base estable.
+- **Qué se hizo:** Se normalizaron los 7 roles oficiales en Usuarios y perfiles. `Admin` vuelve a mostrarse como Admin y `Operaciones` queda como rol independiente y administrable. No se modificaron permisos operacionales ni esquema Supabase.
+- **Archivos tocados:** `src/components/modules/UsersModule.tsx`, `src/app/user-actions.ts`, `STATE.md`.
+- **Cómo se probó:** revisión estática de la definición de roles y validación del mismo catálogo en UI y Server Action; deployment Vercel pendiente.
+- **Build y tsc:** pendiente de validación del deployment/CI de esta rama.
 
 ## Siguiente paso
-- Antes de nuevas features, decidir/ejecutar la corrección pendiente de Operaciones en Levantamientos/Abastecimiento/OC y la visualización de los 4 estados presupuestarios en creación de OC; ambas NO estaban aplicadas en la rama auditada.
-- Completar después RLS/permisos y referencias legacy; no activar todavía la matriz configurable.
+- Mapear y corregir de forma aislada la contradicción de permisos de `Operaciones` en Levantamientos, Abastecimiento y OC, manteniendo la misma autorización en navegación y servidor.
+- Después centralizar autorización antes de activar `user_module_permissions`; no activar todavía la matriz configurable.
 
 ## Auditoría estructural
 - [x] Creado inventario inicial de funciones, riesgos, permisos y navegación en `docs/AUDITORIA_PROFUNDA_2026-09-19.md`.

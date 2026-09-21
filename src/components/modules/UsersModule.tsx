@@ -8,7 +8,8 @@ export type UserAccessRow={id:string;user_id:string;installation_id:string;activ
 const roles=[
  {value:"Admin Total",label:"Admin Total"},
  {value:"Gerencia",label:"Gerencia"},
- {value:"Admin",label:"Operaciones"},
+ {value:"Admin",label:"Admin"},
+ {value:"Operaciones",label:"Operaciones"},
  {value:"Finanzas",label:"Finanzas"},
  {value:"Bodega",label:"Bodega"},
  {value:"Supervisora",label:"Supervisora"},
@@ -32,5 +33,5 @@ export default function UsersModule({users,clients,access,currentUserId}:{users:
  <div className="adminForm"><h3>Prueba de correo</h3><p>Envía un mensaje real usando el SMTP configurado en este Preview. La prueba solo puede ejecutarla Admin Total.</p><button type="button" disabled={testBusy||!user.email} onClick={testEmail}>{testBusy?"Probando SMTP...":`Probar correo${user.email?` a ${user.email}`:""}`}</button>{testMessage&&<small>{testMessage}</small>}</div>
  <div className="assignmentHead"><div><h3>Instalaciones asignadas</h3><p>Las supervisoras verán solamente las instalaciones activas que tengan asignadas.</p></div><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar cliente, contrato o instalación"/></div>
  <div className="assignmentList">{installations.map(item=>{const isAssigned=assigned.has(item.id);return <article key={item.id}><span><b>{item.name}</b><small>{item.client} · {item.contract}<br/>{[item.commune,item.city,item.region].filter(Boolean).join(" · ")||"Ubicación pendiente"}</small></span><form action={setUserInstallationAccess}><input type="hidden" name="user_id" value={user.id}/><input type="hidden" name="installation_id" value={item.id}/><input type="hidden" name="granted" value={String(!isAssigned)}/><button className={isAssigned?"removeAccess":""}>{isAssigned?"Retirar":"Asignar"}</button></form></article>})}</div></div></div>
- <p className="catalogNote">El correo identifica la cuenta de acceso. Los cambios quedan trazados y el perfil Operaciones mantiene los permisos existentes del rol técnico Admin.</p></section>;
+ <p className="catalogNote">El correo identifica la cuenta de acceso. Los cambios quedan trazados. Admin y Operaciones son perfiles independientes.</p></section>;
 }
