@@ -1,0 +1,1 @@
+-- Applied in Supabase as renditions_simple_end_to_end. Adds service_mode, review/payment observations and Admin Total review access.

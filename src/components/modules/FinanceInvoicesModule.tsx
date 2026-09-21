@@ -9,7 +9,7 @@ const tabs:[View,string][]=[["dashboard","Resumen regional"],["clients","Cliente
 export default function FinanceInvoicesModule({role}:{role:string}){
  const [view,setView]=useState<View>("dashboard");
  return <div className="financeShell">
-  <nav className="financeTabs" aria-label="Secciones de Finanzas">{tabs.map(([id,label])=><button key={id} type="button" className={view===id?"active":""} onClick={()=>setView(id)}>{label}</button>)}</nav>
+  <nav className="financeTabs" aria-label="Secciones de Finanzas">{tabs.map(([id,label])=><button key={id} type="button" className={view===id?"active":""} onClick={()=>{if(id==="renditions"){window.location.href="/rendiciones";return}setView(id)}}>{label}</button>)}</nav>
   {view==="dashboard"&&<FinanceDashboard mode="dashboard"/>}
   {view==="clients"&&<FinanceDashboard mode="clients"/>}
   {view==="invoices"&&<FinancePurchaseRegister role={role}/>} {view==="renditions"&&<section className="panel"><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap"}}><div><h2>Rendiciones</h2><p>Expedientes enviados para revisión financiera.</p></div><a href="/rendiciones" style={{fontWeight:800}}>Abrir bandeja de Rendiciones →</a></div></section>} 
