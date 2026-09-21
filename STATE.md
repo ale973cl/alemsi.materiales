@@ -3,18 +3,18 @@
 
 ## Estado actual
 - **Rama activa:** `fix/roles-oficiales-y-permisos`
-- **Último commit:** este commit — `fix: normalizar roles oficiales de usuarios`.
+- **Último commit:** este commit — `fix: alinear Operaciones con circuito de levantamiento y OC`.
 - **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; nuevo Preview de recuperación pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** Se normalizaron los 7 roles oficiales en Usuarios y perfiles. `Admin` vuelve a mostrarse como Admin y `Operaciones` queda como rol independiente y administrable. No se modificaron permisos operacionales ni esquema Supabase.
-- **Archivos tocados:** `src/components/modules/UsersModule.tsx`, `src/app/user-actions.ts`, `STATE.md`.
-- **Cómo se probó:** revisión estática de la definición de roles y validación del mismo catálogo en UI y Server Action; deployment Vercel pendiente.
-- **Build y tsc:** pendiente de validación del deployment/CI de esta rama.
+- **Qué se hizo:** Se alineó el rol `Operaciones` con los módulos que ya ve en navegación: puede registrar levantamientos, generar links de conteo, generar OC desde abastecimiento/OC manual, enviar OC y derivar OC a Finanzas. No se cambió la lógica de carencia, cantidades, inventario, finanzas ni esquema Supabase.
+- **Archivos tocados:** `src/app/survey-actions.ts`, `src/app/survey-link-actions.ts`, `src/app/supply-actions.ts`, `src/app/purchase-order-actions.ts`, `src/app/purchase-order-email-actions.ts`, `src/components/modules/PurchaseOrdersModule.tsx`, `STATE.md`.
+- **Cómo se probó:** revisión cruzada navegación → UI → Server Actions; Vercel/CI pendiente.
+- **Build y tsc:** pendiente de validación del deployment/CI de este commit.
 
 ## Siguiente paso
-- Mapear y corregir de forma aislada la contradicción de permisos de `Operaciones` en Levantamientos, Abastecimiento y OC, manteniendo la misma autorización en navegación y servidor.
+- Revisar y corregir de forma aislada las contradicciones restantes de `Operaciones` en Recepción y Despacho/Rutas, distinguiendo participación de administración.
 - Después centralizar autorización antes de activar `user_module_permissions`; no activar todavía la matriz configurable.
 
 ## Auditoría estructural
@@ -39,7 +39,7 @@
 - [x] Corregido el generador de links de conteo: `/conteo/[token]` usa siempre `https://alemsi-materiales.vercel.app`.
 - [x] Diagnosticado `PDI Angol · Cuartel 2`: no hay configuración de materiales para el contrato PDI Angol en `contract_materials`, `installation_material_profiles` ni `client_materials`; requiere carga/configuración, no cambio del token.
 - [ ] Revisar Finanzas por perfil sin inventar estados financieros inexistentes.
-- [ ] Corregir rol `Operaciones` en Levantamientos/Abastecimiento/OC: la navegación lo muestra, pero `survey-actions.ts`, `supply-actions.ts` y `purchase-order-actions.ts` todavía lo rechazan en servidor.
+- [x] Corregido rol `Operaciones` en Levantamientos/Abastecimiento/OC: navegación, UI de OC y Server Actions quedan alineados.
 - [ ] Implementar/confirmar visualmente los cuatro estados presupuestarios en Abastecimiento → OC: no existen coincidencias de esos estados en los componentes/acciones actuales de OC; la regla gerencial sí permanece documentada.
 - [ ] Revalidar despacho completo manualmente, especialmente entrega parcial → pendiente → guía, firma/recepción y móvil.
 
