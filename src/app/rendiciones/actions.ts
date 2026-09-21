@@ -31,15 +31,10 @@ export async function createRendition(formData:FormData){
 }
 
 export async function addRenditionExpense(formData:FormData){
- const {supabase}=await context(); const renditionId=text(formData.get("rendition_id"));
- const amount=money(formData.get("presented_amount"));
- const row={rendition_id:renditionId,expense_date:text(formData.get("expense_date")),category:text(formData.get("category")),document_type:text(formData.get("document_type")),provider_name:text(formData.get("provider_name"))||null,provider_rut:text(formData.get("provider_rut"))||null,document_number:text(formData.get("document_number"))||null,description:text(formData.get("description")),presented_amount:amount};
- if(!renditionId||!row.expense_date||!row.category||!row.document_type||!row.description)throw new Error("Completa los datos obligatorios del gasto.");
- const {error}=await supabase.from("rendition_expenses").insert(row); if(error)throw new Error(error.message);
- const {data:expenses}=await supabase.from("rendition_expenses").select("presented_amount").eq("rendition_id",renditionId);
- const total=(expenses||[]).reduce((s:any,x:any)=>s+Number(x.presented_amount||0),0);
- await supabase.from("renditions").update({total_presented:total,updated_at:new Date().toISOString()}).eq("id",renditionId);
- revalidatePath("/rendiciones");
+ const {supabase,user}=await context(); const renditionId=text(formData.get("rendition_id")); const amount=money(formData.get("presented_amount")); const file=formData.get("document_file"); let documentId:string|null=null;
+ if(file instanceof File&&file.size>0){const allowed=new Set(["image/jpeg","image/png","image/webp","application/pdf"]);if(!allowed.has(file.type))throw new Error("El comprobante debe ser JPG, PNG, WEBP o PDF.");if(file.size>10*1024*1024)throw new Error("El comprobante no puede superar 10 MB.");const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"_");const path=`${renditionId}/${crypto.randomUUID()}-${safeName}`;const {error:uploadError}=await supabase.storage.from("rendition-documents").upload(path,file,{contentType:file.type,upsert:false});if(uploadError)throw new Error("No se pudo guardar el comprobante.");const {data:doc,error:docError}=await supabase.from("documents").insert({entity_table:"rendition_expenses",entity_id:renditionId,document_type:"Comprobante rendición",file_name:file.name,storage_path:path,mime_type:file.type,uploaded_by:user.id}).select("id").single();if(docError){await supabase.storage.from("rendition-documents").remove([path]);throw new Error("No se pudo registrar el comprobante.");}documentId=doc.id;}
+ const row={rendition_id:renditionId,expense_date:text(formData.get("expense_date")),category:text(formData.get("category")),document_type:text(formData.get("document_type")),provider_name:text(formData.get("provider_name"))||null,provider_rut:text(formData.get("provider_rut"))||null,document_number:text(formData.get("document_number"))||null,description:text(formData.get("description")),presented_amount:amount,document_id:documentId};
+ if(!renditionId||!row.expense_date||!row.category||!row.document_type||!row.description)throw new Error("Completa los datos obligatorios del gasto.");const {error}=await supabase.from("rendition_expenses").insert(row);if(error)throw new Error(error.message);const {data:expenses}=await supabase.from("rendition_expenses").select("presented_amount").eq("rendition_id",renditionId);const total=(expenses||[]).reduce((sum:number,item:{presented_amount:number|null})=>sum+Number(item.presented_amount||0),0);const {error:totalError}=await supabase.from("renditions").update({total_presented:total,updated_at:new Date().toISOString()}).eq("id",renditionId);if(totalError)throw new Error(totalError.message);revalidatePath("/rendiciones");
 }
 
 export async function submitRendition(formData:FormData){

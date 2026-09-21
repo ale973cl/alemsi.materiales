@@ -1,0 +1,1 @@
+-- Aplicada en Supabase como rendition_document_uploads. Bucket privado rendition-documents; rendition_expenses.document_id referencia documents(id).\n
