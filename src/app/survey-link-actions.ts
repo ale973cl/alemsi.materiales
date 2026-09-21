@@ -2,13 +2,14 @@
 import {createHash,randomBytes} from "crypto";
 import {createClient} from "@/lib/supabase/server";
 import {enqueueModuleEmail} from "@/lib/email-queue";
+import {CAPABILITIES,roleCan} from "@/lib/authorization";
 
 async function managerContext(){
   const supabase=await createClient();
   const {data:{user}}=await supabase.auth.getUser();
   if(!user)throw new Error("Sesión no válida");
   const {data:profile}=await supabase.from("user_profiles").select("role,active,full_name,email").eq("id",user.id).single();
-  if(!profile?.active||!["Admin Total","Gerencia","Admin","Operaciones","Supervisora"].includes(profile.role))throw new Error("No autorizado para generar links de conteo");
+  if(!profile?.active||!roleCan(profile.role,CAPABILITIES.SURVEY_LINK_MANAGE))throw new Error("No autorizado para generar links de conteo");
   return{supabase,user,profile};
 }
 
