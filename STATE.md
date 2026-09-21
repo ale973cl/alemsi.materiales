@@ -3,12 +3,12 @@
 
 ## Estado actual
 - **Rama activa:** `feat/servicios-adicionales-base`
-- **Último commit:** este commit — `feat: adjuntar comprobantes en rendiciones`.
+- **Último commit:** este commit — `fix: integrar rendiciones a finanzas y abrir expedientes`.
 - **Base de rama:** `44bf934a7d2b66bc104bd8eb0100a07e2ff3a213` desde `fix/roles-oficiales-y-permisos`; no se usó el tronco antiguo `work/maestros-unificados-ui` para no perder cambios recientes.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** se agregó respaldo documental por gasto en Rendiciones. Permite foto desde teléfono o archivo JPG/PNG/WEBP/PDF, máximo 10 MB, guardado en bucket privado `rendition-documents` y relacionado con el gasto mediante `documents`. El original se conserva.
+- **Qué se hizo:** Finanzas ahora muestra una pestaña `Rendiciones` con acceso a la bandeja real. En `/rendiciones`, cada registro enviado mantiene acceso de consulta mediante `Abrir expediente`; enviar a revisión bloquea edición, no la lectura. Se verificaron en Supabase dos rendiciones enviadas y un gasto registrado.
 - **Supabase:** migraciones `additional_services_base` y `additional_services_security_indexes` aplicadas correctamente. Tablas nuevas: `additional_services` y `additional_service_user_access`. Se revocó acceso anónimo a la función de autorización y se agregaron índices a las nuevas FK. No se modificaron tablas operacionales de Materiales.
 - **Archivos tocados:** `supabase/migrations/20260921053000_additional_services_base.sql`, `supabase/migrations/20260921055500_additional_services_security_indexes.sql`, `src/lib/additional-services.ts`, `STATE.md`.
 - **Correo:** Rendiciones usa `email_queue` y el motor central existente. `email-delivery.ts` fue corregido para usar exclusivamente `SUPABASE_SERVICE_ROLE_KEY`.
