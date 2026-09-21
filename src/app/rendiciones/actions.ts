@@ -46,7 +46,7 @@ export async function addRenditionExpense(fd:FormData){
  const {supabase,user,profile}=await ctx(); const renditionId=txt(fd.get("rendition_id"));
  const {data:r}=await supabase.from("renditions").select("id,status").eq("id",renditionId).single();
  if(!r||!editable.has(r.status))throw new Error("Esta rendición ya no permite agregar gastos.");
- const row={rendition_id:renditionId,expense_date:txt(fd.get("expense_date")),category:txt(fd.get("category")),document_type:txt(fd.get("document_type")),provider_name:txt(fd.get("provider_name"))||null,provider_rut:txt(fd.get("provider_rut"))||null,document_number:txt(fd.get("document_number"))||null,description:txt(fd.get("description")),presented_amount:amount(fd.get("presented_amount"))};
+ const row={rendition_id:renditionId,expense_date:txt(fd.get("expense_date")),category:txt(fd.get("category")),document_type:txt(fd.get("document_type")),provider_name:txt(fd.get("provider_name"))||null,provider_rut:txt(fd.get("provider_rut"))||null,document_number:txt(fd.get("document_number"))||null,description:txt(fd.get("description")),presented_amount:amount(fd.get("presented_amount")),review_status:"Pendiente"};
  if(!row.expense_date||!row.category||!row.document_type||!row.description||row.presented_amount<=0)throw new Error("Completa los datos obligatorios del gasto.");
  const {data:expense,error}=await supabase.from("rendition_expenses").insert(row).select("id").single(); if(error)throw new Error(error.message);
  const file=fd.get("document_file"); let documentId:string|null=null;
@@ -62,7 +62,7 @@ export async function addRenditionExpense(fd:FormData){
 export async function submitRendition(fd:FormData){
  const {supabase,profile}=await ctx(); const id=txt(fd.get("rendition_id"));
  const {data:r}=await supabase.from("renditions").select("id,folio,status,total_presented,person_name").eq("id",id).single();
- if(!r||!editable.has(r.status)||Number(r.total_presented)<=0)throw new Error("Agrega al menos un gasto antes de enviar.");
+ if(!r||!editable.has(r.status)||Number(r.total_presented)<=0)return;
  const {error}=await supabase.from("renditions").update({status:"Enviada",submitted_at:new Date().toISOString(),review_observation:null,updated_at:new Date().toISOString()}).eq("id",id);if(error)throw new Error(error.message);
  await log(supabase,profile,id,"submitted",{status:"Enviada"});
  await enqueueModuleEmail(supabase,{module:"renditions",event:"submitted",emailType:"rendition_submitted",relatedTable:"renditions",relatedId:id,subject:`Rendición ${r.folio} enviada`,summary:`${r.person_name} envió una rendición por $ ${Number(r.total_presented).toLocaleString("es-CL")}.`,facts:{Folio:r.folio,Responsable:r.person_name,"Total presentado":Number(r.total_presented)},idempotencyKey:`renditions:submitted:${id}:${Date.now()}`});
@@ -86,4 +86,36 @@ export async function markRenditionPaid(fd:FormData){
  const {data:r}=await supabase.from("renditions").select("status,total_authorized").eq("id",id).single();if(!r||r.status!=="Aprobada")throw new Error("La rendición debe estar aprobada.");if(paid<=0||paid>Number(r.total_authorized))throw new Error("Monto de pago inválido.");
  const {error}=await supabase.from("renditions").update({status:"Pagada",amount_paid:paid,payment_observation:observation||null,paid_by:profile.id,paid_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",id);if(error)throw new Error(error.message);
  await log(supabase,profile,id,"paid",{amount_paid:paid});revalidatePath("/rendiciones");
+}
+
+
+export async function editRenditionExpense(fd:FormData){
+ const {supabase,profile}=await ctx();const renditionId=txt(fd.get("rendition_id")),expenseId=txt(fd.get("expense_id"));
+ const {data:r}=await supabase.from("renditions").select("status").eq("id",renditionId).single();if(!r||!editable.has(r.status))throw new Error("La rendición ya no permite editar gastos.");
+ const patch={expense_date:txt(fd.get("expense_date")),category:txt(fd.get("category")),document_type:txt(fd.get("document_type")),provider_name:txt(fd.get("provider_name"))||null,provider_rut:txt(fd.get("provider_rut"))||null,document_number:txt(fd.get("document_number"))||null,description:txt(fd.get("description")),presented_amount:amount(fd.get("presented_amount")),authorized_amount:null,review_status:"Pendiente",review_observation:null,reviewed_by:null,reviewed_at:null,updated_at:new Date().toISOString()};
+ if(!patch.expense_date||!patch.category||!patch.document_type||!patch.description||patch.presented_amount<=0)throw new Error("Completa los datos obligatorios.");
+ const {error}=await supabase.from("rendition_expenses").update(patch).eq("id",expenseId).eq("rendition_id",renditionId);if(error)throw new Error(error.message);
+ const {data:items}=await supabase.from("rendition_expenses").select("presented_amount").eq("rendition_id",renditionId);const total=(items??[]).reduce((n:number,x:any)=>n+Number(x.presented_amount||0),0);
+ await supabase.from("renditions").update({total_presented:total,updated_at:new Date().toISOString()}).eq("id",renditionId);await log(supabase,profile,renditionId,"expense_edited",{expense_id:expenseId});revalidatePath("/rendiciones");
+}
+
+export async function reviewExpense(fd:FormData){
+ const {supabase,profile}=await ctx();if(!["Finanzas","Gerencia","Admin Total"].includes(profile.role))throw new Error("Sin permiso para revisar.");
+ const renditionId=txt(fd.get("rendition_id")),expenseId=txt(fd.get("expense_id")),decision=txt(fd.get("decision")),observation=txt(fd.get("observation"));
+ const {data:r}=await supabase.from("renditions").select("status").eq("id",renditionId).single();if(!r||r.status!=="Enviada")throw new Error("La rendición no está pendiente de revisión.");
+ if(decision==="OBSERVE"){
+  if(!observation)throw new Error("Indica qué debe corregirse.");
+  await supabase.from("rendition_expenses").update({review_status:"Observada",review_observation:observation,authorized_amount:null,reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",expenseId).eq("rendition_id",renditionId);
+  await supabase.from("renditions").update({status:"Observada",review_observation:"Existe al menos un gasto observado.",reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",renditionId);
+ }else{
+  if(profile.role==="Gerencia")throw new Error("Gerencia solo puede observar.");
+  const {data:g}=await supabase.from("rendition_expenses").select("presented_amount").eq("id",expenseId).eq("rendition_id",renditionId).single();if(!g)throw new Error("Gasto no encontrado.");
+  if(decision==="REJECT"&&!observation)throw new Error("Indica el motivo del rechazo.");if(!["APPROVE","REJECT"].includes(decision))throw new Error("Decisión inválida.");
+  const authorized=decision==="APPROVE"?Math.min(amount(fd.get("authorized_amount")),Number(g.presented_amount)):0;
+  await supabase.from("rendition_expenses").update({review_status:decision==="APPROVE"?"Aprobada":"Rechazada",review_observation:observation||null,authorized_amount:authorized,reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",expenseId).eq("rendition_id",renditionId);
+  const {data:items}=await supabase.from("rendition_expenses").select("review_status,authorized_amount").eq("rendition_id",renditionId);const total=(items??[]).reduce((n:number,x:any)=>n+Number(x.authorized_amount||0),0);const unresolved=(items??[]).some((x:any)=>["Pendiente","Observada"].includes(x.review_status));
+  await supabase.from("renditions").update({total_authorized:total,updated_at:new Date().toISOString()}).eq("id",renditionId);
+  if(!unresolved){const allRejected=(items??[]).length>0&&(items??[]).every((x:any)=>x.review_status==="Rechazada");await supabase.from("renditions").update({status:allRejected?"Rechazada":"Aprobada",total_authorized:total,reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",renditionId);}
+ }
+ await log(supabase,profile,renditionId,"expense_reviewed",{expense_id:expenseId,decision,observation});revalidatePath("/rendiciones");
 }
