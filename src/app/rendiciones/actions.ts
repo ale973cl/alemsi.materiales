@@ -7,6 +7,7 @@ const txt=(v:FormDataEntryValue|null)=>String(v??"").trim();
 const amount=(v:FormDataEntryValue|null)=>Math.max(0,Number(v||0));
 const editable=new Set(["Borrador","Observada"]);
 const allowedFiles=new Set(["image/jpeg","image/png","image/webp","application/pdf"]);
+export type RenditionExpenseResult={ok:boolean;message:string};
 
 async function ctx(){
  const supabase=await createClient();
@@ -42,21 +43,37 @@ export async function createRendition(fd:FormData){
  await log(supabase,profile,data.id,"created",{folio:data.folio,service_mode:row.service_mode}); revalidatePath("/rendiciones");
 }
 
-export async function addRenditionExpense(fd:FormData){
- const {supabase,user,profile}=await ctx(); const renditionId=txt(fd.get("rendition_id"));
- const {data:r}=await supabase.from("renditions").select("id,status").eq("id",renditionId).single();
- if(!r||!editable.has(r.status))throw new Error("Esta rendición ya no permite agregar gastos.");
- const row={rendition_id:renditionId,expense_date:txt(fd.get("expense_date")),category:txt(fd.get("category")),document_type:txt(fd.get("document_type")),provider_name:txt(fd.get("provider_name"))||null,provider_rut:txt(fd.get("provider_rut"))||null,document_number:txt(fd.get("document_number"))||null,description:txt(fd.get("description")),presented_amount:amount(fd.get("presented_amount")),review_status:"Pendiente"};
- if(!row.expense_date||!row.category||!row.document_type||!row.description||row.presented_amount<=0)throw new Error("Completa los datos obligatorios del gasto.");
- const {data:expense,error}=await supabase.from("rendition_expenses").insert(row).select("id").single(); if(error)throw new Error(error.message);
- const file=fd.get("document_file"); let documentId:string|null=null;
- try{if(file instanceof File&&file.size>0)documentId=await saveFile(supabase,user.id,expense.id,file);
-  if(documentId){const {error:link}=await supabase.from("rendition_expenses").update({document_id:documentId,updated_at:new Date().toISOString()}).eq("id",expense.id);if(link)throw link;}
- }catch(e){await supabase.from("rendition_expenses").delete().eq("id",expense.id);throw e;}
- const {data:items}=await supabase.from("rendition_expenses").select("presented_amount").eq("rendition_id",renditionId);
- const total=(items??[]).reduce((n:number,x:{presented_amount:number|null})=>n+Number(x.presented_amount||0),0);
- await supabase.from("renditions").update({total_presented:total,updated_at:new Date().toISOString()}).eq("id",renditionId);
- await log(supabase,profile,renditionId,"expense_added",{expense_id:expense.id,amount:row.presented_amount,document_id:documentId}); revalidatePath("/rendiciones");
+export async function addRenditionExpense(_prev:RenditionExpenseResult,fd:FormData):Promise<RenditionExpenseResult>{
+ let expenseId:string|null=null;let renditionId="";
+ try{
+  const {supabase,user,profile}=await ctx(); renditionId=txt(fd.get("rendition_id"));
+  const {data:r}=await supabase.from("renditions").select("id,status").eq("id",renditionId).single();
+  if(!r||!editable.has(r.status))return {ok:false,message:"Esta rendición ya no permite agregar gastos."};
+  const row={rendition_id:renditionId,expense_date:txt(fd.get("expense_date")),category:txt(fd.get("category")),document_type:txt(fd.get("document_type")),provider_name:txt(fd.get("provider_name"))||null,provider_rut:txt(fd.get("provider_rut"))||null,document_number:txt(fd.get("document_number"))||null,description:txt(fd.get("description")),presented_amount:amount(fd.get("presented_amount")),review_status:"Pendiente"};
+  if(!row.expense_date||!row.category||!row.document_type||!row.description||row.presented_amount<=0)return {ok:false,message:"Completa los datos obligatorios del gasto."};
+  const {data:expense,error}=await supabase.from("rendition_expenses").insert(row).select("id").single();
+  if(error)return {ok:false,message:"No se pudo registrar el gasto. Intenta nuevamente."};
+  expenseId=expense.id;
+  const file=fd.get("document_file");let documentId:string|null=null;
+  try{
+   if(file instanceof File&&file.size>0)documentId=await saveFile(supabase,user.id,expense.id,file);
+   if(documentId){const {error:link}=await supabase.from("rendition_expenses").update({document_id:documentId,updated_at:new Date().toISOString()}).eq("id",expense.id);if(link)throw new Error("No se pudo vincular el comprobante al gasto.");}
+  }catch(e){
+   await supabase.from("rendition_expenses").delete().eq("id",expense.id);
+   return {ok:false,message:e instanceof Error?e.message:"No se pudo guardar el comprobante."};
+  }
+  const {data:items,error:itemsError}=await supabase.from("rendition_expenses").select("presented_amount").eq("rendition_id",renditionId);
+  if(itemsError)return {ok:false,message:"El gasto se guardó, pero no fue posible actualizar el total. Recarga la página."};
+  const total=(items??[]).reduce((n:number,x:{presented_amount:number|null})=>n+Number(x.presented_amount||0),0);
+  const {error:totalError}=await supabase.from("renditions").update({total_presented:total,updated_at:new Date().toISOString()}).eq("id",renditionId);
+  if(totalError)return {ok:false,message:"El gasto se guardó, pero no fue posible actualizar el total. Recarga la página."};
+  await log(supabase,profile,renditionId,"expense_added",{expense_id:expense.id,amount:row.presented_amount,document_id:documentId});
+  revalidatePath("/rendiciones");
+  return {ok:true,message:"Gasto guardado correctamente."};
+ }catch(e){
+  console.error("addRenditionExpense",e);
+  return {ok:false,message:e instanceof Error?e.message:"No se pudo guardar el gasto. Intenta nuevamente."};
+ }
 }
 
 export async function submitRendition(fd:FormData){
@@ -87,7 +104,6 @@ export async function markRenditionPaid(fd:FormData){
  const {error}=await supabase.from("renditions").update({status:"Pagada",amount_paid:paid,payment_observation:observation||null,paid_by:profile.id,paid_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",id);if(error)throw new Error(error.message);
  await log(supabase,profile,id,"paid",{amount_paid:paid});revalidatePath("/rendiciones");
 }
-
 
 export async function editRenditionExpense(fd:FormData){
  const {supabase,profile}=await ctx();const renditionId=txt(fd.get("rendition_id")),expenseId=txt(fd.get("expense_id"));
