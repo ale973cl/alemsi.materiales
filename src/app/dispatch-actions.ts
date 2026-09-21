@@ -11,7 +11,7 @@ const ROUTE_FINAL_DISPATCH_STATUSES=["Entregado conforme","Entrega con observaci
 async function closeFinishedRoutes(supabase:any,dispatchId:string){const {data:links}=await supabase.from("delivery_route_dispatches").select("route_id").eq("dispatch_id",dispatchId);for(const link of links||[]){const {data:route}=await supabase.from("delivery_routes").select("id,status,delivery_route_dispatches(dispatches(status))").eq("id",(link as any).route_id).single();if(!route||!["En tránsito","Parcialmente entregada"].includes(String((route as any).status)))continue;const routeLinks=((route as any).delivery_route_dispatches||[]) as any[];const statuses=routeLinks.map(x=>String(Array.isArray(x.dispatches)?x.dispatches[0]?.status:x.dispatches?.status||""));if(statuses.length&&statuses.every(status=>ROUTE_FINAL_DISPATCH_STATUSES.includes(status))){await supabase.from("delivery_routes").update({status:"Completada",updated_at:new Date().toISOString()}).eq("id",(route as any).id);}}
 }
 
-async function ctx(roles:string[]){
+async function ctx(roles:readonly string[]){
   const supabase=await createClient();
   const {data:{user}}=await supabase.auth.getUser();
   if(!user)throw new Error("Sesión no válida");

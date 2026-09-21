@@ -3,14 +3,14 @@
 
 ## Estado actual
 - **Rama activa:** `fix/roles-oficiales-y-permisos`
-- **Último commit:** este commit — `fix: corregir imports de autorización servidor`.
+- **Último commit:** este commit — `fix: corregir tipado de autorización servidor`.
 - **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; nuevo Preview de recuperación pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** Se corrigió un error de sintaxis introducido al migrar las Server Actions: cinco archivos contenían el texto literal `\\n` después de `"use server";`, lo que impedía compilar el Preview. La lógica de autorización central permanece sin cambios.
-- **Archivos tocados:** `src/app/receipt-actions.ts`, `src/app/inventory-actions.ts`, `src/app/dispatch-actions.ts`, `src/app/purchase-order-actions.ts`, `src/app/purchase-order-email-actions.ts`, `STATE.md`.
-- **Cómo se probó:** inspección directa de los archivos que fallaron tras el commit anterior; Vercel/CI pendiente.
+- **Qué se hizo:** Tras el segundo fallo de Vercel se corrigió el tipado de los helpers de autorización del servidor: `ctx` acepta listas readonly y Rutas valida la capacidad con `roleCan` en vez de comparar directamente un rol `string` contra una unión tipada. No se cambiaron permisos efectivos ni reglas de negocio.
+- **Archivos tocados:** `src/app/receipt-actions.ts`, `src/app/dispatch-actions.ts`, `src/app/route-actions.ts`, `STATE.md`.
+- **Cómo se probó:** revisión estática del punto de incompatibilidad TypeScript introducido por la centralización; Vercel/CI pendiente.
 - **Build y tsc:** pendiente de validación del deployment/CI de este commit.
 
 ## Siguiente paso
