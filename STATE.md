@@ -3,14 +3,14 @@
 
 ## Estado actual
 - **Rama activa:** `feat/servicios-adicionales-base`
-- **Último commit:** este commit — `feat: crear base aislada de servicios adicionales`.
+- **Último commit:** este commit — `fix: endurecer acceso de servicios adicionales`.
 - **Base de rama:** `44bf934a7d2b66bc104bd8eb0100a07e2ff3a213` desde `fix/roles-oficiales-y-permisos`; no se usó el tronco antiguo `work/maestros-unificados-ui` para no perder cambios recientes.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
 - **Qué se hizo:** se creó la base genérica y aislada para servicios adicionales. Estados comerciales: INACTIVO/DEMO/ACTIVO. Admin Total administra activación y autorizaciones. Rendiciones queda con acceso individual autorizado; Flota permite uso a cualquier usuario autenticado cuando el servicio está activo; Cotizaciones queda preparado pero INACTIVO. Se creó función RLS `has_additional_service_access`.
-- **Supabase:** migración `additional_services_base` aplicada correctamente. Tablas nuevas: `additional_services` y `additional_service_user_access`. No se modificaron tablas operacionales de Materiales.
-- **Archivos tocados:** `supabase/migrations/20260921053000_additional_services_base.sql`, `src/lib/additional-services.ts`, `STATE.md`.
+- **Supabase:** migraciones `additional_services_base` y `additional_services_security_indexes` aplicadas correctamente. Tablas nuevas: `additional_services` y `additional_service_user_access`. Se revocó acceso anónimo a la función de autorización y se agregaron índices a las nuevas FK. No se modificaron tablas operacionales de Materiales.
+- **Archivos tocados:** `supabase/migrations/20260921053000_additional_services_base.sql`, `supabase/migrations/20260921055500_additional_services_security_indexes.sql`, `src/lib/additional-services.ts`, `STATE.md`.
 - **Correo:** los nuevos módulos deben encolar notificaciones en `email_queue` y usar el motor central existente; no se crea un motor paralelo.
 - **Build y tsc:** pendientes después de integrar la primera UI/ruta; este commit no altera componentes ni rutas ejecutables.
 
