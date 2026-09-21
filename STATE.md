@@ -3,15 +3,15 @@
 
 ## Estado actual
 - **Rama activa:** `fix/roles-oficiales-y-permisos`
-- **Último commit:** este commit — `fix: corregir tipado de autorización servidor`.
+- **Último commit:** este commit — `fix: corregir salto de línea en autorización`.
 - **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; nuevo Preview de recuperación pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** Tras el segundo fallo de Vercel se corrigió el tipado de los helpers de autorización del servidor: `ctx` acepta listas readonly y Rutas valida la capacidad con `roleCan` en vez de comparar directamente un rol `string` contra una unión tipada. No se cambiaron permisos efectivos ni reglas de negocio.
-- **Archivos tocados:** `src/app/receipt-actions.ts`, `src/app/dispatch-actions.ts`, `src/app/route-actions.ts`, `STATE.md`.
-- **Cómo se probó:** revisión estática del punto de incompatibilidad TypeScript introducido por la centralización; Vercel/CI pendiente.
-- **Build y tsc:** pendiente de validación del deployment/CI de este commit.
+- **Qué se hizo:** Con el log exacto de Vercel se identificó la causa real: `src/lib/authorization.ts` contenía un `\\n` literal entre `rolesFor` y `roleCan`. Se reemplazó por un salto de línea real. No se modificó la matriz de permisos ni reglas de negocio.
+- **Archivos tocados:** `src/lib/authorization.ts`, `STATE.md`.
+- **Cómo se probó:** corrección directa sobre la línea 7 indicada por Vercel; deployment/CI pendiente.
+- **Build y tsc:** pendiente de validación de Vercel.
 
 ## Siguiente paso
 - Ampliar la capa central a Levantamientos y Abastecimiento y validar los 7 roles de extremo a extremo.
