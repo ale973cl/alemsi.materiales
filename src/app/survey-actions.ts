@@ -1,13 +1,14 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import {CAPABILITIES,roleCan} from "@/lib/authorization";
 
 async function surveyContext(){
   const supabase=await createClient();
   const {data:{user}}=await supabase.auth.getUser();
   if(!user)throw new Error("Sesión no válida");
   const {data:profile}=await supabase.from("user_profiles").select("role,active,full_name,email").eq("id",user.id).single();
-  if(!profile?.active||!["Admin Total","Gerencia","Admin","Operaciones","Supervisora"].includes(profile.role))throw new Error("No autorizado para esta operación");
+  if(!profile?.active||!roleCan(profile.role,CAPABILITIES.SURVEY_REGISTER))throw new Error("No autorizado para esta operación");
   return{supabase,user,profile};
 }
 
