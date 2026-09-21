@@ -3,17 +3,19 @@
 
 ## Estado actual
 - **Rama activa:** `fix/roles-oficiales-y-permisos`
-- **Último commit:** este commit — `fix: corregir salto de línea en autorización`.
-- **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; nuevo Preview de recuperación pendiente de Vercel.
+- **Último commit:** este commit — `refactor: centralizar levantamientos y abastecimiento`.
+- **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; Preview de autorización base `a739b64` verificado READY; nueva migración de Levantamientos/Abastecimiento pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** Con el log exacto de Vercel se identificó la causa real: `src/lib/authorization.ts` contenía un `\\n` literal entre `rolesFor` y `roleCan`. Se reemplazó por un salto de línea real. No se modificó la matriz de permisos ni reglas de negocio.
-- **Archivos tocados:** `src/lib/authorization.ts`, `STATE.md`.
-- **Cómo se probó:** corrección directa sobre la línea 7 indicada por Vercel; deployment/CI pendiente.
-- **Build y tsc:** pendiente de validación de Vercel.
+- **Qué se hizo:** Se incorporaron `SURVEY_REGISTER`, `SURVEY_LINK_MANAGE` y `SUPPLY_MANAGE` a la matriz central de autorización. `survey-actions.ts`, `survey-link-actions.ts` y `supply-actions.ts` dejaron de mantener listas locales de roles y consultan `roleCan`. Se conserva aparte el alcance por instalación de Supervisora mediante `user_installation_access`; no se modificó carencia, OC, Supabase ni reglas de negocio.
+- **Archivos tocados:** `src/lib/authorization.ts`, `src/app/survey-actions.ts`, `src/app/survey-link-actions.ts`, `src/app/supply-actions.ts`, `STATE.md`.
+- **Cómo se probó:** equivalencia de roles antes/después: Levantamientos y links = Admin Total/Gerencia/Admin/Operaciones/Supervisora; Abastecimiento = Admin Total/Gerencia/Admin/Operaciones. Preview base `a739b64` READY; nuevo deployment pendiente.
+- **Build y tsc:** Vercel pendiente para este cambio; validación local independiente no disponible en esta sesión.
 
 ## Siguiente paso
+- Confirmar Vercel READY para Levantamientos/Abastecimiento.
+- Luego validar matriz completa de los 7 roles antes de construir `Usuarios y perfiles → Funciones y permisos`. `user_module_permissions` continúa sin activarse como fuente única.
 - Ampliar la capa central a Levantamientos y Abastecimiento y validar los 7 roles de extremo a extremo.
 - Después conectar `Usuarios y perfiles` a una vista de Funciones y permisos; `user_module_permissions` sigue sin ser fuente única hasta definir la semántica de agregar/quitar permisos individuales.
 
