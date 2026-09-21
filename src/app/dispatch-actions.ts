@@ -1,4 +1,4 @@
-"use server";
+"use server";\nimport {CAPABILITIES,rolesFor} from "@/lib/authorization";
 
 import {headers} from "next/headers";
 import {revalidatePath} from "next/cache";
@@ -24,7 +24,7 @@ function fillTemplate(template:string,values:Record<string,string>){return Objec
 async function origin(){const h=await headers();const host=h.get("x-forwarded-host")||h.get("host");const protocol=h.get("x-forwarded-proto")||"https";return host?`${protocol}://${host}`:process.env.NEXT_PUBLIC_APP_URL||""}
 
 export async function createCampaignDispatch(input:{surveyId:string}){
-  const {supabase}=await ctx(["Admin Total","Admin","Operaciones","Bodega"]);
+  const {supabase}=await ctx(rolesFor(CAPABILITIES.DISPATCH_MANAGE));
   const {data:survey,error}=await supabase.from("surveys").select("id,campaign_id,installation_id,status,campaigns(id,label,status),installations(id,name,address,commune,city,region,contracts(id,name,clients(id,legal_name))),survey_lines(material_id,shortage_qty)").eq("id",input.surveyId).single();
   if(error||!survey)throw new Error("Levantamiento no encontrado");
   if(survey.status!=="Confirmada")throw new Error("El levantamiento aún no está confirmado");
@@ -61,7 +61,7 @@ export async function createCampaignDispatch(input:{surveyId:string}){
 }
 
 export async function registerDeliveryWithEmail(input:{dispatchId:string;recipientName:string;recipientRut:string;recipientRole?:string;recipientEmail:string;observations?:string;signature?:string;lines:{line_id:string;delivered_qty:number}[]}){
-  const {supabase,user,profile}=await ctx(["Admin Total","Admin","Operaciones","Bodega","Supervisora"]);
+  const {supabase,user,profile}=await ctx(rolesFor(CAPABILITIES.DELIVERY_REGISTER));
   const email=String(input.recipientEmail||"").trim().toLowerCase();
   if(!email||!email.includes("@"))throw new Error("Ingresa el correo de la persona que recibe");
 
@@ -97,7 +97,7 @@ export async function registerDeliveryWithEmail(input:{dispatchId:string;recipie
 }
 
 export async function createComplementaryDispatch(input:{parentDispatchId:string}){
-  const {supabase}=await ctx(["Admin Total","Admin","Operaciones","Bodega"]);
+  const {supabase}=await ctx(rolesFor(CAPABILITIES.DISPATCH_MANAGE));
   const {data,error}=await supabase.rpc("create_complementary_dispatch_v1",{p_parent_dispatch_id:input.parentDispatchId});
   if(error)throw new Error(error.message);
   revalidatePath("/");

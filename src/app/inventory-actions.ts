@@ -1,11 +1,11 @@
-"use server";
+"use server";\nimport {CAPABILITIES,roleCan} from "@/lib/authorization";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
 
 export async function registerInventoryCount(formData:FormData){
  const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)throw new Error("Sesión no válida");
  const {data:profile}=await supabase.from("user_profiles").select("role,active,full_name,email").eq("id",user.id).single();
- if(!profile?.active||!["Admin Total","Gerencia","Admin","Operaciones","Bodega"].includes(profile.role))throw new Error("No autorizado para ajustar inventario");
+ if(!profile?.active||!roleCan(profile.role,CAPABILITIES.INVENTORY_ADJUST))throw new Error("No autorizado para ajustar inventario");
  const materialId=String(formData.get("material_id")||"");const physical=Number(formData.get("physical_qty"));const reason=String(formData.get("reason")||"").trim();
  if(!materialId||!Number.isFinite(physical)||physical<0)throw new Error("Conteo físico inválido");if(reason.length<5)throw new Error("Indica el motivo del ajuste");
  const {data:rows,error}=await supabase.from("inventory_movements").select("signed_quantity").eq("material_id",materialId);if(error)throw new Error(error.message);
