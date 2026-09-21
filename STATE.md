@@ -3,17 +3,19 @@
 
 ## Estado actual
 - **Rama activa:** `fix/roles-oficiales-y-permisos`
-- **Último commit:** este commit — `refactor: centralizar levantamientos y abastecimiento`.
-- **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; Preview de autorización base `a739b64` verificado READY; nueva migración de Levantamientos/Abastecimiento pendiente de Vercel.
+- **Último commit:** este commit — `feat: agregar excepciones individuales de funciones`.
+- **Preview desplegado:** base estable verificada `761e034` / deployment `dpl_BsCd66sRJzbzPs3t9qGyXjjgwZdM` READY; Preview de autorización base `a739b64` verificado READY; migración de Levantamientos/Abastecimiento `4323a3c` verificada SUCCESS; nueva UI de permisos pendiente de Vercel.
 - **Fecha de última actualización:** 2026-09-21
 
 ## Última tarea completada
-- **Qué se hizo:** Se incorporaron `SURVEY_REGISTER`, `SURVEY_LINK_MANAGE` y `SUPPLY_MANAGE` a la matriz central de autorización. `survey-actions.ts`, `survey-link-actions.ts` y `supply-actions.ts` dejaron de mantener listas locales de roles y consultan `roleCan`. Se conserva aparte el alcance por instalación de Supervisora mediante `user_installation_access`; no se modificó carencia, OC, Supabase ni reglas de negocio.
-- **Archivos tocados:** `src/lib/authorization.ts`, `src/app/survey-actions.ts`, `src/app/survey-link-actions.ts`, `src/app/supply-actions.ts`, `STATE.md`.
-- **Cómo se probó:** equivalencia de roles antes/después: Levantamientos y links = Admin Total/Gerencia/Admin/Operaciones/Supervisora; Abastecimiento = Admin Total/Gerencia/Admin/Operaciones. Preview base `a739b64` READY; nuevo deployment pendiente.
-- **Build y tsc:** Vercel pendiente para este cambio; validación local independiente no disponible en esta sesión.
+- **Qué se hizo:** Confirmada la decisión B: el rol base es plantilla y Admin Total puede agregar o bloquear capacidades por usuario. Se incorporó `Funciones y permisos` en la ficha de Usuarios, separada de `Instalaciones asignadas`. Las excepciones se almacenan en `user_module_permissions` usando `module_code=capability`; ausencia de fila = heredar rol, `can_view=true` = permitir, `can_view=false` = bloquear. La propia cuenta Admin Total queda protegida. Aún no se usa esta tabla como fuente única de autorización operativa.
+- **Archivos tocados:** `src/app/user-permission-actions.ts`, `src/app/page.tsx`, `src/components/OperationalApp.tsx`, `src/components/modules/MastersModule.tsx`, `src/components/modules/UsersModule.tsx`, `STATE.md`.
+- **Cómo se probó:** Preview anterior `4323a3c` SUCCESS; nueva UI y persistencia pendientes de Vercel.
+- **Build y tsc:** Vercel pendiente; validación local independiente no disponible en esta sesión.
 
 ## Siguiente paso
+- Confirmar Vercel READY y probar visualmente una excepción en un usuario que no sea Admin Total.
+- Después hacer que la autorización efectiva consulte `rol base + excepción individual`, manteniendo alcance de instalaciones separado y validación en servidor.
 - Confirmar Vercel READY para Levantamientos/Abastecimiento.
 - Luego validar matriz completa de los 7 roles antes de construir `Usuarios y perfiles → Funciones y permisos`. `user_module_permissions` continúa sin activarse como fuente única.
 - Ampliar la capa central a Levantamientos y Abastecimiento y validar los 7 roles de extremo a extremo.
