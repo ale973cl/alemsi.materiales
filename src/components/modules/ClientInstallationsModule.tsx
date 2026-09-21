@@ -6,7 +6,8 @@ import {saveInstallationDetails} from "@/app/installation-actions";
 import {loadContractMaterialMatrix,loadMaterialProfile,saveContractMaterialMatrixRow,saveMaterialProfileConfig} from "@/app/material-profile-actions";
 import SuppliersModule from "@/components/modules/SuppliersModule";
 import ClientCsvImportPanel from "@/components/modules/ClientCsvImportPanel";
-import MaterialProfileCsvImportPanel from "@/components/modules/MaterialProfileCsvImportPanel";\nimport type {MaterialProfileImportTarget} from "@/app/material-profile-import-actions";
+import MaterialProfileCsvImportPanel from "@/components/modules/MaterialProfileCsvImportPanel";
+import type {MaterialProfileImportTarget} from "@/app/material-profile-import-actions";
 
 type Installation={id:string;name:string;address?:string|null;region?:string|null;city?:string|null;commune?:string|null;surface_m2?:number|null;collaborator_count?:number|null;delivery_contact_name?:string|null;delivery_email?:string|null;general_email?:string|null;delivery_phone?:string|null;phone?:string|null;active?:boolean};
 type Contract={id:string;name:string;code?:string|null;net_budget?:number|null;installations:Installation[]};

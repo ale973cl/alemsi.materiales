@@ -3,14 +3,14 @@
 
 ## Estado actual
 - **Rama activa:** `feat/carga-masiva-perfil-materiales`
-- **Último commit:** este commit — `fix: evitar doble descuento de reservas en inventario`.
+- **Último commit:** este commit — `fix: corregir sintaxis de integración de carga masiva`.
 - **Preview desplegado:** pendiente de Vercel para este commit.
 - **Fecha de última actualización:** 2026-09-20
 
 ## Última tarea completada
-- **Qué se hizo:** Se corrigió el cálculo de Reservado en Inventario para no volver a descontar materiales que ya tienen salida física registrada. Solo los despachos previos a salida física (En preparación, Preparado, Listo para ruta) alimentan Reservado; En tránsito y Entrega parcial permanecen trazables por despacho/Kardex pero ya no reducen Disponible por segunda vez.
-- **Archivos tocados:** `src/app/api/inventory/context/route.ts`, `STATE.md`.
-- **Cómo se probó:** diagnóstico de solo lectura sobre WK-100, WK-550, Escobillón y Esponja confirmó movimientos físicos de despacho ya registrados y reservas provenientes de guías En tránsito.
+- **Qué se hizo:** Se corrigieron dos secuencias literales `\\n` introducidas en ClientInstallationsModule durante la integración contextual de Carga masiva, que impedían compilar toda la rama. Se conserva además la corrección de Reservado de Inventario del commit anterior.
+- **Archivos tocados:** `src/components/modules/ClientInstallationsModule.tsx`, `STATE.md`.
+- **Cómo se probó:** inspección directa del archivo que Vercel no podía compilar; queda pendiente validar el nuevo deployment.
 - **Build y tsc:** pendiente de Vercel para este commit.
 
 ## Siguiente paso
