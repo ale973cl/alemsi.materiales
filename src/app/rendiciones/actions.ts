@@ -27,7 +27,7 @@ export async function createRendition(formData:FormData){
  if(!payload.person_rut||!payload.person_name||!payload.period_start||!payload.period_end)throw new Error("Completa identificación y período.");
  const {data,error}=await supabase.from("renditions").insert(payload).select("id,folio").single();
  if(error)throw new Error(error.message);
- revalidatePath("/rendiciones"); return data;
+ revalidatePath("/rendiciones");
 }
 
 export async function addRenditionExpense(formData:FormData){
