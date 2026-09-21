@@ -11,7 +11,7 @@
 - Usuario autorizado recibe acceso directo; Finanzas abre bandeja directamente.
 - Expedientes guardan DEMO/ACTIVO.
 - Migración Supabase `renditions_simple_end_to_end` aplicada.
-- **Build/tsc:** pendiente del deployment.
+- **Build:** `6b567e2` falló en Vercel por error TypeScript; corrección `c4daf15` en despliegue. **tsc local:** no disponible en esta sesión.
 ## Siguiente paso
 - Validar build y circuito completo.
 - Incorporar lector/autocompletado sobre el circuito estable.
