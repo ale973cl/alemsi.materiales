@@ -27,7 +27,7 @@ export default async function Page() {
     ({ data: profile } = await supabase.from("user_profiles").select("id,full_name,email,role,active").eq("id", user.id).maybeSingle());
   }
   if (!profile?.active) return <main className="blocked"><h1>Acceso pendiente</h1><p>Tu usuario existe, pero todavía no está habilitado por Administración.</p></main>;
-  const [clients, installations, materials, openCampaigns, pendingSurveys, openPOs, partialReceipts, openDispatches, financePending, emailPending, campaigns, activeCampaigns, consolidatedSurveys, orders, dispatches, audit, materialCatalog, inactiveMaterials, clientInstallations, masterClientInstallations, users, userInstallationAccess, userModulePermissions] = await Promise.all([
+  const [clients, installations, materials, openCampaigns, pendingSurveys, openPOs, partialReceipts, openDispatches, financePending, emailPending, campaigns, activeCampaigns, consolidatedSurveys, orders, dispatches, audit, materialCatalog, inactiveMaterials, clientInstallations, masterClientInstallations, users, userInstallationAccess, userModulePermissions, additionalServices] = await Promise.all([
     count(supabase,"clients",["active","true"]), count(supabase,"installations",["active","true"]), count(supabase,"materials",["active","true"]),
     count(supabase,"campaigns",["status","Abierta"]), count(supabase,"campaign_installations",["status","Pendiente"]), count(supabase,"purchase_orders",["status","Emitida"]),
     count(supabase,"receipts",["status","Parcial"]), count(supabase,"dispatches",["status","Pendiente"]), count(supabase,"finance_movements",["status","Pendiente"]), count(supabase,"email_queue",["status","Pendiente"]),
@@ -43,10 +43,11 @@ export default async function Page() {
     supabase.from("user_profiles").select("id,full_name,email,role,active,created_at").order("full_name"),
     supabase.from("user_installation_access").select("id,user_id,installation_id,active,can_view_master,can_survey"),
     supabase.from("user_module_permissions").select("id,user_id,module_code,can_view"),
+    profile.role==="Admin Total"?supabase.from("additional_services").select("service_code,display_name,status,access_mode,public_entry_enabled").order("display_name"):Promise.resolve({data:[]}),
   ]);
   const masterMaterialCatalog=[
     ...materialCatalog.rows.map((row:any)=>({...row,active:true})),
     ...(inactiveMaterials.data||[]).map((row:any)=>({id:row.id,family:row.family,supplier:null,supplier_code:row.supplier_code,product:row.name,presentation:row.presentation,unit:row.unit,net_value:row.current_net_price,availability:0,duplicate_count:1,active:false})),
   ];
-  return <OperationalApp profile={profile} summary={{clients,installations,materials,openCampaigns,pendingSurveys,openPOs,partialReceipts,openDispatches,financePending,emailPending}} campaigns={campaigns.data||[]} activeCampaigns={activeCampaigns.data||[]} consolidatedSurveys={consolidatedSurveys.data||[]} orders={orders.data||[]} dispatches={dispatches.data||[]} audit={audit.data||[]} materialCatalog={materialCatalog.rows} materialCatalogSourceCount={materialCatalog.sourceCount} materialCatalogError={materialCatalog.error} masterMaterialCatalog={masterMaterialCatalog} clientInstallations={clientInstallations.data||[]} masterClientInstallations={masterClientInstallations.data||[]} users={users.data||[]} userInstallationAccess={userInstallationAccess.data||[]} userModulePermissions={userModulePermissions.data||[]}/>;
+  return <OperationalApp profile={profile} summary={{clients,installations,materials,openCampaigns,pendingSurveys,openPOs,partialReceipts,openDispatches,financePending,emailPending}} campaigns={campaigns.data||[]} activeCampaigns={activeCampaigns.data||[]} consolidatedSurveys={consolidatedSurveys.data||[]} orders={orders.data||[]} dispatches={dispatches.data||[]} audit={audit.data||[]} materialCatalog={materialCatalog.rows} materialCatalogSourceCount={materialCatalog.sourceCount} materialCatalogError={materialCatalog.error} masterMaterialCatalog={masterMaterialCatalog} clientInstallations={clientInstallations.data||[]} masterClientInstallations={masterClientInstallations.data||[]} users={users.data||[]} userInstallationAccess={userInstallationAccess.data||[]} userModulePermissions={userModulePermissions.data||[]} additionalServices={(additionalServices as any).data||[]}/>;
 }
