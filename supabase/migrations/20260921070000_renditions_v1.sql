@@ -1,0 +1,3 @@
+-- Rendiciones v1: expediente, gastos, saldo histórico y tokens.
+-- Aplicada en Supabase como migration renditions_v1.
+-- La lógica de acceso reutiliza current_app_role() y has_additional_service_access('rendiciones').
