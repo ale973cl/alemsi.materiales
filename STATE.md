@@ -234,3 +234,5 @@
 - Los contratos sin net_budget permanecen visibles como “Presupuesto no configurado”; no se excluyen ni bloquean campañas/OC.
 - Base operativa queda reducida a una línea secundaria con clientes, instalaciones y materiales.
 - No se cambió esquema Supabase, autorización, Server Actions, estados React, package.json ni variables Vercel.
+
+- Hotfix build Dashboard Inicio: se agregó el tipo MaterialControlData y la prop materialControl a Props; sin cambios funcionales ni de datos.
