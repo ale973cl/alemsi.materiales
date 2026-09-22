@@ -234,3 +234,15 @@ button,input,select,textarea{max-width:100%}
  .renditionTableObservationText{grid-column:1/-1!important}
  .renditionRowOwnerActions{grid-column:1/-1;display:grid}
 }
+
+/* Rendiciones · eliminar información visual repetida */
+.renditionDetailPage .renditionCompactTitle{padding:7px 12px 5px}
+.renditionDetailPage .renditionCompactTitle h2{margin:0;font-size:15px}
+@media(min-width:901px){
+ .renditionDetailPage .renditionGallery{display:flex;gap:6px;padding:0 8px 8px;overflow-x:auto}
+ .renditionDetailPage .renditionGalleryCard{flex:0 0 112px}
+ .renditionDetailPage .renditionGalleryCard img{height:88px}
+ .renditionDetailPage .renditionGalleryCard>span:last-child{padding:5px 6px}
+ .renditionDetailPage .renditionGalleryCard b{font-size:10px}
+ .renditionDetailPage .renditionGalleryPdf{min-height:118px}
+}

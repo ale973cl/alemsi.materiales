@@ -107,3 +107,11 @@
 - Edición/eliminación del creador permanecen disponibles bajo su fila mientras Borrador/Observada.
 - Móvil redistribuye los mismos datos con sus mismos nombres.
 - Sin cambios de esquema Supabase, permisos ni variables Vercel.
+
+## Eliminación de información repetida en expediente 2026-09-22
+- El bloque superior se denomina “Gastos”; “Comprobantes” queda reservado a la galería inferior.
+- Se elimina el contador textual redundante de gastos porque ITEM ya enumera cada línea.
+- Las miniaturas dejan de repetir tipo/número de documento, monto y estado ya visibles en la matriz; conservan solo la correlación Foto N · Gasto N.
+- La galería de escritorio pasa a franja horizontal compacta para reducir scroll vertical.
+- Se conserva el estado general de la rendición y el estado por línea porque representan niveles distintos del flujo.
+- Sin cambios de lógica, Supabase, permisos ni variables Vercel.
