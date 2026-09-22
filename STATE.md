@@ -74,3 +74,8 @@
 - Un usuario con capacidad de revisión también puede ver sus propios Borradores en la bandeja de Rendiciones.
 - Los Borradores de otros usuarios continúan ocultos hasta Enviar a Finanzas.
 - Pendientes de Finanzas cuenta únicamente rendiciones Enviadas; Observadas quedan fuera de la cola activa mientras se corrigen.
+
+## Eliminación de gastos duplicados 2026-09-22
+- El creador puede eliminar líneas mientras la rendición esté Borrador u Observada.
+- Eliminar una línea también elimina su comprobante de Storage/documentos y recalcula total_presented.
+- La acción se registra en activity_log y no está disponible después de enviar/aprobar/pagar.

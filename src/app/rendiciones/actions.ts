@@ -143,3 +143,22 @@ export async function reviewExpense(fd:FormData){
  }
  await log(supabase,profile,renditionId,"expense_reviewed",{expense_id:expenseId,decision,observation});revalidatePath("/rendiciones");
 }
+
+export async function deleteRenditionExpense(fd:FormData){
+ const {supabase,user,profile}=await ctx();await requireCapability(supabase,profile,CAPABILITIES.RENDITION_SUBMIT,"Sin permiso para eliminar gastos.");
+ const renditionId=txt(fd.get("rendition_id")),expenseId=txt(fd.get("expense_id"));
+ const {data:r}=await supabase.from("renditions").select("status,creator_user_id").eq("id",renditionId).single();
+ if(!r||r.creator_user_id!==user.id)throw new Error("Solo quien creó la rendición puede eliminar sus gastos.");
+ if(!editable.has(r.status))throw new Error("La rendición ya no permite eliminar gastos.");
+ const {data:g}=await supabase.from("rendition_expenses").select("id,document_id").eq("id",expenseId).eq("rendition_id",renditionId).single();
+ if(!g)throw new Error("Gasto no encontrado.");
+ if(g.document_id){
+  const {data:doc}=await supabase.from("documents").select("storage_path").eq("id",g.document_id).single();
+  if(doc?.storage_path){const {error:storageError}=await supabase.storage.from("rendition-documents").remove([doc.storage_path]);if(storageError)throw new Error("No se pudo eliminar el comprobante asociado.");}
+  const {error:docError}=await supabase.from("documents").delete().eq("id",g.document_id);if(docError)throw new Error("No se pudo eliminar el registro del comprobante.");
+ }
+ const {error:deleteError}=await supabase.from("rendition_expenses").delete().eq("id",expenseId).eq("rendition_id",renditionId);if(deleteError)throw new Error("No se pudo eliminar el gasto.");
+ const {data:items,error:itemsError}=await supabase.from("rendition_expenses").select("presented_amount").eq("rendition_id",renditionId);if(itemsError)throw new Error("Gasto eliminado, pero no se pudo recalcular el total.");
+ const total=(items??[]).reduce((n:number,x:any)=>n+Number(x.presented_amount||0),0);const {error:totalError}=await supabase.from("renditions").update({total_presented:total,updated_at:new Date().toISOString()}).eq("id",renditionId);if(totalError)throw new Error("Gasto eliminado, pero no se pudo actualizar el total.");
+ await log(supabase,profile,renditionId,"expense_deleted",{expense_id:expenseId,document_id:g.document_id||null});revalidatePath("/rendiciones");revalidatePath(`/rendiciones/${renditionId}`);
+}
