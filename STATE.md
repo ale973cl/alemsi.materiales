@@ -251,3 +251,5 @@
 - Hacer levantamiento reutiliza selectedCampaignId + selectedSurveyInstallationId + setTab("levantamientos"); rutas llevan al módulo Despacho.
 - El dashboard no concede permisos nuevos: resume relaciones/asignaciones ya existentes.
 - Sin cambios de esquema Supabase, authorization.ts, package.json ni variables Vercel.
+
+- Hotfix build Dashboard Supervisora: se eliminó la referencia anticipada a userInstallationAccess dentro de Promise.all. Las instalaciones autorizadas se filtran después de resolver las consultas, preservando la misma regla de alcance.
