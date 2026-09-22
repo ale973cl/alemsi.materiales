@@ -276,3 +276,10 @@
 - Rutas y entregas resume rutas pendientes y cantidad de guías/despachos vinculados; abre directamente Despacho.
 - Debajo se muestra “Mis campañas” como lista compacta agrupada por campaign_id con total, pendientes y realizados. Abrir una campaña cambia a Levantamientos sin desplegar instalaciones dentro de Inicio.
 - Se conservan selectedCampaignId, selectedSurveyInstallationId y setTab; no se cambian Server Actions, Supabase, authorization.ts ni variables Vercel.
+
+## Selector visual de campaña en Necesidades y abastecimiento · 2026-09-22
+- OC desde campaña/consolidado deja de usar un select desplegable para elegir campaña.
+- Se reutiliza el patrón de lista compacta usado en Inicio de Supervisora: una fila por campaña con nombre, instalaciones con conteo confirmado, líneas con necesidad y acción Abrir/Seleccionada.
+- Al pulsar una fila se conserva exactamente el flujo existente: campaignId, familias, cantidades, precios, mensajes y detalle de origen; no se cambian Server Actions ni reglas de abastecimiento.
+- El cambio aplica a todos los perfiles que ya tengan acceso al módulo Necesidades y abastecimiento; no modifica authorization.ts ni concede acceso nuevo.
+- Sin cambios de Supabase, package.json ni variables Vercel.
