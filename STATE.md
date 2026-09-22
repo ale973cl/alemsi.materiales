@@ -225,3 +225,12 @@
 - Las seis métricas de Inicio reducen padding, altura y tipografía numérica para disminuir aproximadamente a la mitad su ocupación vertical.
 - Móvil conserva lectura responsive: las filas densas se redistribuyen y el panel de acceso aparece como panel compacto inferior.
 - Sin cambios de Supabase, Server Actions, estados React, permisos, package.json ni variables Vercel.
+
+
+## Dashboard gerencial de Inicio · 2026-09-22
+- Inicio reemplaza las seis tarjetas operativas y la Base operativa grande por Control gerencial de materiales.
+- Fuente real: contracts.net_budget para presupuesto; purchase_orders.total_net vinculadas por supply_runs.contract_id para consumo/compromiso por contrato.
+- Indicadores: presupuesto configurado, comprometido en OC, saldo, porcentaje consumido, OC en curso, recepciones parciales, campañas activas y consumo por contrato.
+- Los contratos sin net_budget permanecen visibles como “Presupuesto no configurado”; no se excluyen ni bloquean campañas/OC.
+- Base operativa queda reducida a una línea secundaria con clientes, instalaciones y materiales.
+- No se cambió esquema Supabase, autorización, Server Actions, estados React, package.json ni variables Vercel.
