@@ -115,3 +115,15 @@
 - La galería de escritorio pasa a franja horizontal compacta para reducir scroll vertical.
 - Se conserva el estado general de la rendición y el estado por línea porque representan niveles distintos del flujo.
 - Sin cambios de lógica, Supabase, permisos ni variables Vercel.
+
+## Fórmula financiera y arrastre de saldos 2026-09-22
+- Fórmula única: saldo de cierre = saldo anterior + total autorizado − fondos/caja chica − pagado.
+- Saldo positivo = monto pendiente a favor de quien rinde; saldo negativo = monto a favor de la empresa.
+- Los fondos/caja chica se descuentan antes de determinar el pago.
+- El pago permitido corresponde exactamente al saldo a favor de quien rinde, no al total autorizado bruto.
+- Si el resultado al aprobar es cero o queda a favor de la empresa, la rendición se cierra sin desembolso y conserva el saldo negativo para arrastre.
+- Una nueva rendición recupera el saldo de cierre de la última rendición Pagada del mismo RUT; no se arrastran rendiciones aún abiertas para evitar doble contabilización.
+- La pantalla muestra Saldo a pagar y A favor empresa por separado.
+- Comprobantes se correlacionan únicamente como ITEM N, sin repetir monto/estado/tipo de documento.
+- Se confirmó en Supabase que previous_balance admite valores con signo y que renditions_check solo valida period_end >= period_start; no fue necesario cambiar esquema.
+- Sin variables nuevas de Vercel.

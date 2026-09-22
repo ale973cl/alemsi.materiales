@@ -4,6 +4,7 @@ import {redirect} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
 import {enqueueModuleEmail} from "@/lib/email-queue";
 import {CAPABILITIES,roleCan,type Capability} from "@/lib/authorization";
+import {calculateRenditionBalance} from "@/lib/renditions/financial";
 
 const txt=(v:FormDataEntryValue|null)=>String(v??"").trim();
 const amount=(v:FormDataEntryValue|null)=>Math.max(0,Number(v||0));
@@ -42,7 +43,10 @@ async function saveFile(supabase:any,userId:string,expenseId:string,file:File){
 
 export async function createRendition(fd:FormData){
  const {supabase,user,profile,serviceStatus}=await ctx(); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_SUBMIT,"Sin permiso para crear rendiciones.");
- const row={creator_user_id:user.id,person_rut:txt(fd.get("person_rut")),person_name:txt(fd.get("person_name"))||profile.full_name,person_email:txt(fd.get("person_email"))||profile.email,period_start:txt(fd.get("period_start")),period_end:txt(fd.get("period_end")),company_funds:amount(fd.get("company_funds")),observations:txt(fd.get("observations"))||null,service_mode:serviceStatus==="ACTIVO"?"ACTIVO":"DEMO"};
+ const personRut=txt(fd.get("person_rut"));
+ const {data:lastSettled}=personRut?await supabase.from("renditions").select("previous_balance,company_funds,total_authorized,amount_paid").eq("person_rut",personRut).eq("status","Pagada").order("paid_at",{ascending:false}).limit(1).maybeSingle():{data:null};
+ const previousBalance=lastSettled?calculateRenditionBalance({previousBalance:Number(lastSettled.previous_balance||0),companyFunds:Number(lastSettled.company_funds||0),authorized:Number(lastSettled.total_authorized||0),paid:Number(lastSettled.amount_paid||0)}).closingBalance:0;
+ const row={creator_user_id:user.id,person_rut:personRut,person_name:txt(fd.get("person_name"))||profile.full_name,person_email:txt(fd.get("person_email"))||profile.email,period_start:txt(fd.get("period_start")),period_end:txt(fd.get("period_end")),previous_balance:previousBalance,company_funds:amount(fd.get("company_funds")),observations:txt(fd.get("observations"))||null,service_mode:serviceStatus==="ACTIVO"?"ACTIVO":"DEMO"};
  if(!row.person_rut||!row.person_name||!row.period_start||!row.period_end)throw new Error("Completa identificación y período.");
  const {data,error}=await supabase.from("renditions").insert(row).select("id,folio").single(); if(error)throw new Error(error.message);
  await log(supabase,profile,data.id,"created",{folio:data.folio,service_mode:row.service_mode}); revalidatePath("/rendiciones"); redirect(`/rendiciones/${data.id}`);
@@ -107,7 +111,10 @@ export async function reviewRendition(fd:FormData){
 export async function markRenditionPaid(fd:FormData){
  const {supabase,user,profile}=await ctx(); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_PAY,"Sin permiso para registrar el pago.");
  const id=txt(fd.get("rendition_id"));const paid=amount(fd.get("amount_paid"));const observation=txt(fd.get("payment_observation"));
- const {data:r}=await supabase.from("renditions").select("status,total_authorized,creator_user_id").eq("id",id).single();if(!r||r.status!=="Aprobada")throw new Error("La rendición debe estar aprobada.");if(r.creator_user_id===user.id)throw new Error("No puedes registrar el pago de tu propia rendición.");if(paid<=0||paid>Number(r.total_authorized))throw new Error("Monto de pago inválido.");
+ const {data:r}=await supabase.from("renditions").select("status,total_authorized,previous_balance,company_funds,amount_paid,creator_user_id").eq("id",id).single();if(!r||r.status!=="Aprobada")throw new Error("La rendición debe estar aprobada.");if(r.creator_user_id===user.id)throw new Error("No puedes registrar el pago de tu propia rendición.");
+ const balance=calculateRenditionBalance({previousBalance:Number(r.previous_balance||0),companyFunds:Number(r.company_funds||0),authorized:Number(r.total_authorized||0),paid:Number(r.amount_paid||0)});
+ if(balance.amountToPay<=0)throw new Error("Esta rendición no tiene saldo a pagar a la persona.");
+ if(paid!==balance.amountToPay)throw new Error(`El pago debe corresponder al saldo pendiente: $ ${balance.amountToPay.toLocaleString("es-CL")}.`);
  const {error}=await supabase.from("renditions").update({status:"Pagada",amount_paid:paid,payment_observation:observation||null,paid_by:profile.id,paid_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",id);if(error)throw new Error(error.message);
  await log(supabase,profile,id,"paid",{amount_paid:paid});revalidatePath("/rendiciones");
 }
@@ -139,7 +146,7 @@ export async function reviewExpense(fd:FormData){
   await supabase.from("rendition_expenses").update({review_status:decision==="APPROVE"?"Aprobada":"Rechazada",review_observation:observation||null,authorized_amount:authorized,reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",expenseId).eq("rendition_id",renditionId);
   const {data:items}=await supabase.from("rendition_expenses").select("review_status,authorized_amount").eq("rendition_id",renditionId);const total=(items??[]).reduce((n:number,x:any)=>n+Number(x.authorized_amount||0),0);const unresolved=(items??[]).some((x:any)=>["Pendiente","Observada"].includes(x.review_status));
   await supabase.from("renditions").update({total_authorized:total,updated_at:new Date().toISOString()}).eq("id",renditionId);
-  if(!unresolved){const allRejected=(items??[]).length>0&&(items??[]).every((x:any)=>x.review_status==="Rechazada");await supabase.from("renditions").update({status:allRejected?"Rechazada":"Aprobada",total_authorized:total,reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",renditionId);}
+  if(!unresolved){const allRejected=(items??[]).length>0&&(items??[]).every((x:any)=>x.review_status==="Rechazada");let finalStatus=allRejected?"Rechazada":"Aprobada";let autoSettled=false;if(!allRejected){const {data:current}=await supabase.from("renditions").select("previous_balance,company_funds").eq("id",renditionId).single();const balance=calculateRenditionBalance({previousBalance:Number(current?.previous_balance||0),companyFunds:Number(current?.company_funds||0),authorized:total,paid:0});if(balance.amountToPay===0){finalStatus="Pagada";autoSettled=true;}}await supabase.from("renditions").update({status:finalStatus,total_authorized:total,amount_paid:0,paid_at:autoSettled?new Date().toISOString():null,paid_by:autoSettled?profile.id:null,payment_observation:autoSettled?"Cierre automático sin pago: saldo a favor de la empresa o saldo cero.":null,reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",renditionId);}
  }
  await log(supabase,profile,renditionId,"expense_reviewed",{expense_id:expenseId,decision,observation});revalidatePath("/rendiciones");
 }
