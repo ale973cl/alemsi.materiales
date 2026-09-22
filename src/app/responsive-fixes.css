@@ -154,22 +154,7 @@ input,select,textarea,button{max-width:100%}
   .nav[data-tab="levantamientos"]::before{content:'◫'}
   .nav[data-tab="abastecimiento"]::before{content:'∑'}
   .nav[data-tab="oc"]::before{content:'OC';font-size:10px;font-weight:800}
-  .nav[data-tab="finanzas"]::before{content:'
-  .nav.active{box-shadow:inset 3px 0 var(--mint);background:#12516f}
-  .workspace{max-width:none;margin:0;padding-left:clamp(16px,2vw,28px);padding-right:clamp(16px,2vw,28px)}
-}
-
-/* Chrome móvil con sitio para computador */
-@media (min-width:761px) and (max-width:1100px){
-  .portalBody{grid-template-columns:58px minmax(0,1fr)}
-  .portalBody>aside{width:58px;min-width:58px;padding:10px 6px}
-  .portalBody>aside:hover{width:220px}
-  .productTitle::before{flex-basis:42px;width:42px}
-  .nav{padding:0 6px}
-  .nav::before{flex-basis:28px;width:28px;font-size:17px}
-  .portalBody>aside:hover .nav{font-size:12px}
-}
-}
+  .nav[data-tab="finanzas"]::before{content:'$'}
   .nav[data-tab="recepcion"]::before{content:'↓'}
   .nav[data-tab="inventario"]::before{content:'▣'}
   .nav[data-tab="despacho"]::before{content:'↗'}
@@ -217,7 +202,8 @@ input,select,textarea,button{max-width:100%}
   .mobileDrawer{position:absolute;inset:0 auto 0 0;width:min(88vw,360px);height:100%;padding:12px 10px 18px;background:var(--navy2);color:#fff;overflow-y:auto;transform:translateX(-102%);transition:transform .18s ease;box-shadow:10px 0 28px rgba(5,29,46,.24)}
   .mobileDrawerLayer.open .mobileDrawer{transform:translateX(0)}
   .mobileDrawerHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:6px 8px 12px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:8px}
-  .mobileDrawerHead>div{display:grid;gap:3px}.mobileDrawerHead small{color:#a9c2ce;font-size:10px}
+  .mobileDrawerHead>div{display:grid;gap:3px}
+  .mobileDrawerHead small{color:#a9c2ce;font-size:10px}
   .mobileDrawerHead>button{width:38px;height:38px;min-height:38px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:transparent;color:#fff;font-size:25px}
   .mobileDrawer .navWorkspace{margin-bottom:12px}
   .mobileDrawer .navWorkspaceLabel{color:#9fc0ce;padding:8px 10px 4px}

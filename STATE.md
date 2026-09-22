@@ -188,3 +188,14 @@
 - Validar Preview con los 7 roles reales en escritorio y Android.
 - Verificar workspaces vacíos, acceso a Rendiciones, Campaña → Levantamiento y Drawer móvil.
 - No integrar rutas dedicadas al Shell común hasta aprobar esta implementación.
+
+
+## Hotfix de compilación · 2026-09-22
+- Se localizó el fallo de build en `src/app/responsive-fixes.css`: el reemplazo textual interpretó la secuencia `
+- Se reconstruyó únicamente `responsive-fixes.css` desde la versión estable de `ui/rendiciones-corporativa` y se reaplicaron los selectores `data-tab` + estilos del Drawer usando sustitución literal segura. Se verificó balance de llaves CSS y ausencia de selectores `nth-of-type`.
+- No se modificó `OperationalApp.tsx`, package.json, Supabase, reglas de negocio ni rutas.
+- Siguiente validación: confirmar deployment Vercel READY y retomar certificación Fase 4.
+` del icono de Finanzas como patrón de sustitución, truncando y duplicando parte del CSS.
+- Se reconstruyó únicamente `responsive-fixes.css` desde la versión estable de `ui/rendiciones-corporativa` y se reaplicaron los selectores `data-tab` + estilos del Drawer de Fase 3.
+- No se modificó `OperationalApp.tsx`, package.json, Supabase, reglas de negocio ni rutas.
+- Siguiente validación: confirmar deployment Vercel READY y retomar certificación Fase 4.
