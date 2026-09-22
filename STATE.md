@@ -269,3 +269,10 @@
 - Dashboard de Supervisora deja de imprimir el JSON interno de campaigns.label y muestra únicamente el nombre legible de la campaña.
 - El usuario activo “Operaciones” (rol técnico Admin) quedó autorizado para el servicio Rendiciones mediante additional_service_user_access; no se cambió su rol ni authorization.ts.
 - Sin cambios de esquema, reglas de negocio ni variables Vercel.
+
+## Inicio Supervisora jerárquico · 2026-09-22
+- Se reemplazan las cuatro tarjetas separadas y la lista inmediata de instalaciones por dos bloques: “Campañas y levantamientos” y “Rutas y entregas”.
+- Campañas y levantamientos combina campañas activas, total de levantamientos, pendientes y realizados en una sola tarjeta; los indicadores son accesos al módulo Levantamientos.
+- Rutas y entregas resume rutas pendientes y cantidad de guías/despachos vinculados; abre directamente Despacho.
+- Debajo se muestra “Mis campañas” como lista compacta agrupada por campaign_id con total, pendientes y realizados. Abrir una campaña cambia a Levantamientos sin desplegar instalaciones dentro de Inicio.
+- Se conservan selectedCampaignId, selectedSurveyInstallationId y setTab; no se cambian Server Actions, Supabase, authorization.ts ni variables Vercel.
