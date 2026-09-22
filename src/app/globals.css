@@ -138,3 +138,22 @@ button,input,select,textarea{max-width:100%}
 .renditionsPage .renditionExpenseActions>.renditionBtnOutline{background:#eaf6f4;border-color:#5daea2;color:#0b2f4a}
 .renditionsPage .renditionListOpen{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:5px 9px;border-radius:7px;background:#eaf6f4;border:1px solid #79bdb1;color:#0b2f4a}
 @media(max-width:600px){.renditionsPage .renditionBtn{border-radius:8px}.renditionsPage .renditionBadge{border-radius:6px}}
+
+/* Rendiciones · lista arriba, galería de comprobantes abajo y feedback sin spinner */
+.renditionNoDocument{font-size:12px;color:var(--r-muted)}
+.renditionGallerySection>.renditionsBoardHead{padding-bottom:12px}
+.renditionGallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:0 14px 14px}
+.renditionGalleryCard{display:flex;flex-direction:column;min-width:0;padding:0;overflow:hidden;border:1px solid #c8dce8;border-radius:9px;background:#fff;color:#173650;text-align:left;text-decoration:none;cursor:pointer}
+.renditionGalleryCard:hover{border-color:#5daea2;box-shadow:0 3px 10px rgba(7,59,92,.12)}
+.renditionGalleryCard img{width:100%;height:145px;object-fit:cover;background:#eef4f6}
+.renditionGalleryCard>span:last-child{display:grid;gap:2px;padding:8px 9px}
+.renditionGalleryCard b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.renditionGalleryCard small{font-size:11px;color:#536875}
+.renditionGalleryPdf{min-height:205px;justify-content:flex-end;background:#f4f8f9}
+.renditionPdfMark{display:grid;place-items:center;flex:1;font-size:24px;font-weight:900;color:#073b5c}
+.renditionLightbox{position:fixed;z-index:10000;inset:0;display:grid;place-items:center;padding:54px 18px 48px;background:rgba(6,27,42,.88)}
+.renditionLightbox img{max-width:min(1100px,96vw);max-height:82vh;object-fit:contain;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.renditionLightboxClose{position:fixed;top:14px;right:18px;width:42px;height:42px;border:1px solid #79bdb1;border-radius:8px;background:#fff;color:#073b5c;font-size:28px;line-height:1;cursor:pointer}
+.renditionLightboxCaption{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:#fff;font-size:13px;font-weight:800}
+.renditionsPage .renditionBtn[aria-busy="true"]{opacity:.78;cursor:wait;transform:none}
+@media(max-width:600px){.renditionGallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:0 10px 10px}.renditionGalleryCard img{height:125px}.renditionGalleryPdf{min-height:185px}}

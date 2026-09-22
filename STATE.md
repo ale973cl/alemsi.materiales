@@ -1,7 +1,7 @@
 # STATE — ALEMSI Materiales
 ## Estado actual
 - **Rama activa:** ui/rendiciones-corporativa
-- **Último cambio:** contraste visual ALEMSI en estados y botones de Rendiciones.
+- **Último cambio:** feedback inmediato de botones + galería inferior de comprobantes en Rendiciones.
 - **Fecha:** 2026-09-21
 
 ## Última tarea completada
@@ -37,3 +37,10 @@
 - Botones de Rendiciones pasan de píldora a rectangulares con radio moderado y borde visible.
 - Ver comprobante, Volver y acciones secundarias se diferencian del fondo mediante borde teal y fondo claro.
 - Sin cambios de lógica, permisos, Supabase, Gemini ni variables Vercel.
+
+## Ajuste Rendiciones 2026-09-22
+- La lista de gastos permanece arriba con su detalle operativo.
+- Los comprobantes se muestran juntos en una galería inferior; las imágenes se amplían en pantalla y los PDF conservan apertura directa.
+- Las acciones de Rendiciones muestran texto de proceso (Guardando…, Enviando…, Aprobando…, etc.) y se bloquean mientras ejecutan para evitar doble clic.
+- No se usa spinner/rombo en estos botones.
+- Sin cambios de esquema Supabase, Gemini, permisos ni variables Vercel.
