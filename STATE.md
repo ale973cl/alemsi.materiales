@@ -264,3 +264,8 @@
 - Sin variables nuevas de Vercel.
 
 - Hotfix build: se alineó Promise.all de page.tsx agregando la consulta user_territorial_scopes en la misma posición de su destructuración; evita desplazamiento de resultados posteriores.
+
+## Corrección visual Supervisora y acceso Rendiciones · 2026-09-22
+- Dashboard de Supervisora deja de imprimir el JSON interno de campaigns.label y muestra únicamente el nombre legible de la campaña.
+- El usuario activo “Operaciones” (rol técnico Admin) quedó autorizado para el servicio Rendiciones mediante additional_service_user_access; no se cambió su rol ni authorization.ts.
+- Sin cambios de esquema, reglas de negocio ni variables Vercel.
