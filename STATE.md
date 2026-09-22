@@ -1,6 +1,6 @@
 # STATE — ALEMSI Materiales
 ## Estado actual
-- **Rama activa:** ui/rendiciones-corporativa
+- **Rama activa:** feature/rediseno-shell-navegacion
 - **Último cambio:** feedback inmediato de botones + galería inferior de comprobantes en Rendiciones.
 - **Fecha:** 2026-09-21
 
@@ -171,3 +171,20 @@
 - El botón se identifica como Descargar Excel histórico completo para evitar confusión.
 - Gastos por persona se identifican por nombre + RUT; la evolución usa fecha real del gasto cuando existe.
 - Sin cambios de esquema Supabase ni variables Vercel.
+
+
+## Rediseño UX/UI controlado · Fase 3 — Shell y navegación 2026-09-22
+- Nueva rama: `feature/rediseno-shell-navegacion`, creada desde `ui/rendiciones-corporativa`; `main` no se modificó.
+- Menú plano agrupado visualmente en cuatro workspaces: INICIO, ABASTECIMIENTO, BODEGA Y LOGÍSTICA y FINANZAS Y ADMIN.
+- Se preservan los módulos efectivos ya calculados por rol/permisos/servicios; el workspace solo agrupa opciones visibles y no concede permisos.
+- Los tabs conservan sus identificadores y `setTab(...)`; Campaña → Levantamiento mantiene selectedCampaignId y selectedSurveyInstallationId.
+- Iconografía pasa de `.nav:nth-of-type(...)` a `data-tab="..."`.
+- En móvil <=760 px la barra horizontal se reemplaza por Drawer lateral ligero sin dependencias nuevas.
+- Las rutas dedicadas permanecen intactas en esta tarea.
+- Sin cambios de Supabase, esquema, reglas de negocio, package.json ni variables Vercel.
+- `npm run build` y `npx tsc --noEmit`: no ejecutados localmente porque esta sesión solo dispone del conector GitHub, no de un terminal del repositorio. Validar Preview Vercel antes de fusionar.
+
+## Siguiente paso del rediseño
+- Validar Preview con los 7 roles reales en escritorio y Android.
+- Verificar workspaces vacíos, acceso a Rendiciones, Campaña → Levantamiento y Drawer móvil.
+- No integrar rutas dedicadas al Shell común hasta aprobar esta implementación.

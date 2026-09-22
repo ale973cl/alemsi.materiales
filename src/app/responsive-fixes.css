@@ -148,21 +148,13 @@ input,select,textarea,button{max-width:100%}
   .nav{height:46px;display:flex;align-items:center;gap:10px;width:100%;padding:0 8px;margin:3px 0;white-space:nowrap;overflow:hidden;font-size:0;border-radius:9px}
   .nav::before{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;font-size:18px;line-height:1}
   .portalBody>aside:hover .nav{font-size:13px;padding:0 10px}
-  .nav:nth-of-type(1)::before{content:'⌂'}
-  .nav:nth-of-type(2)::before{content:'▦'}
-  .nav:nth-of-type(3)::before{content:'▤'}
-  .nav:nth-of-type(4)::before{content:'◫'}
-  .nav:nth-of-type(5)::before{content:'✓'}
-  .nav:nth-of-type(6)::before{content:'∑'}
-  .nav:nth-of-type(7)::before{content:'OC';font-size:10px;font-weight:800}
-  .nav:nth-of-type(8)::before{content:'$'}
-  .nav:nth-of-type(9)::before{content:'↓'}
-  .nav:nth-of-type(10)::before{content:'▣'}
-  .nav:nth-of-type(11)::before{content:'!'}
-  .nav:nth-of-type(12)::before{content:'♙'}
-  .nav:nth-of-type(13)::before{content:'✉'}
-  .nav:nth-of-type(14)::before{content:'↺'}
-  .nav:nth-of-type(15)::before{content:'▥'}
+  .nav[data-tab="inicio"]::before{content:'⌂'}
+  .nav[data-tab="maestros"]::before{content:'▦'}
+  .nav[data-tab="campañas"]::before{content:'▤'}
+  .nav[data-tab="levantamientos"]::before{content:'◫'}
+  .nav[data-tab="abastecimiento"]::before{content:'∑'}
+  .nav[data-tab="oc"]::before{content:'OC';font-size:10px;font-weight:800}
+  .nav[data-tab="finanzas"]::before{content:'
   .nav.active{box-shadow:inset 3px 0 var(--mint);background:#12516f}
   .workspace{max-width:none;margin:0;padding-left:clamp(16px,2vw,28px);padding-right:clamp(16px,2vw,28px)}
 }
@@ -176,4 +168,65 @@ input,select,textarea,button{max-width:100%}
   .nav{padding:0 6px}
   .nav::before{flex-basis:28px;width:28px;font-size:17px}
   .portalBody>aside:hover .nav{font-size:12px}
+}
+}
+  .nav[data-tab="recepcion"]::before{content:'↓'}
+  .nav[data-tab="inventario"]::before{content:'▣'}
+  .nav[data-tab="despacho"]::before{content:'↗'}
+  .nav[data-tab="auditoria"]::before{content:'!'}
+  .nav[data-tab="respaldos"]::before{content:'↺'}
+  .nav[data-tab="servicios"]::before{content:'+'}
+  .nav[data-tab="rendiciones"]::before{content:'▥'}
+  .nav.active{box-shadow:inset 3px 0 var(--mint);background:#12516f}
+  .workspace{max-width:none;margin:0;padding-left:clamp(16px,2vw,28px);padding-right:clamp(16px,2vw,28px)}
+}
+
+/* Chrome móvil con sitio para computador */
+@media (min-width:761px) and (max-width:1100px){
+  .portalBody{grid-template-columns:58px minmax(0,1fr)}
+  .portalBody>aside{width:58px;min-width:58px;padding:10px 6px}
+  .portalBody>aside:hover{width:220px}
+  .productTitle::before{flex-basis:42px;width:42px}
+  .nav{padding:0 6px}
+  .nav::before{flex-basis:28px;width:28px;font-size:17px}
+  .portalBody>aside:hover .nav{font-size:12px}
+}
+
+
+/* Shell Fase 3 · navegación por workspaces e identidad semántica */
+.mobileMenuButton,.mobileCurrentContext,.mobileDrawerLayer{display:none}
+.navWorkspace{display:grid;gap:2px;margin:0 0 10px}
+.navWorkspaceLabel{padding:7px 10px 4px;color:#9fc0ce;font-size:9px;font-weight:800;letter-spacing:.1em;white-space:nowrap;overflow:hidden}
+@media (min-width:761px){
+  .desktopNavigation .navWorkspaceLabel{opacity:0;height:0;padding:0;transition:opacity .12s ease}
+  .desktopNavigation:hover .navWorkspaceLabel{opacity:1;height:auto;padding:7px 10px 4px}
+  .desktopNavigation .navWorkspace{margin-bottom:5px;border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:5px}
+  .desktopNavigation .navWorkspace:last-child{border-bottom:0}
+}
+@media (max-width:760px){
+  .portalTop{display:grid;grid-template-columns:42px auto minmax(0,1fr) auto;align-items:center}
+  .mobileMenuButton{display:grid;place-items:center;width:38px;height:38px;min-height:38px;padding:0;border:1px solid #c8dce8;border-radius:8px;background:#fff;color:var(--navy);font-size:22px}
+  .mobileCurrentContext{display:grid;gap:1px;min-width:0;margin-left:8px}
+  .mobileCurrentContext small{font-size:8px;font-weight:800;color:#627d98;letter-spacing:.08em}
+  .mobileCurrentContext strong{font-size:11px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .desktopNavigation{display:none!important}
+  .mobileDrawerLayer{display:block;position:fixed;inset:0;z-index:200;visibility:hidden;pointer-events:none}
+  .mobileDrawerLayer.open{visibility:visible;pointer-events:auto}
+  .mobileDrawerBackdrop{position:absolute;inset:0;width:100%;height:100%;min-height:0;border:0;border-radius:0;background:rgba(5,29,46,.52);opacity:0;transition:opacity .16s ease}
+  .mobileDrawerLayer.open .mobileDrawerBackdrop{opacity:1}
+  .mobileDrawer{position:absolute;inset:0 auto 0 0;width:min(88vw,360px);height:100%;padding:12px 10px 18px;background:var(--navy2);color:#fff;overflow-y:auto;transform:translateX(-102%);transition:transform .18s ease;box-shadow:10px 0 28px rgba(5,29,46,.24)}
+  .mobileDrawerLayer.open .mobileDrawer{transform:translateX(0)}
+  .mobileDrawerHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:6px 8px 12px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:8px}
+  .mobileDrawerHead>div{display:grid;gap:3px}.mobileDrawerHead small{color:#a9c2ce;font-size:10px}
+  .mobileDrawerHead>button{width:38px;height:38px;min-height:38px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:transparent;color:#fff;font-size:25px}
+  .mobileDrawer .navWorkspace{margin-bottom:12px}
+  .mobileDrawer .navWorkspaceLabel{color:#9fc0ce;padding:8px 10px 4px}
+  .mobileDrawer .nav{display:flex;width:100%;min-height:42px;height:auto;margin:2px 0;padding:9px 10px;gap:10px;align-items:center;text-align:left;font-size:12px;white-space:normal}
+  .mobileDrawer .nav::before{display:grid;place-items:center;flex:0 0 28px;width:28px;font-size:16px}
+  .mobileDrawer .nav.active{background:#12516f;box-shadow:inset 3px 0 var(--mint)}
+}
+@media (max-width:430px){
+  .portalTop{grid-template-columns:40px 92px minmax(0,1fr)}
+  .portalTop .userBox{display:none}
+  .mobileCurrentContext{margin-left:4px}
 }
