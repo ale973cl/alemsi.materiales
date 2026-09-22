@@ -157,3 +157,21 @@ button,input,select,textarea{max-width:100%}
 .renditionLightboxCaption{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:#fff;font-size:13px;font-weight:800}
 .renditionsPage .renditionBtn[aria-busy="true"]{opacity:.78;cursor:wait;transform:none}
 @media(max-width:600px){.renditionGallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:0 10px 10px}.renditionGalleryCard img{height:125px}.renditionGalleryPdf{min-height:185px}}
+
+/* Rendiciones · expediente compacto para revisión financiera */
+@media(min-width:901px){
+ .renditionDetailPage .renditionDetailSection>.renditionsBoardHead{padding:11px 13px 4px}
+ .renditionDetailPage .renditionDetailSection>.renditionsBoardHead h2{font-size:17px}
+ .renditionDetailPage .renditionExpenseList{gap:6px;padding:7px 9px}
+ .renditionDetailPage .renditionExpense{border-radius:9px}
+ .renditionDetailPage .renditionExpenseMain{grid-template-columns:105px 1fr 1.55fr 1.45fr 95px 90px;gap:8px;padding:8px 12px;align-items:start}
+ .renditionDetailPage .renditionExpenseMain strong{margin-top:2px;font-size:12px;line-height:1.25}
+ .renditionDetailPage .renditionExpenseMain small{margin-top:2px;font-size:11px;line-height:1.25}
+ .renditionDetailPage .renditionExpenseActions{gap:7px;padding:7px 12px;align-items:center}
+ .renditionDetailPage .renditionReviewForm{grid-template-columns:minmax(220px,1fr) 150px auto;gap:7px;align-items:stretch}
+ .renditionDetailPage .renditionReviewForm textarea{min-height:42px;height:42px;resize:vertical}
+ .renditionDetailPage .renditionReviewForm input{min-height:42px;height:42px}
+ .renditionDetailPage .renditionDecisionButtons{flex-wrap:nowrap}
+ .renditionDetailPage .renditionDecisionButtons .renditionBtn{min-height:42px;padding:7px 12px}
+ .renditionDetailPage .renditionBadge{min-height:24px;padding:3px 8px}
+}

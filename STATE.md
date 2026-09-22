@@ -86,3 +86,8 @@
 - Rendiciones del personal excluye al usuario conectado y oculta Borradores ajenos; aparecen al entrar al circuito de revisión.
 - Se bloqueó en interfaz y servidor revisar/aprobar/rechazar gastos propios y registrar el pago de una rendición propia.
 - Sin cambios de esquema Supabase ni variables Vercel.
+
+## Compactación visual expediente de Rendiciones 2026-09-22
+- Se redujo el alto de cada línea de gasto en escritorio para aprovechar mejor la pantalla de revisión.
+- Los seis datos del gasto se distribuyen en una sola fila y el bloque Observación/Monto/acciones queda en una fila compacta inmediatamente inferior.
+- No cambia lógica, permisos, montos, estados, Supabase ni variables Vercel.
