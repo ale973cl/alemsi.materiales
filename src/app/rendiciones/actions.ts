@@ -98,7 +98,7 @@ export async function submitRendition(fd:FormData){
 }
 
 export async function reviewRendition(fd:FormData){
- const {supabase,user,profile}=await ctx(); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_REVIEW,"Sin permiso para revisar.");
+ const {supabase,user,profile}=await ctx(); if(!["Gerencia","Finanzas"].includes(profile.role))throw new Error("Solo Gerencia y Finanzas pueden revisar rendiciones."); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_REVIEW,"Sin permiso para revisar.");
  const id=txt(fd.get("rendition_id")),decision=txt(fd.get("decision")),observation=txt(fd.get("observation"));
  const {data:r}=await supabase.from("renditions").select("id,status,folio,person_email,total_presented,creator_user_id").eq("id",id).single();if(!r||r.status!=="Enviada")throw new Error("La rendición no está pendiente de revisión.");if(r.creator_user_id===user.id)throw new Error("No puedes revisar tu propia rendición.");
  if(decision==="OBSERVE"){await requireCapability(supabase,profile,CAPABILITIES.RENDITION_OBSERVE,"Sin permiso para observar.");if(!observation)throw new Error("Indica qué debe corregirse.");await supabase.from("renditions").update({status:"Observada",review_observation:observation,reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",id);}
@@ -109,7 +109,7 @@ export async function reviewRendition(fd:FormData){
 }
 
 export async function markRenditionPaid(fd:FormData){
- const {supabase,user,profile}=await ctx(); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_PAY,"Sin permiso para registrar el pago.");
+ const {supabase,user,profile}=await ctx(); if(profile.role!=="Finanzas")throw new Error("Solo Finanzas puede registrar pagos de rendiciones."); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_PAY,"Sin permiso para registrar el pago.");
  const id=txt(fd.get("rendition_id"));const paid=amount(fd.get("amount_paid"));const observation=txt(fd.get("payment_observation"));
  const {data:r}=await supabase.from("renditions").select("status,total_authorized,previous_balance,company_funds,amount_paid,creator_user_id").eq("id",id).single();if(!r||r.status!=="Aprobada")throw new Error("La rendición debe estar aprobada.");if(r.creator_user_id===user.id)throw new Error("No puedes registrar el pago de tu propia rendición.");
  const balance=calculateRenditionBalance({previousBalance:Number(r.previous_balance||0),companyFunds:Number(r.company_funds||0),authorized:Number(r.total_authorized||0),paid:Number(r.amount_paid||0)});
@@ -130,7 +130,7 @@ export async function editRenditionExpense(fd:FormData){
 }
 
 export async function reviewExpense(fd:FormData){
- const {supabase,user,profile}=await ctx();await requireCapability(supabase,profile,CAPABILITIES.RENDITION_REVIEW,"Sin permiso para revisar.");
+ const {supabase,user,profile}=await ctx();if(!["Gerencia","Finanzas"].includes(profile.role))throw new Error("Solo Gerencia y Finanzas pueden revisar gastos.");await requireCapability(supabase,profile,CAPABILITIES.RENDITION_REVIEW,"Sin permiso para revisar.");
  const renditionId=txt(fd.get("rendition_id")),expenseId=txt(fd.get("expense_id")),decision=txt(fd.get("decision")),observation=txt(fd.get("observation"));
  const {data:r}=await supabase.from("renditions").select("status,creator_user_id").eq("id",renditionId).single();if(!r||r.status!=="Enviada")throw new Error("La rendición no está pendiente de revisión.");if(r.creator_user_id===user.id)throw new Error("No puedes revisar gastos de tu propia rendición.");
  if(decision==="OBSERVE"){

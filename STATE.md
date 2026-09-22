@@ -141,3 +141,13 @@
 - Corregido el texto literal \\n que quedó renderizado entre el encabezado y Nueva rendición por una inserción JSX incorrecta del dashboard.
 - Corrección exclusivamente sintáctica/visual; no modifica datos, permisos, fórmulas, Supabase ni dashboard.
 - Sin variables nuevas de Vercel.
+
+## Acceso financiero y exportación Excel 2026-09-22
+- Dashboard, bandeja del personal y exportación global quedan restringidos exclusivamente a perfiles Gerencia y Finanzas.
+- Los demás perfiles consultan únicamente sus propias rendiciones; no reciben vista global ni dashboard.
+- Finanzas conserva aprobación/rechazo y registro de pago; Gerencia conserva revisión/observación según permisos.
+- El Excel mantiene primero el orden original ITEM | TIPO | Fecha | T. DOC | N. DOC | RAZÓN SOCIAL | Descripción | MONTO | OBSERVACIÓN | APROBAR | OBS | RECHAZA.
+- Después agrega trazabilidad: N° rendición, RUT y nombre de quien rinde, motivo, montos de rendición/autorizado, período, estado, fecha de envío, fecha/hora de aprobación, quién aprobó/revisó, revisión por ITEM, fondos/caja chica, saldo anterior, monto/fecha/hora de pago, quién registró pago, referencia documental de pago y observación de pago.
+- El archivo se genera como .xlsx con encabezado congelado y autofiltro; excluye Borradores ajenos/no ingresados al circuito.
+- La caja chica continúa siendo individual por persona/RUT; los agregados son solo indicadores gerenciales.
+- Sin cambios de esquema Supabase ni variables nuevas de Vercel.
