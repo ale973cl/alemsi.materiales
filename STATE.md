@@ -55,3 +55,11 @@
 - Finanzas y Gerencia ya no se excluyen de navegación cuando tienen acceso al servicio.
 - Server Actions validan rol base + excepción individual; Admin Total permanece protegido.
 - Gerencia hereda revisar/observar; Finanzas hereda revisar/observar/aprobar/pagar.
+
+## Borrador persistente de Rendiciones 2026-09-22
+- Una rendición recién creada queda en Borrador y abre inmediatamente su expediente.
+- Cada gasto se persiste al pulsar “Agregar gasto”; el usuario puede salir y continuar después sin perder líneas ya guardadas.
+- El comprobante es opcional: se permite foto/PDF con lectura automática o ingreso manual del gasto.
+- Solo el creador puede agregar/editar gastos y enviar su rendición.
+- Finanzas/Gerencia no ven ni pueden abrir borradores ajenos; la rendición entra a revisión solo al cambiar a Enviada mediante “Enviar a Finanzas”.
+- No hay cambios de esquema Supabase ni variables Vercel.

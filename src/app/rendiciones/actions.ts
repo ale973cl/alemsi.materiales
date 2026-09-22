@@ -1,5 +1,6 @@
 "use server";
 import {revalidatePath} from "next/cache";
+import {redirect} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
 import {enqueueModuleEmail} from "@/lib/email-queue";
 import {CAPABILITIES,roleCan,type Capability} from "@/lib/authorization";
@@ -44,15 +45,16 @@ export async function createRendition(fd:FormData){
  const row={creator_user_id:user.id,person_rut:txt(fd.get("person_rut")),person_name:txt(fd.get("person_name"))||profile.full_name,person_email:txt(fd.get("person_email"))||profile.email,period_start:txt(fd.get("period_start")),period_end:txt(fd.get("period_end")),company_funds:amount(fd.get("company_funds")),observations:txt(fd.get("observations"))||null,service_mode:serviceStatus==="ACTIVO"?"ACTIVO":"DEMO"};
  if(!row.person_rut||!row.person_name||!row.period_start||!row.period_end)throw new Error("Completa identificación y período.");
  const {data,error}=await supabase.from("renditions").insert(row).select("id,folio").single(); if(error)throw new Error(error.message);
- await log(supabase,profile,data.id,"created",{folio:data.folio,service_mode:row.service_mode}); revalidatePath("/rendiciones");
+ await log(supabase,profile,data.id,"created",{folio:data.folio,service_mode:row.service_mode}); revalidatePath("/rendiciones"); redirect(`/rendiciones/${data.id}`);
 }
 
 export async function addRenditionExpense(_prev:RenditionExpenseResult,fd:FormData):Promise<RenditionExpenseResult>{
  let expenseId:string|null=null;let renditionId="";
  try{
   const {supabase,user,profile}=await ctx(); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_SUBMIT,"Sin permiso para agregar comprobantes."); renditionId=txt(fd.get("rendition_id"));
-  const {data:r}=await supabase.from("renditions").select("id,status").eq("id",renditionId).single();
-  if(!r||!editable.has(r.status))return {ok:false,message:"Esta rendición ya no permite agregar gastos."};
+  const {data:r}=await supabase.from("renditions").select("id,status,creator_user_id").eq("id",renditionId).single();
+  if(!r||r.creator_user_id!==user.id)return {ok:false,message:"Solo quien creó la rendición puede agregar gastos."};
+  if(!editable.has(r.status))return {ok:false,message:"Esta rendición ya no permite agregar gastos."};
   const row={rendition_id:renditionId,expense_date:txt(fd.get("expense_date")),category:txt(fd.get("category")),document_type:txt(fd.get("document_type")),provider_name:txt(fd.get("provider_name"))||null,provider_rut:txt(fd.get("provider_rut"))||null,document_number:txt(fd.get("document_number"))||null,description:txt(fd.get("description")),presented_amount:amount(fd.get("presented_amount")),review_status:"Pendiente"};
   if(!row.expense_date||!row.category||!row.document_type||!row.description||row.presented_amount<=0)return {ok:false,message:"Completa los datos obligatorios del gasto."};
   const {data:expense,error}=await supabase.from("rendition_expenses").insert(row).select("id").single();
@@ -81,9 +83,10 @@ export async function addRenditionExpense(_prev:RenditionExpenseResult,fd:FormDa
 }
 
 export async function submitRendition(fd:FormData){
- const {supabase,profile}=await ctx(); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_SUBMIT,"Sin permiso para enviar rendiciones."); const id=txt(fd.get("rendition_id"));
- const {data:r}=await supabase.from("renditions").select("id,folio,status,total_presented,person_name").eq("id",id).single();
- if(!r||!editable.has(r.status)||Number(r.total_presented)<=0)return;
+ const {supabase,user,profile}=await ctx(); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_SUBMIT,"Sin permiso para enviar rendiciones."); const id=txt(fd.get("rendition_id"));
+ const {data:r}=await supabase.from("renditions").select("id,folio,status,total_presented,person_name,creator_user_id").eq("id",id).single();
+ if(!r||r.creator_user_id!==user.id)throw new Error("Solo quien creó la rendición puede enviarla a Finanzas.");
+ if(!editable.has(r.status)||Number(r.total_presented)<=0)return;
  const {error}=await supabase.from("renditions").update({status:"Enviada",submitted_at:new Date().toISOString(),review_observation:null,updated_at:new Date().toISOString()}).eq("id",id);if(error)throw new Error(error.message);
  await log(supabase,profile,id,"submitted",{status:"Enviada"});
  await enqueueModuleEmail(supabase,{module:"renditions",event:"submitted",emailType:"rendition_submitted",relatedTable:"renditions",relatedId:id,subject:`Rendición ${r.folio} enviada`,summary:`${r.person_name} envió una rendición por $ ${Number(r.total_presented).toLocaleString("es-CL")}.`,facts:{Folio:r.folio,Responsable:r.person_name,"Total presentado":Number(r.total_presented)},idempotencyKey:`renditions:submitted:${id}:${Date.now()}`});
@@ -110,8 +113,8 @@ export async function markRenditionPaid(fd:FormData){
 }
 
 export async function editRenditionExpense(fd:FormData){
- const {supabase,profile}=await ctx();await requireCapability(supabase,profile,CAPABILITIES.RENDITION_SUBMIT,"Sin permiso para editar rendiciones.");const renditionId=txt(fd.get("rendition_id")),expenseId=txt(fd.get("expense_id"));
- const {data:r}=await supabase.from("renditions").select("status").eq("id",renditionId).single();if(!r||!editable.has(r.status))throw new Error("La rendición ya no permite editar gastos.");
+ const {supabase,user,profile}=await ctx();await requireCapability(supabase,profile,CAPABILITIES.RENDITION_SUBMIT,"Sin permiso para editar rendiciones.");const renditionId=txt(fd.get("rendition_id")),expenseId=txt(fd.get("expense_id"));
+ const {data:r}=await supabase.from("renditions").select("status,creator_user_id").eq("id",renditionId).single();if(!r||r.creator_user_id!==user.id)throw new Error("Solo quien creó la rendición puede editar sus gastos.");if(!editable.has(r.status))throw new Error("La rendición ya no permite editar gastos.");
  const patch={expense_date:txt(fd.get("expense_date")),category:txt(fd.get("category")),document_type:txt(fd.get("document_type")),provider_name:txt(fd.get("provider_name"))||null,provider_rut:txt(fd.get("provider_rut"))||null,document_number:txt(fd.get("document_number"))||null,description:txt(fd.get("description")),presented_amount:amount(fd.get("presented_amount")),authorized_amount:null,review_status:"Pendiente",review_observation:null,reviewed_by:null,reviewed_at:null,updated_at:new Date().toISOString()};
  if(!patch.expense_date||!patch.category||!patch.document_type||!patch.description||patch.presented_amount<=0)throw new Error("Completa los datos obligatorios.");
  const {error}=await supabase.from("rendition_expenses").update(patch).eq("id",expenseId).eq("rendition_id",renditionId);if(error)throw new Error(error.message);
