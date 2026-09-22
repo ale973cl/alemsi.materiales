@@ -253,3 +253,12 @@
 - Sin cambios de esquema Supabase, authorization.ts, package.json ni variables Vercel.
 
 - Hotfix build Dashboard Supervisora: se eliminó la referencia anticipada a userInstallationAccess dentro de Promise.all. Las instalaciones autorizadas se filtran después de resolver las consultas, preservando la misma regla de alcance.
+
+## Alcance territorial y asignación masiva · 2026-09-22
+- Autorizado explícitamente el cambio mínimo de esquema para que “Toda la Región” incluya instalaciones presentes y futuras.
+- Nueva tabla user_territorial_scopes: user_id + region + commune opcional + active; RLS permite lectura propia/gerencial y escritura Admin Total.
+- Usuarios y perfiles incorpora filtros Región/Comuna, “Asignar toda la región/comuna”, chips de alcances activos, selección de todas las visibles y asignación masiva.
+- Selección específica conserva user_installation_access; alcance territorial complementa, no reemplaza, las asignaciones individuales.
+- Inicio/Campañas/Levantamientos y Despacho de Supervisora consideran instalación individual O alcance territorial; no se modifica authorization.ts ni la matriz de roles.
+- Las instalaciones futuras quedan incluidas automáticamente por coincidencia region/commune, sin crear 150 registros individuales.
+- Sin variables nuevas de Vercel.

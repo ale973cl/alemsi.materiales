@@ -183,6 +183,44 @@ export async function setUserInstallationAccess(formData:FormData) {
   await audit(supabase,user,profile,{module:"Usuarios",action:granted?"Asignar instalación":"Retirar instalación",entity_table:"user_installation_access",entity_id:existing?.id,new_data:{user_id:userId,installation_id:installationId,active:granted}}); revalidatePath("/");
 }
 
+
+export async function setUserTerritorialScope(formData:FormData){
+  const {supabase,user,profile}=await context(["Admin Total"]);
+  const userId=String(formData.get("user_id")||"");
+  const region=String(formData.get("region")||"").trim();
+  const commune=String(formData.get("commune")||"").trim()||null;
+  const granted=String(formData.get("granted")||"")==="true";
+  if(!userId||!region) throw new Error("Usuario y región son obligatorios");
+  const {data:existing,error:readError}=await supabase.from("user_territorial_scopes").select("id,active").eq("user_id",userId).ilike("region",region).is("commune",commune).maybeSingle();
+  if(readError) throw readError;
+  if(existing){
+    const {error}=await supabase.from("user_territorial_scopes").update({active:granted,updated_at:new Date().toISOString()}).eq("id",existing.id); if(error)throw error;
+  }else if(granted){
+    const {error}=await supabase.from("user_territorial_scopes").insert({user_id:userId,region,commune,active:true}); if(error)throw error;
+  }
+  await audit(supabase,user,profile,{module:"Usuarios",action:granted?"Asignar alcance territorial":"Retirar alcance territorial",entity_table:"user_territorial_scopes",entity_id:existing?.id,new_data:{user_id:userId,region,commune,active:granted}});
+  revalidatePath("/");
+}
+
+export async function setUserInstallationAccessBulk(formData:FormData){
+  const {supabase,user,profile}=await context(["Admin Total"]);
+  const userId=String(formData.get("user_id")||"");
+  const installationIds=[...new Set(formData.getAll("installation_ids").map(String).filter(Boolean))];
+  const granted=String(formData.get("granted")||"")==="true";
+  if(!userId||!installationIds.length) throw new Error("Selecciona al menos una instalación");
+  const {data:existing,error:readError}=await supabase.from("user_installation_access").select("id,installation_id").eq("user_id",userId).in("installation_id",installationIds);
+  if(readError)throw readError;
+  const existingByInstallation=new Map((existing||[]).map((row:any)=>[row.installation_id,row]));
+  const existingIds=(existing||[]).map((row:any)=>row.id);
+  if(existingIds.length){const {error}=await supabase.from("user_installation_access").update({active:granted,can_view_master:true,can_survey:true,updated_at:new Date().toISOString()}).in("id",existingIds);if(error)throw error;}
+  if(granted){
+    const missing=installationIds.filter(id=>!existingByInstallation.has(id));
+    if(missing.length){const {error}=await supabase.from("user_installation_access").insert(missing.map(installation_id=>({user_id:userId,installation_id,can_view_master:true,can_survey:true,active:true})));if(error)throw error;}
+  }
+  await audit(supabase,user,profile,{module:"Usuarios",action:granted?"Asignación masiva de instalaciones":"Retiro masivo de instalaciones",entity_table:"user_installation_access",new_data:{user_id:userId,installation_ids:installationIds,active:granted,count:installationIds.length}});
+  revalidatePath("/");
+}
+
 export async function createDispatchV1(input:{installationId:string;observations?:string;lines:{material_id:string;quantity:number}[]}){
   const {supabase}=await context(["Admin Total","Admin","Operaciones","Bodega"]);
   const {data,error}=await supabase.rpc("create_dispatch_v1",{p_installation_id:input.installationId,p_lines:input.lines,p_observations:input.observations||null});
