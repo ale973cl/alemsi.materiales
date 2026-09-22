@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
-const ALLOWED_ROLES = ["Admin Total", "Gerencia", "Admin", "Finanzas", "Bodega", "Supervisora"] as const;
+const ALLOWED_ROLES = ["Admin Total", "Gerencia", "Admin", "Operaciones", "Finanzas", "Bodega", "Supervisora"] as const;
 const COOKIE_NAME = "alemsi_preview_origin";
 const ACTIVE_COOKIE = "alemsi_preview_active";
 const MAX_AGE_SECONDS = 60 * 60 * 6;

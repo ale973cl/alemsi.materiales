@@ -6,7 +6,8 @@ import { returnFromPreviewProfile, switchPreviewProfile } from "@/app/preview-pr
 const ROLE_OPTIONS = [
   { role: "Admin Total", label: "Admin Total" },
   { role: "Gerencia", label: "Gerencia" },
-  { role: "Admin", label: "Admin / Operaciones" },
+  { role: "Admin", label: "Admin" },
+  { role: "Operaciones", label: "Operaciones" },
   { role: "Finanzas", label: "Finanzas" },
   { role: "Bodega", label: "Bodega" },
   { role: "Supervisora", label: "Supervisora" },

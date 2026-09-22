@@ -199,3 +199,11 @@
 - Se reconstruyó únicamente `responsive-fixes.css` desde la versión estable de `ui/rendiciones-corporativa` y se reaplicaron los selectores `data-tab` + estilos del Drawer de Fase 3.
 - No se modificó `OperationalApp.tsx`, package.json, Supabase, reglas de negocio ni rutas.
 - Siguiente validación: confirmar deployment Vercel READY y retomar certificación Fase 4.
+
+
+## Rediseño UX/UI controlado · Fase 4.1 — Certificación de perfiles 2026-09-22
+- PreviewProfileSwitcher separa Admin y Operaciones como perfiles de prueba independientes.
+- preview-profile-actions permite conmutar explícitamente a Operaciones en Preview; no se modificó authorization.ts ni las capacidades productivas.
+- Los 7 perfiles certificables quedan: Admin Total, Gerencia, Admin, Operaciones, Finanzas, Bodega y Supervisora.
+- La agrupación de Workspaces continúa derivándose de los módulos efectivos; los Workspaces sin módulos visibles se filtran antes de renderizar.
+- Pendiente de cierre: confirmar deployment READY y validación interactiva del Drawer móvil y de cada sesión real mediante PreviewProfileSwitcher.
