@@ -243,3 +243,11 @@
 - Sin cambios de lógica de negocio, Supabase, navegación, permisos ni variables Vercel.
 
 - Hotfix: se restauró import useMemo, requerido por ConsolidatedSupply y SurveyEditor dentro de OperationalApp; el retiro del Stepper no cambia esos usos.
+
+## Dashboard por rol · Supervisora · 2026-09-22
+- Inicio de Supervisora deja de mostrar presupuesto/OC globales y pasa a “Mi operación”.
+- Fuentes existentes, sin esquema nuevo: user_installation_access(can_survey), campaign_installations(supervisor_id/installation_id/status), campaigns(status), delivery_routes(delivery_assignee_id/status) y delivery_route_dispatches.
+- Muestra campañas activas relacionadas, levantamientos pendientes/completados y rutas asignadas pendientes/en ejecución.
+- Hacer levantamiento reutiliza selectedCampaignId + selectedSurveyInstallationId + setTab("levantamientos"); rutas llevan al módulo Despacho.
+- El dashboard no concede permisos nuevos: resume relaciones/asignaciones ya existentes.
+- Sin cambios de esquema Supabase, authorization.ts, package.json ni variables Vercel.
