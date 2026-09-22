@@ -136,3 +136,8 @@
 - Visualizaciones: gastos por tipo, gastos por persona y evolución mensual; indicadores de Presentado, Autorizado y Fondos/Caja chica.
 - El dashboard consume renditions y rendition_expenses existentes; no duplica datos ni cambia el esquema Supabase.
 - Sin variables nuevas de Vercel.
+
+## Corrección visual literal expuesto 2026-09-22
+- Corregido el texto literal \\n que quedó renderizado entre el encabezado y Nueva rendición por una inserción JSX incorrecta del dashboard.
+- Corrección exclusivamente sintáctica/visual; no modifica datos, permisos, fórmulas, Supabase ni dashboard.
+- Sin variables nuevas de Vercel.
