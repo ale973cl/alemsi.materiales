@@ -289,3 +289,9 @@
 - Móvil <=760px mantiene tratamiento independiente: controles táctiles de mínimo 42px y campos de 44px, evitando trasladar la densidad de escritorio a teléfonos.
 - La regla se limita a .portalMain y excluye navegación lateral, botón de menú y cierre del Drawer.
 - No se modifican componentes funcionales, Server Actions, estados React, authorization.ts, Supabase ni dependencias.
+
+## Correo manual al enviar OC · 2026-09-22
+- En Órdenes de compra → Enviar OC, la casilla Destino queda editable para ingresar o corregir manualmente el correo antes del envío.
+- Si el proveedor tiene purchase_order_email/commercial_email se usa solo como valor inicial editable; si no existe, el campo queda vacío.
+- queuePurchaseOrderEmail recibe recipient_email, valida un destino básico y conserva la cola central, idempotencia, trazabilidad y políticas del entorno.
+- No se modifica el correo maestro del proveedor, Supabase, authorization.ts ni variables Vercel.

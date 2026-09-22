@@ -16,12 +16,13 @@ async function context(){
 export async function queuePurchaseOrderEmail(formData:FormData){
   const {supabase,user,profile}=await context();
   const id=String(formData.get("purchase_order_id")||"").trim();
+  const manualRecipient=String(formData.get("recipient_email")||"").trim().toLowerCase();
   if(!id)throw new Error("Orden de compra no válida");
   const {data:po,error}=await supabase.from("purchase_orders").select("id,order_number,status,total_net,total_amount,currency,suppliers(legal_name,purchase_order_email,commercial_email)").eq("id",id).single();
   if(error||!po)throw new Error("Orden de compra no encontrada");
   const supplier:any=Array.isArray(po.suppliers)?po.suppliers[0]:po.suppliers;
-  const recipient=String(supplier?.purchase_order_email||supplier?.commercial_email||"").trim();
-  if(!recipient)throw new Error("El proveedor no tiene correo de órdenes de compra configurado");
+  const recipient=manualRecipient||String(supplier?.purchase_order_email||supplier?.commercial_email||"").trim().toLowerCase();
+  if(!recipient||!recipient.includes("@")||recipient.startsWith("@")||recipient.endsWith("@"))throw new Error("Ingresa un correo de destino válido");
   const folio=po.order_number||po.id;
   const queued=await enqueueModuleEmail(supabase,{
     module:"purchase_orders",
