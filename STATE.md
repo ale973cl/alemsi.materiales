@@ -262,3 +262,5 @@
 - Inicio/Campañas/Levantamientos y Despacho de Supervisora consideran instalación individual O alcance territorial; no se modifica authorization.ts ni la matriz de roles.
 - Las instalaciones futuras quedan incluidas automáticamente por coincidencia region/commune, sin crear 150 registros individuales.
 - Sin variables nuevas de Vercel.
+
+- Hotfix build: se alineó Promise.all de page.tsx agregando la consulta user_territorial_scopes en la misma posición de su destructuración; evita desplazamiento de resultados posteriores.

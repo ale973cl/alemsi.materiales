@@ -42,6 +42,7 @@ export default async function Page() {
     supabase.from("clients").select("id,legal_name,rut,business_center,active,contracts(id,name,code,net_budget,active,installations(id,name,address,region,city,commune,surface_m2,collaborator_count,delivery_contact_name,delivery_email,delivery_phone,phone,general_email,active))").order("legal_name"),
     supabase.from("user_profiles").select("id,full_name,email,role,active,created_at").order("full_name"),
     supabase.from("user_installation_access").select("id,user_id,installation_id,active,can_view_master,can_survey"),
+    supabase.from("user_territorial_scopes").select("id,user_id,region,commune,active").eq("active",true),
     supabase.from("user_module_permissions").select("id,user_id,module_code,can_view"),
     profile.role==="Admin Total"?supabase.from("additional_services").select("service_code,display_name,status,access_mode,public_entry_enabled").order("display_name"):Promise.resolve({data:[]}),
     profile.role==="Admin Total"?supabase.from("additional_service_user_access").select("id,service_code,user_id,active"):Promise.resolve({data:[]}),
