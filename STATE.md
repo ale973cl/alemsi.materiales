@@ -236,3 +236,8 @@
 - No se cambió esquema Supabase, autorización, Server Actions, estados React, package.json ni variables Vercel.
 
 - Hotfix build Dashboard Inicio: se agregó el tipo MaterialControlData y la prop materialControl a Props; sin cambios funcionales ni de datos.
+
+## Simplificación de Inicio · 2026-09-22
+- Se eliminó del Inicio la franja visual del circuito Perfil → Campaña → … → Entrega. El flujo sigue intacto en los módulos; solo se retira una explicación redundante que ocupaba espacio antes del Dashboard gerencial.
+- También se retiraron la constante stages y el useMemo/cards ya sin uso en OperationalApp.
+- Sin cambios de lógica de negocio, Supabase, navegación, permisos ni variables Vercel.
