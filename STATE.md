@@ -91,3 +91,10 @@
 - Se redujo el alto de cada línea de gasto en escritorio para aprovechar mejor la pantalla de revisión.
 - Los seis datos del gasto se distribuyen en una sola fila y el bloque Observación/Monto/acciones queda en una fila compacta inmediatamente inferior.
 - No cambia lógica, permisos, montos, estados, Supabase ni variables Vercel.
+
+## Densidad de tabla Rendiciones 2026-09-22
+- Se mantienen las columnas y datos actuales del expediente; no se elimina información.
+- En escritorio se amplía el ancho útil y se reducen padding, gaps, alto de controles y márgenes para evitar crecimiento vertical innecesario.
+- Observación, monto autorizado y acciones permanecen compactos bajo cada línea solo cuando corresponde revisar.
+- Móvil conserva el diseño responsive existente.
+- Sin cambios de lógica, Supabase, permisos ni variables Vercel.

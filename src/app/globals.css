@@ -175,3 +175,26 @@ button,input,select,textarea{max-width:100%}
  .renditionDetailPage .renditionDecisionButtons .renditionBtn{min-height:42px;padding:7px 12px}
  .renditionDetailPage .renditionBadge{min-height:24px;padding:3px 8px}
 }
+
+/* Rendiciones · densidad de tabla manteniendo columnas actuales */
+@media(min-width:901px){
+ .renditionDetailPage{max-width:1440px;padding-top:12px}
+ .renditionDetailPage .renditionsHero{padding-bottom:10px}
+ .renditionDetailPage .renditionDetailMoney{margin-bottom:9px}
+ .renditionDetailPage .renditionMoneyGrid>div{padding:8px 14px}
+ .renditionDetailPage .renditionDetailSection{margin-bottom:9px}
+ .renditionDetailPage .renditionExpenseList{gap:3px;padding:4px 6px}
+ .renditionDetailPage .renditionExpense{border-radius:6px}
+ .renditionDetailPage .renditionExpenseMain{grid-template-columns:82px 95px minmax(180px,1.35fr) minmax(220px,1.7fr) 92px 82px;gap:6px;padding:6px 9px;align-items:center}
+ .renditionDetailPage .renditionLabel{font-size:9px}
+ .renditionDetailPage .renditionExpenseMain strong{margin-top:1px;font-size:12px;line-height:1.15}
+ .renditionDetailPage .renditionExpenseMain small{margin-top:1px;font-size:10px;line-height:1.15}
+ .renditionDetailPage .renditionExpenseAmount{text-align:right}
+ .renditionDetailPage .renditionExpenseActions{gap:5px;padding:5px 9px}
+ .renditionDetailPage .renditionReviewForm{grid-template-columns:minmax(180px,1fr) 110px auto;gap:5px}
+ .renditionDetailPage .renditionReviewForm textarea,.renditionDetailPage .renditionReviewForm input{min-height:34px;height:34px;padding:5px 8px;border-radius:6px}
+ .renditionDetailPage .renditionDecisionButtons{gap:4px}
+ .renditionDetailPage .renditionDecisionButtons .renditionBtn{min-height:34px;padding:5px 9px;font-size:12px;border-radius:6px}
+ .renditionDetailPage .renditionBadge{min-height:22px;padding:2px 6px;font-size:10px}
+ .renditionDetailPage .renditionObservation{padding:5px 8px}
+}
