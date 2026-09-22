@@ -216,3 +216,12 @@
 - Inicio: el circuito operativo conserva los 13 pasos reales existentes y se compacta para caber en una sola línea en escritorio; no se eliminaron etapas para forzarlo a 11.
 - Móvil mantiene redistribución legible y controles táctiles; no se alteraron selectedCampaignId, selectedSurveyInstallationId, setTab, Server Actions ni Supabase.
 - Sin dependencias nuevas ni variables Vercel.
+
+
+## Tabla densa de Levantamientos y accesos colapsados · 2026-09-22
+- Las instalaciones abiertas desde Campañas pasan de tarjetas altas a una matriz densa con columnas Cliente | Contrato | Instalación | Estado | Acción | Accesos.
+- El acceso por correo queda oculto por defecto detrás de “✉ Enviar link”; al desplegar conserva correo, Generar acceso, Enviar por correo, Copiar link y mensajes del mismo createSurveyAccessLink.
+- La acción principal permanece siempre visible: Hacer levantamiento; en tomas completadas se identifica como Ver / editar conteo.
+- Las seis métricas de Inicio reducen padding, altura y tipografía numérica para disminuir aproximadamente a la mitad su ocupación vertical.
+- Móvil conserva lectura responsive: las filas densas se redistribuyen y el panel de acceso aparece como panel compacto inferior.
+- Sin cambios de Supabase, Server Actions, estados React, permisos, package.json ni variables Vercel.
