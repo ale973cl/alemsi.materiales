@@ -44,3 +44,7 @@
 - Las acciones de Rendiciones muestran texto de proceso (Guardando…, Enviando…, Aprobando…, etc.) y se bloquean mientras ejecutan para evitar doble clic.
 - No se usa spinner/rombo en estos botones.
 - Sin cambios de esquema Supabase, Gemini, permisos ni variables Vercel.
+
+## Corrección build 2026-09-22
+- Corregido cierre JSX faltante en el bloque condicional de la galería de comprobantes de `/rendiciones/[id]`.
+- Cambio sintáctico únicamente; no modifica lógica, permisos, Supabase ni Gemini.
