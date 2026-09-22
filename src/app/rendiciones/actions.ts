@@ -151,6 +151,28 @@ export async function reviewExpense(fd:FormData){
  await log(supabase,profile,renditionId,"expense_reviewed",{expense_id:expenseId,decision,observation});revalidatePath("/rendiciones");
 }
 
+
+export async function saveAuthorizedExpenseAmount(fd:FormData){
+ const {supabase,user,profile}=await ctx();
+ if(profile.role!=="Finanzas")throw new Error("Solo Finanzas puede modificar el monto autorizado.");
+ await requireCapability(supabase,profile,CAPABILITIES.RENDITION_APPROVE,"Sin permiso para modificar el monto autorizado.");
+ const renditionId=txt(fd.get("rendition_id")),expenseId=txt(fd.get("expense_id"));
+ const {data:r,error:rError}=await supabase.from("renditions").select("status,creator_user_id").eq("id",renditionId).single();
+ if(rError||!r||!["Enviada","Aprobada"].includes(r.status))throw new Error("La rendición no permite modificar montos autorizados.");
+ if(r.creator_user_id===user.id)throw new Error("No puedes modificar montos de tu propia rendición.");
+ const {data:g,error:gError}=await supabase.from("rendition_expenses").select("presented_amount,review_status").eq("id",expenseId).eq("rendition_id",renditionId).single();
+ if(gError||!g)throw new Error("Gasto no encontrado.");
+ if(g.review_status!=="Aprobada")throw new Error("Primero debes aprobar esta línea.");
+ const authorized=Math.min(amount(fd.get("authorized_amount")),Number(g.presented_amount||0));
+ const {error:updateError}=await supabase.from("rendition_expenses").update({authorized_amount:authorized,reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",expenseId).eq("rendition_id",renditionId);
+ if(updateError)throw new Error("No se pudo guardar el monto autorizado.");
+ const {data:items,error:itemsError}=await supabase.from("rendition_expenses").select("authorized_amount").eq("rendition_id",renditionId);if(itemsError)throw new Error("Monto guardado, pero no se pudo recalcular el total.");
+ const total=(items??[]).reduce((n:number,x:any)=>n+Number(x.authorized_amount||0),0);
+ const {error:totalError}=await supabase.from("renditions").update({total_authorized:total,updated_at:new Date().toISOString()}).eq("id",renditionId);if(totalError)throw new Error("Monto guardado, pero no se pudo actualizar el total autorizado.");
+ await log(supabase,profile,renditionId,"authorized_amount_updated",{expense_id:expenseId,authorized_amount:authorized,total_authorized:total});
+ revalidatePath("/rendiciones");revalidatePath(`/rendiciones/${renditionId}`);
+}
+
 export async function deleteRenditionExpense(fd:FormData){
  const {supabase,user,profile}=await ctx();await requireCapability(supabase,profile,CAPABILITIES.RENDITION_SUBMIT,"Sin permiso para eliminar gastos.");
  const renditionId=txt(fd.get("rendition_id")),expenseId=txt(fd.get("expense_id"));

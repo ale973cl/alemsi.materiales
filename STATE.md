@@ -155,3 +155,11 @@
 ## Corrección build exportación Excel 2026-09-22
 - Corregido tipado de IDs de usuarios y cuerpo binario de respuesta del endpoint XLSX para compatibilidad TypeScript/Next 15.
 - No cambia el contenido ni los permisos de la exportación.
+
+## Corrección guardado monto autorizado por línea 2026-09-22
+- Finanzas puede corregir y guardar el monto autorizado de una línea ya Aprobada mientras la rendición esté Enviada o Aprobada.
+- Guardar monto actualiza rendition_expenses.authorized_amount, recalcula renditions.total_authorized y refresca el expediente.
+- Se mantiene el límite duro: monto autorizado nunca supera monto presentado.
+- Gerencia no modifica montos; conserva revisión/observación. No se habilita edición financiera a otros perfiles.
+- La modificación queda registrada en activity_log con monto de línea y total autorizado recalculado.
+- Sin cambios de esquema Supabase ni variables Vercel.

@@ -4,7 +4,7 @@ import {createClient} from "@/lib/supabase/server";
 import ExpenseForm from "../ExpenseForm";
 import RenditionGallery from "../RenditionGallery";
 import RenditionSubmitButton from "../RenditionSubmitButton";
-import {deleteRenditionExpense,editRenditionExpense,markRenditionPaid,reviewExpense,submitRendition} from "../actions";
+import {deleteRenditionExpense,editRenditionExpense,markRenditionPaid,reviewExpense,saveAuthorizedExpenseAmount,submitRendition} from "../actions";
 import {CAPABILITIES,roleCan,type Capability} from "@/lib/authorization";
 import {calculateRenditionBalance} from "@/lib/renditions/financial";
 const money=(v:number|null|undefined)=>Number(v||0).toLocaleString("es-CL");
@@ -42,7 +42,7 @@ export default async function Page({params}:{params:Promise<{id:string}>}){
     <div className="renditionTableAction">{canObserve?<RenditionSubmitButton className="renditionBtn renditionBtnWarning" idle="OBS" pending="…" name="decision" value="OBSERVE"/>:<span>—</span>}</div>
     <div className="renditionTableAction">{canApprove?<RenditionSubmitButton className="renditionBtn renditionBtnDanger" idle="Rechaza" pending="…" name="decision" value="REJECT"/>:<span>—</span>}</div>
    </form>:<>
-    <span className="renditionTableObservationText">{g.review_observation||"—"}</span>
+    <span className="renditionTableObservationText">{g.review_observation||"—"}{canApprove&&g.review_status==="Aprobada"&&["Enviada","Aprobada"].includes(r.status)&&<form action={saveAuthorizedExpenseAmount} className="renditionAuthorizedSaved"><input type="hidden" name="rendition_id" value={r.id}/><input type="hidden" name="expense_id" value={g.id}/><label>Autorizado $<input name="authorized_amount" type="number" min="0" max={Number(g.presented_amount)} defaultValue={Number(g.authorized_amount??g.presented_amount)}/></label><RenditionSubmitButton className="renditionBtn renditionBtnGhost" idle="Guardar monto" pending="Guardando…"/></form>}</span>
     <span className="renditionTableAction"><span className={badge(g.review_status||"Pendiente")}>{g.review_status||"Pendiente"}</span></span>
     <span className="renditionTableAction">—</span><span className="renditionTableAction">—</span>
    </>}
