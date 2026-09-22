@@ -48,3 +48,10 @@
 ## Corrección build 2026-09-22
 - Corregido cierre JSX faltante en el bloque condicional de la galería de comprobantes de `/rendiciones/[id]`.
 - Cambio sintáctico únicamente; no modifica lógica, permisos, Supabase ni Gemini.
+
+## Permisos Rendiciones 2026-09-22
+- Rendiciones integrado a CAPABILITIES y `user_module_permissions` sin cambio de esquema.
+- Capacidades: enviar, revisar, observar, aprobar/rechazar y registrar pago.
+- Finanzas y Gerencia ya no se excluyen de navegación cuando tienen acceso al servicio.
+- Server Actions validan rol base + excepción individual; Admin Total permanece protegido.
+- Gerencia hereda revisar/observar; Finanzas hereda revisar/observar/aprobar/pagar.
