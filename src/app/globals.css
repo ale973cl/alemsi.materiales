@@ -198,3 +198,39 @@ button,input,select,textarea{max-width:100%}
  .renditionDetailPage .renditionBadge{min-height:22px;padding:2px 6px;font-size:10px}
  .renditionDetailPage .renditionObservation{padding:5px 8px}
 }
+
+/* Rendiciones · matriz financiera según estructura definida por usuario */
+.renditionExpenseTable{overflow-x:auto;background:#fff}
+.renditionExpenseTableHead,.renditionExpenseTableRow{display:grid;grid-template-columns:42px 118px 86px 72px 88px minmax(155px,1.15fr) minmax(190px,1.45fr) 88px minmax(180px,1.25fr) 82px 66px 82px;align-items:stretch;min-width:1260px}
+.renditionExpenseTableHead{background:#0b2f4a;color:#fff;font-size:10px;font-weight:800}
+.renditionExpenseTableHead>span{padding:7px 6px;border-right:1px solid rgba(255,255,255,.25)}
+.renditionExpenseTableRow{border-top:1px solid #c8dce8;font-size:11px;color:#173650}
+.renditionExpenseTableRow>span,.renditionTableReviewForm>*{min-width:0;padding:6px;border-right:1px solid #dce7ea;overflow-wrap:anywhere}
+.renditionCellItem{text-align:right;font-weight:800}.renditionCellAmount{text-align:right;font-weight:800;white-space:nowrap}
+.renditionTableReviewForm{display:contents}
+.renditionTableObservation{display:flex;align-items:center;gap:4px;padding:3px!important}
+.renditionTableObservation textarea{min-height:32px;height:32px;padding:5px 6px;border-radius:5px;font-size:11px;resize:vertical}
+.renditionAuthorizedInline{display:flex;align-items:center;gap:3px;white-space:nowrap;font-size:9px;font-weight:800}
+.renditionAuthorizedInline input{width:72px;min-height:32px;height:32px;padding:4px 5px;border-radius:5px;font-size:11px}
+.renditionTableObservationText{font-size:10px;color:#536875}
+.renditionTableAction{display:flex;align-items:center;justify-content:center;padding:3px!important}
+.renditionTableAction .renditionBtn{width:100%;min-height:30px;padding:4px 5px;border-radius:5px;font-size:10px}
+.renditionTableAction .renditionBadge{max-width:100%;min-height:22px;padding:2px 5px;font-size:9px;overflow:hidden;text-overflow:ellipsis}
+.renditionRowOwnerActions{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:4px 7px;border-top:1px dashed #dce7ea;background:#f8fbfc}
+.renditionRowOwnerActions .renditionInlineDetails{flex:1;border:0;padding:0;font-size:11px}
+.renditionRowOwnerActions .renditionDeleteExpense .renditionBtn{min-height:30px;padding:4px 8px;font-size:10px}
+@media(max-width:900px){
+ .renditionExpenseTable{overflow:visible}
+ .renditionExpenseTableHead{display:none}
+ .renditionExpenseTableRow{display:grid;grid-template-columns:72px 1fr;min-width:0;margin:8px;border:1px solid #c8dce8;border-radius:9px;overflow:hidden}
+ .renditionExpenseTableRow>span{display:grid;grid-template-columns:88px 1fr;gap:6px;padding:7px 9px;border-right:0;border-bottom:1px solid #eef3f5}
+ .renditionExpenseTableRow>span:before{font-weight:800;color:#627d98}
+ .renditionExpenseTableRow>span:nth-child(1):before{content:"ITEM"}.renditionExpenseTableRow>span:nth-child(2):before{content:"TIPO"}.renditionExpenseTableRow>span:nth-child(3):before{content:"Fecha"}.renditionExpenseTableRow>span:nth-child(4):before{content:"T. DOC"}.renditionExpenseTableRow>span:nth-child(5):before{content:"N. DOC"}.renditionExpenseTableRow>span:nth-child(6):before{content:"RAZÓN SOCIAL"}.renditionExpenseTableRow>span:nth-child(7):before{content:"Descripción"}.renditionExpenseTableRow>span:nth-child(8):before{content:"MONTO"}
+ .renditionExpenseTableRow>span:nth-child(-n+8){grid-column:1/-1}
+ .renditionTableReviewForm{display:grid;grid-column:1/-1;grid-template-columns:1fr 1fr 1fr}
+ .renditionTableObservation{grid-column:1/-1;display:grid;padding:7px!important}
+ .renditionAuthorizedInline{justify-content:flex-end}
+ .renditionTableAction{padding:5px!important}
+ .renditionTableObservationText{grid-column:1/-1!important}
+ .renditionRowOwnerActions{grid-column:1/-1;display:grid}
+}

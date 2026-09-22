@@ -98,3 +98,12 @@
 - Observación, monto autorizado y acciones permanecen compactos bajo cada línea solo cuando corresponde revisar.
 - Móvil conserva el diseño responsive existente.
 - Sin cambios de lógica, Supabase, permisos ni variables Vercel.
+
+## Matriz compacta de gastos según Excel 2026-09-22
+- El expediente usa exactamente el orden visual solicitado: ITEM | TIPO | Fecha | T. DOC | N. DOC | RAZÓN SOCIAL | Descripción | MONTO | OBSERVACIÓN | APROBAR | OBS | RECHAZA.
+- T. DOC corresponde al tipo de documento y N. DOC al número del documento.
+- En escritorio cada gasto ocupa una fila compacta; observación y acciones de revisión se integran en la misma matriz.
+- Se conserva monto autorizado dentro de la celda de observación para no perder la función financiera existente.
+- Edición/eliminación del creador permanecen disponibles bajo su fila mientras Borrador/Observada.
+- Móvil redistribuye los mismos datos con sus mismos nombres.
+- Sin cambios de esquema Supabase, permisos ni variables Vercel.
