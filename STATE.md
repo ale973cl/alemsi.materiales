@@ -1,7 +1,7 @@
 # STATE — ALEMSI Materiales
 ## Estado actual
 - **Rama activa:** ui/rendiciones-corporativa
-- **Último cambio:** bandeja compacta + expediente independiente por rendición.
+- **Último cambio:** contraste visual ALEMSI en estados y botones de Rendiciones.
 - **Fecha:** 2026-09-21
 
 ## Última tarea completada
@@ -31,3 +31,9 @@
 4. Recepción → Inventario → Despacho → Entrega.
 5. Respaldos solo Admin Total.
 6. Roles oficiales se mantienen.
+
+## Ajuste visual 2026-09-21
+- Indicadores de estado ahora usan colores contrastados de la paleta ALEMSI; error/rechazo conserva rojo funcional.
+- Botones de Rendiciones pasan de píldora a rectangulares con radio moderado y borde visible.
+- Ver comprobante, Volver y acciones secundarias se diferencian del fondo mediante borde teal y fondo claro.
+- Sin cambios de lógica, permisos, Supabase, Gemini ni variables Vercel.

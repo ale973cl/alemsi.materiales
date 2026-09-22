@@ -119,3 +119,22 @@ button,input,select,textarea{max-width:100%}
 .renditionListHead.renditionListSimple,.renditionListRow.renditionListSimple{grid-template-columns:1.1fr .8fr 1.7fr .8fr 54px}
 .renditionDetailAlert{margin-bottom:14px;padding:14px 16px;border:1px solid #ead79d;border-radius:12px;background:#fff8e5;color:#725000}.renditionDetailAlert p{margin:5px 0 0}.renditionDetailMoney{margin-bottom:14px;border:1px solid var(--r-border);border-radius:14px;overflow:hidden}.renditionDetailSection{margin-bottom:14px;background:#fff;border:1px solid var(--r-border);border-radius:14px;overflow:hidden}.renditionDetailSection>.renditionsBoardHead{padding:15px 16px 6px}.renditionDetailSection>.renditionExpenseList{background:#fff}.renditionDetailSection>.renditionSubmit{margin:0;padding:14px 18px}
 @media(max-width:900px){.renditionListHead{display:none}.renditionListRow,.renditionListRow.renditionListSimple{grid-template-columns:1fr auto;gap:6px 10px;padding:11px 12px}.renditionListRow>span:nth-child(3),.renditionListRow>span:nth-child(4),.renditionListRow>span:nth-child(5){display:none}.renditionListRow.renditionListSimple>span:nth-child(3){display:block;grid-column:1/-1}.renditionListOpen{grid-column:2}.renditionDetailMoney{grid-template-columns:1fr 1fr}}
+
+
+/* Rendiciones · contraste ALEMSI y controles rectangulares */
+.renditionsPage .renditionBtn{border-radius:9px;min-height:40px;padding:9px 14px;box-shadow:0 1px 2px rgba(7,59,92,.08)}
+.renditionsPage .renditionBtnPrimary{background:#073b5c;color:#fff;border-color:#073b5c}
+.renditionsPage .renditionBtnGhost,.renditionsPage .renditionBtnOutline{background:#fff;color:#073b5c;border:1px solid #79bdb1}
+.renditionsPage .renditionBtnSuccess{background:#159a9c;color:#fff;border-color:#159a9c}
+.renditionsPage .renditionBtnWarning{background:#fff4cf;color:#6a4b00;border-color:#d8b44a}
+.renditionsPage .renditionBtnDanger{background:#b42318;color:#fff;border-color:#b42318}
+.renditionsPage .renditionBtn:hover{filter:brightness(.96);box-shadow:0 2px 6px rgba(7,59,92,.14)}
+.renditionsPage .renditionBadge{border-radius:7px;border:1px solid transparent;min-height:28px;padding:4px 10px}
+.renditionsPage .renditionBadgeOk{background:#159a9c;color:#fff;border-color:#087a73}
+.renditionsPage .renditionBadgeWarning{background:#f4c95d;color:#4f3900;border-color:#d8b44a}
+.renditionsPage .renditionBadgeError{background:#b42318;color:#fff;border-color:#8f1c14}
+.renditionsPage .renditionBadgeNeutral{background:#dce7ea;color:#173650;border-color:#c8dce8}
+.renditionsPage .renditionExpenseActions{background:#f4f8f9}
+.renditionsPage .renditionExpenseActions>.renditionBtnOutline{background:#eaf6f4;border-color:#5daea2;color:#0b2f4a}
+.renditionsPage .renditionListOpen{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:5px 9px;border-radius:7px;background:#eaf6f4;border:1px solid #79bdb1;color:#0b2f4a}
+@media(max-width:600px){.renditionsPage .renditionBtn{border-radius:8px}.renditionsPage .renditionBadge{border-radius:6px}}
