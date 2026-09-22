@@ -69,3 +69,8 @@
 - El original pesado no se envía al Server Action ni se almacena en Supabase, evitando el error 413 (>1 MB) detectado en Android.
 - Lista: Gasto 1, Gasto 2, etc. Galería: Foto 1 · Gasto 1, Foto 2 · Gasto 2, etc.
 - Sin cambios de esquema Supabase ni variables Vercel.
+
+## Corrección visibilidad de borradores propios 2026-09-22
+- Un usuario con capacidad de revisión también puede ver sus propios Borradores en la bandeja de Rendiciones.
+- Los Borradores de otros usuarios continúan ocultos hasta Enviar a Finanzas.
+- Pendientes de Finanzas cuenta únicamente rendiciones Enviadas; Observadas quedan fuera de la cola activa mientras se corrigen.
