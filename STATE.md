@@ -63,3 +63,9 @@
 - Solo el creador puede agregar/editar gastos y enviar su rendición.
 - Finanzas/Gerencia no ven ni pueden abrir borradores ajenos; la rendición entra a revisión solo al cambiar a Enviada mediante “Enviar a Finanzas”.
 - No hay cambios de esquema Supabase ni variables Vercel.
+
+## Optimización y correlación visual de comprobantes 2026-09-22
+- Fotos se optimizan en el navegador antes de lectura y guardado: máximo 1200 px, WebP y objetivo aproximado de 100 KB.
+- El original pesado no se envía al Server Action ni se almacena en Supabase, evitando el error 413 (>1 MB) detectado en Android.
+- Lista: Gasto 1, Gasto 2, etc. Galería: Foto 1 · Gasto 1, Foto 2 · Gasto 2, etc.
+- Sin cambios de esquema Supabase ni variables Vercel.
