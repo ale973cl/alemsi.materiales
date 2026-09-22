@@ -241,3 +241,5 @@
 - Se eliminó del Inicio la franja visual del circuito Perfil → Campaña → … → Entrega. El flujo sigue intacto en los módulos; solo se retira una explicación redundante que ocupaba espacio antes del Dashboard gerencial.
 - También se retiraron la constante stages y el useMemo/cards ya sin uso en OperationalApp.
 - Sin cambios de lógica de negocio, Supabase, navegación, permisos ni variables Vercel.
+
+- Hotfix: se restauró import useMemo, requerido por ConsolidatedSupply y SurveyEditor dentro de OperationalApp; el retiro del Stepper no cambia esos usos.

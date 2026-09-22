@@ -1,7 +1,7 @@
 "use client";
 import {modulesForRole} from "@/lib/authorization";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { signOut } from "@/app/actions";
 import { saveSurveyWithTrace } from "@/app/survey-actions";
 import MastersModule from "@/components/modules/MastersModule";
