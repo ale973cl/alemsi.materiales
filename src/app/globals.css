@@ -246,3 +246,10 @@ button,input,select,textarea{max-width:100%}
  .renditionDetailPage .renditionGalleryCard b{font-size:10px}
  .renditionDetailPage .renditionGalleryPdf{min-height:118px}
 }
+
+/* Rendiciones · dashboard gerencial de gastos */
+.renditionAnalytics{margin:0 0 14px;border:1px solid #c8dce8;border-radius:14px;background:#fff;overflow:hidden}
+.renditionAnalytics>.renditionsBoardHead{padding:14px 16px 8px}.renditionAnalytics>.renditionsBoardHead h2{margin:0;color:#0b2f4a;font-size:18px}.renditionAnalytics>.renditionsBoardHead p{margin:3px 0 0;color:#536875;font-size:12px}
+.renditionAnalyticsMetrics{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#c8dce8;border-top:1px solid #c8dce8;border-bottom:1px solid #c8dce8}.renditionAnalyticsMetrics article{display:grid;gap:2px;padding:10px 14px;background:#f8fbfc}.renditionAnalyticsMetrics span{font-size:10px;font-weight:800;text-transform:uppercase;color:#627d98}.renditionAnalyticsMetrics strong{font-size:18px;color:#0b2f4a}.renditionAnalyticsMetrics small{font-size:9px;color:#536875}
+.renditionAnalyticsGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px}.renditionAnalyticsGrid article{min-width:0;padding:10px;border:1px solid #dce7ea;border-radius:10px}.renditionAnalyticsGrid h3{margin:0 0 10px;color:#173650;font-size:13px}.renditionAnalyticsWide{grid-column:1/-1}.renditionAnalyticsBars{display:grid;gap:8px}.renditionAnalyticsBarMeta{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#173650}.renditionAnalyticsBarMeta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.renditionAnalyticsBarMeta strong{white-space:nowrap}.renditionAnalyticsProgress{display:block;width:100%;height:8px;accent-color:#5daea2}.renditionAnalyticsEmpty{margin:0;color:#536875;font-size:11px}
+@media(max-width:700px){.renditionAnalyticsMetrics{grid-template-columns:1fr}.renditionAnalyticsGrid{grid-template-columns:1fr}.renditionAnalyticsWide{grid-column:1}.renditionAnalytics>.renditionsBoardHead{padding:12px}.renditionAnalyticsGrid{padding:8px}}

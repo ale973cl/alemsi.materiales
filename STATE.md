@@ -127,3 +127,12 @@
 - Comprobantes se correlacionan únicamente como ITEM N, sin repetir monto/estado/tipo de documento.
 - Se confirmó en Supabase que previous_balance admite valores con signo y que renditions_check solo valida period_end >= period_start; no fue necesario cambiar esquema.
 - Sin variables nuevas de Vercel.
+
+## Regla de caja chica individual y dashboard gerencial 2026-09-22
+- Los fondos/caja chica y sus saldos son individuales por persona/RUT; nunca se compensan entre trabajadores.
+- Los totales agregados de fondos se usan solo como indicador informativo para Gerencia/Finanzas.
+- Se incorpora Dashboard de gastos para perfiles con capacidad de revisión: Admin Total, Gerencia y Finanzas según permisos.
+- Los gráficos usan monto autorizado y solo rendiciones Aprobadas/Pagadas.
+- Visualizaciones: gastos por tipo, gastos por persona y evolución mensual; indicadores de Presentado, Autorizado y Fondos/Caja chica.
+- El dashboard consume renditions y rendition_expenses existentes; no duplica datos ni cambia el esquema Supabase.
+- Sin variables nuevas de Vercel.
