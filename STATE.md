@@ -163,3 +163,11 @@
 - Gerencia no modifica montos; conserva revisión/observación. No se habilita edición financiera a otros perfiles.
 - La modificación queda registrada en activity_log con monto de línea y total autorizado recalculado.
 - Sin cambios de esquema Supabase ni variables Vercel.
+
+## Resumen mensual y búsqueda histórica 2026-09-22
+- Dashboard de Gerencia/Finanzas abre por defecto en el mes calendario actual.
+- Selector Mes del resumen permite buscar cualquier mes/año anterior; indicadores y gráficos cambian únicamente al período seleccionado.
+- La descarga Excel permanece independiente del filtro visual y siempre exporta el histórico completo disponible.
+- El botón se identifica como Descargar Excel histórico completo para evitar confusión.
+- Gastos por persona se identifican por nombre + RUT; la evolución usa fecha real del gasto cuando existe.
+- Sin cambios de esquema Supabase ni variables Vercel.

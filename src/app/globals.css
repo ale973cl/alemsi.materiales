@@ -255,3 +255,5 @@ button,input,select,textarea{max-width:100%}
 @media(max-width:700px){.renditionAnalyticsMetrics{grid-template-columns:1fr}.renditionAnalyticsGrid{grid-template-columns:1fr}.renditionAnalyticsWide{grid-column:1}.renditionAnalytics>.renditionsBoardHead{padding:12px}.renditionAnalyticsGrid{padding:8px}}
 
 .renditionExportBar{display:flex;justify-content:flex-end;margin:0 0 8px}.renditionExportBar .renditionBtn{min-height:34px;padding:7px 12px}
+
+.renditionDashboardToolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:0 0 10px}.renditionDashboardToolbar form{display:flex;align-items:flex-end;gap:8px}.renditionDashboardToolbar label{display:grid;gap:4px;font-weight:700;color:#173650}.renditionDashboardToolbar input[type=month]{min-height:36px;border:1px solid #c8dce8;border-radius:8px;padding:6px 9px;background:#fff;color:#173650}@media(max-width:700px){.renditionDashboardToolbar,.renditionDashboardToolbar form{align-items:stretch;flex-direction:column}.renditionDashboardToolbar .renditionBtn{width:100%;text-align:center}}
