@@ -216,3 +216,49 @@ input,select,textarea,button{max-width:100%}
   .portalTop .userBox{display:none}
   .mobileCurrentContext{margin-left:4px}
 }
+
+
+/* Compactación operativa 2026-09-22: levantamientos, campañas y circuito */
+@media (min-width:761px){
+  .campaignCard{padding:11px 12px}
+  .campaignCardHead{display:flex!important;align-items:center!important;gap:10px!important;flex-wrap:nowrap}
+  .campaignCardHead>span{flex:1 1 230px;min-width:180px}
+  .campaignCardHead>em{flex:0 0 auto}
+  .campaignMetrics{display:inline-flex!important;align-items:center;gap:6px;margin:0!important;flex:0 0 auto}
+  .campaignMetrics button{display:inline-flex!important;align-items:center;gap:4px;min-height:30px!important;padding:5px 8px!important;border-radius:999px!important;background:#f2f6f7;font-size:10px!important;white-space:nowrap}
+  .campaignMetrics button b{font-size:11px!important;line-height:1}
+  .campaignMetrics button small{font-size:10px!important;line-height:1;color:inherit}
+  .campaignHeaderActions{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto}
+  .campaignHeaderActions button{min-height:32px!important;padding:6px 9px!important;white-space:nowrap}
+
+  .surveyInstallationCard{grid-template-columns:minmax(115px,1.05fr) minmax(115px,1.05fr) minmax(135px,1.15fr) minmax(90px,.7fr) minmax(115px,.8fr) minmax(390px,2.2fr) auto!important;align-items:center!important;gap:8px!important;padding:9px 10px!important}
+  .surveyInstallationCard>span{min-width:0}
+  .surveyInstallationCard>span small{font-size:9px!important}
+  .surveyInstallationCard>span b{font-size:11px!important;line-height:1.2}
+  .surveyInstallationCard>.surveyPrimaryAction{grid-column:auto!important;justify-self:end!important;min-height:34px!important;padding:7px 10px!important;white-space:nowrap}
+  .surveyAccessControl{display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}
+  .surveyAccessControl .surveyAccessEmail{width:180px;min-width:130px;min-height:34px!important;padding:6px 8px!important;font-size:11px}
+  .surveyAccessControl button{grid-column:auto!important;width:auto!important;min-height:34px!important;padding:6px 8px!important;font-size:10px!important;white-space:nowrap}
+  .surveyAccessControl .surveyAccessLink{width:120px;min-width:90px;min-height:34px!important;font-size:10px}
+  .surveyAccessMessage{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px!important;color:#52636e}
+
+  .flow.flowCompact{display:flex!important;align-items:stretch;gap:4px;overflow:visible!important;width:100%;margin:0 0 12px}
+  .flow.flowCompact>div{flex:1 1 0;min-width:0;padding:6px 4px!important;gap:4px!important;align-items:center;justify-content:center;text-align:center}
+  .flow.flowCompact b{width:20px!important;height:20px!important;min-width:20px;display:grid;place-items:center;font-size:10px!important;line-height:1}
+  .flow.flowCompact span{font-size:9px!important;line-height:1.1;white-space:normal;overflow-wrap:normal;word-break:normal}
+}
+@media (max-width:760px){
+  .campaignHeaderActions{display:flex;gap:6px;flex-wrap:wrap}
+  .campaignHeaderActions button{flex:1 1 140px}
+  .campaignMetrics{display:flex!important;gap:5px!important;overflow-x:auto;grid-template-columns:none!important;margin-top:8px}
+  .campaignMetrics button{flex:0 0 auto;display:inline-flex!important;align-items:center;gap:4px;min-height:34px!important;padding:6px 8px!important}
+  .campaignMetrics button b{font-size:11px!important}.campaignMetrics button small{font-size:10px!important}
+  .surveyAccessControl{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
+  .surveyAccessControl .surveyAccessEmail,.surveyAccessControl .surveyAccessLink{grid-column:1/-1;width:100%;min-width:0}
+  .surveyAccessControl button{width:100%!important}
+  .surveyAccessMessage{grid-column:1/-1}
+  .flow.flowCompact{display:flex!important;gap:4px;overflow-x:auto!important;padding-bottom:4px}
+  .flow.flowCompact>div{flex:0 0 92px;padding:7px 5px!important}
+  .flow.flowCompact b{font-size:10px!important}
+  .flow.flowCompact span{font-size:9px!important}
+}

@@ -207,3 +207,12 @@
 - Los 7 perfiles certificables quedan: Admin Total, Gerencia, Admin, Operaciones, Finanzas, Bodega y Supervisora.
 - La agrupación de Workspaces continúa derivándose de los módulos efectivos; los Workspaces sin módulos visibles se filtran antes de renderizar.
 - Pendiente de cierre: confirmar deployment READY y validación interactiva del Drawer móvil y de cada sesión real mediante PreviewProfileSwitcher.
+
+
+## Compactación UX/UI operativa · 2026-09-22
+- Levantamientos: en escritorio, datos de instalación + acceso por correo + acciones de acceso + Hacer levantamiento quedan en una sola fila horizontal.
+- SurveyLinkControl conserva createSurveyAccessLink, estados, generación, envío y copia; solo cambia su presentación.
+- Campañas: métricas Esperadas / En proceso / Tomadas / Pendientes pasan a chips compactos y comparten cabecera con Abrir campaña y Administrar campaña.
+- Inicio: el circuito operativo conserva los 13 pasos reales existentes y se compacta para caber en una sola línea en escritorio; no se eliminaron etapas para forzarlo a 11.
+- Móvil mantiene redistribución legible y controles táctiles; no se alteraron selectedCampaignId, selectedSurveyInstallationId, setTab, Server Actions ni Supabase.
+- Sin dependencias nuevas ni variables Vercel.
