@@ -341,3 +341,20 @@ input,select,textarea,button{max-width:100%}
 /* Inicio Supervisora jerárquico · 2026-09-22 */
 .supervisorSummaryGrid{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(260px,.8fr);gap:10px}.supervisorCombinedCard,.supervisorRouteCard{border:1px solid #c8dce8;border-radius:12px;background:#fff;padding:12px;text-align:left}.supervisorCardTitle small,.supervisorRouteCard>small{display:block;font-size:9px;font-weight:800;letter-spacing:.08em;color:#008d8b}.supervisorCardTitle b{display:block;margin-top:3px;color:#0b2f4a;font-size:14px}.supervisorCombinedMetrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:9px}.supervisorCombinedMetrics button{display:grid;gap:1px;min-height:58px!important;padding:7px 9px!important;border:1px solid #dbe7ec!important;border-radius:9px!important;background:#f8fbfc!important;text-align:left!important}.supervisorCombinedMetrics button:hover{border-color:#79bdb1!important;background:#eef8f6!important}.supervisorCombinedMetrics strong{font-size:20px;color:#0b2f4a}.supervisorCombinedMetrics span{font-size:9px;color:#627d98}.supervisorRouteCard{display:grid;grid-template-columns:1fr 1fr;gap:7px;cursor:pointer}.supervisorRouteCard>small,.supervisorRouteCard>b{grid-column:1/-1}.supervisorRouteCard div{display:grid}.supervisorRouteCard div strong{font-size:20px;color:#0b2f4a}.supervisorRouteCard div span{font-size:9px;color:#627d98}.supervisorRouteCard>b{font-size:10px;color:#087a73}.supervisorCampaignRow{width:100%;display:grid!important;grid-template-columns:minmax(220px,1fr) 110px 110px 75px;align-items:center;gap:8px;min-height:48px!important;padding:7px 11px!important;border:0!important;border-top:1px solid #e1eaee!important;border-radius:0!important;background:#fff!important;text-align:left!important}.supervisorCampaignRow:hover{background:#f6fafb!important}.supervisorCampaignRow span b,.supervisorCampaignRow span small{display:block}.supervisorCampaignRow span b{font-size:11px;color:#0b2f4a}.supervisorCampaignRow span small{font-size:9px;color:#627d98;margin-top:2px}.supervisorCampaignRow>strong{font-size:10px;color:#087a73;text-align:right}
 @media(max-width:760px){.supervisorSummaryGrid{grid-template-columns:1fr}.supervisorCombinedMetrics{grid-template-columns:1fr 1fr}.supervisorCampaignRow{grid-template-columns:1fr auto auto}.supervisorCampaignRow>strong{grid-column:1/-1;text-align:left}}
+
+/* Densidad global escritorio + controles táctiles móvil · 2026-09-22 */
+@media(min-width:761px){
+ .portalMain button:not(.nav):not(.mobileMenuButton):not(.mobileDrawerClose),.portalMain .btn,.portalMain .linkBtn{min-height:32px!important;padding:5px 10px!important;font-size:11px!important;line-height:1.15!important;border-radius:8px!important}
+ .portalMain input:not([type="checkbox"]):not([type="radio"]),.portalMain select{min-height:34px!important;padding:5px 9px!important;font-size:11px!important}
+ .portalMain textarea{padding:7px 9px!important;font-size:11px!important}
+ .portalMain .panel{padding:12px!important}.portalMain .campaignCard{padding:9px 11px!important}.portalMain .row{padding-top:6px!important;padding-bottom:6px!important}
+ .portalMain h2{margin-top:0;margin-bottom:8px}.portalMain h3,.portalMain h4{margin-top:8px;margin-bottom:7px}
+ .surveyInstallationRow,.surveyDenseRow{min-height:54px!important}.surveyInstallationRow button,.surveyDenseRow button{min-width:118px!important;white-space:nowrap}
+}
+@media(max-width:760px){
+ .portalMain button:not(.nav):not(.mobileMenuButton):not(.mobileDrawerClose),.portalMain .btn,.portalMain .linkBtn{min-height:42px!important;padding:9px 12px!important;font-size:12px!important}
+ .portalMain input:not([type="checkbox"]):not([type="radio"]),.portalMain select{min-height:44px!important;font-size:13px!important}
+ .portalMain textarea{font-size:13px!important}
+ .portalMain .panel{padding:10px!important}
+ .portalMain .row{gap:7px}
+}

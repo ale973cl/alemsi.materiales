@@ -283,3 +283,9 @@
 - Al pulsar una fila se conserva exactamente el flujo existente: campaignId, familias, cantidades, precios, mensajes y detalle de origen; no se cambian Server Actions ni reglas de abastecimiento.
 - El cambio aplica a todos los perfiles que ya tengan acceso al módulo Necesidades y abastecimiento; no modifica authorization.ts ni concede acceso nuevo.
 - Sin cambios de Supabase, package.json ni variables Vercel.
+
+## Estandarización de densidad de interfaz · 2026-09-22
+- Escritorio: botones de contenido estandarizados a 32px de alto mínimo, padding 5x10, fuente 11px y radio 8px; inputs/selects a 34px. Paneles, tarjetas y filas reducen padding para mostrar más información útil por pantalla.
+- Móvil <=760px mantiene tratamiento independiente: controles táctiles de mínimo 42px y campos de 44px, evitando trasladar la densidad de escritorio a teléfonos.
+- La regla se limita a .portalMain y excluye navegación lateral, botón de menú y cierre del Drawer.
+- No se modifican componentes funcionales, Server Actions, estados React, authorization.ts, Supabase ni dependencias.
