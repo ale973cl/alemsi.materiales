@@ -94,9 +94,9 @@ export async function submitRendition(fd:FormData){
 }
 
 export async function reviewRendition(fd:FormData){
- const {supabase,profile}=await ctx(); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_REVIEW,"Sin permiso para revisar.");
+ const {supabase,user,profile}=await ctx(); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_REVIEW,"Sin permiso para revisar.");
  const id=txt(fd.get("rendition_id")),decision=txt(fd.get("decision")),observation=txt(fd.get("observation"));
- const {data:r}=await supabase.from("renditions").select("id,status,folio,person_email,total_presented").eq("id",id).single();if(!r||r.status!=="Enviada")throw new Error("La rendición no está pendiente de revisión.");
+ const {data:r}=await supabase.from("renditions").select("id,status,folio,person_email,total_presented,creator_user_id").eq("id",id).single();if(!r||r.status!=="Enviada")throw new Error("La rendición no está pendiente de revisión.");if(r.creator_user_id===user.id)throw new Error("No puedes revisar tu propia rendición.");
  if(decision==="OBSERVE"){await requireCapability(supabase,profile,CAPABILITIES.RENDITION_OBSERVE,"Sin permiso para observar.");if(!observation)throw new Error("Indica qué debe corregirse.");await supabase.from("renditions").update({status:"Observada",review_observation:observation,reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",id);}
  else if(decision==="REJECT"){await requireCapability(supabase,profile,CAPABILITIES.RENDITION_APPROVE,"Sin permiso para rechazar.");if(!observation)throw new Error("Indica el motivo del rechazo.");await supabase.from("renditions").update({status:"Rechazada",review_observation:observation,reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",id);}
  else if(decision==="APPROVE"){await requireCapability(supabase,profile,CAPABILITIES.RENDITION_APPROVE,"Sin permiso para aprobar.");const authorized=amount(fd.get("authorized_amount"));if(authorized>Number(r.total_presented))throw new Error("El autorizado no puede superar lo presentado.");await supabase.from("renditions").update({status:"Aprobada",total_authorized:authorized,review_observation:observation||null,reviewed_by:profile.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",id);}
@@ -105,9 +105,9 @@ export async function reviewRendition(fd:FormData){
 }
 
 export async function markRenditionPaid(fd:FormData){
- const {supabase,profile}=await ctx(); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_PAY,"Sin permiso para registrar el pago.");
+ const {supabase,user,profile}=await ctx(); await requireCapability(supabase,profile,CAPABILITIES.RENDITION_PAY,"Sin permiso para registrar el pago.");
  const id=txt(fd.get("rendition_id"));const paid=amount(fd.get("amount_paid"));const observation=txt(fd.get("payment_observation"));
- const {data:r}=await supabase.from("renditions").select("status,total_authorized").eq("id",id).single();if(!r||r.status!=="Aprobada")throw new Error("La rendición debe estar aprobada.");if(paid<=0||paid>Number(r.total_authorized))throw new Error("Monto de pago inválido.");
+ const {data:r}=await supabase.from("renditions").select("status,total_authorized,creator_user_id").eq("id",id).single();if(!r||r.status!=="Aprobada")throw new Error("La rendición debe estar aprobada.");if(r.creator_user_id===user.id)throw new Error("No puedes registrar el pago de tu propia rendición.");if(paid<=0||paid>Number(r.total_authorized))throw new Error("Monto de pago inválido.");
  const {error}=await supabase.from("renditions").update({status:"Pagada",amount_paid:paid,payment_observation:observation||null,paid_by:profile.id,paid_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",id);if(error)throw new Error(error.message);
  await log(supabase,profile,id,"paid",{amount_paid:paid});revalidatePath("/rendiciones");
 }
@@ -123,9 +123,9 @@ export async function editRenditionExpense(fd:FormData){
 }
 
 export async function reviewExpense(fd:FormData){
- const {supabase,profile}=await ctx();await requireCapability(supabase,profile,CAPABILITIES.RENDITION_REVIEW,"Sin permiso para revisar.");
+ const {supabase,user,profile}=await ctx();await requireCapability(supabase,profile,CAPABILITIES.RENDITION_REVIEW,"Sin permiso para revisar.");
  const renditionId=txt(fd.get("rendition_id")),expenseId=txt(fd.get("expense_id")),decision=txt(fd.get("decision")),observation=txt(fd.get("observation"));
- const {data:r}=await supabase.from("renditions").select("status").eq("id",renditionId).single();if(!r||r.status!=="Enviada")throw new Error("La rendición no está pendiente de revisión.");
+ const {data:r}=await supabase.from("renditions").select("status,creator_user_id").eq("id",renditionId).single();if(!r||r.status!=="Enviada")throw new Error("La rendición no está pendiente de revisión.");if(r.creator_user_id===user.id)throw new Error("No puedes revisar gastos de tu propia rendición.");
  if(decision==="OBSERVE"){
   await requireCapability(supabase,profile,CAPABILITIES.RENDITION_OBSERVE,"Sin permiso para observar.");
   if(!observation)throw new Error("Indica qué debe corregirse.");

@@ -79,3 +79,10 @@
 - El creador puede eliminar líneas mientras la rendición esté Borrador u Observada.
 - Eliminar una línea también elimina su comprobante de Storage/documentos y recalcula total_presented.
 - La acción se registra en activity_log y no está disponible después de enviar/aprobar/pagar.
+
+## Separación Mis rendiciones / Rendiciones del personal 2026-09-22
+- Perfiles con capacidad de revisión ven dos bandejas separadas: Mis rendiciones y Rendiciones del personal.
+- Mis rendiciones contiene exclusivamente registros creados por el usuario, incluidos Borradores y Observadas.
+- Rendiciones del personal excluye al usuario conectado y oculta Borradores ajenos; aparecen al entrar al circuito de revisión.
+- Se bloqueó en interfaz y servidor revisar/aprobar/rechazar gastos propios y registrar el pago de una rendición propia.
+- Sin cambios de esquema Supabase ni variables Vercel.
