@@ -151,3 +151,7 @@
 - El archivo se genera como .xlsx con encabezado congelado y autofiltro; excluye Borradores ajenos/no ingresados al circuito.
 - La caja chica continúa siendo individual por persona/RUT; los agregados son solo indicadores gerenciales.
 - Sin cambios de esquema Supabase ni variables nuevas de Vercel.
+
+## Corrección build exportación Excel 2026-09-22
+- Corregido tipado de IDs de usuarios y cuerpo binario de respuesta del endpoint XLSX para compatibilidad TypeScript/Next 15.
+- No cambia el contenido ni los permisos de la exportación.
