@@ -403,3 +403,12 @@
 - No se implementa todavía un destino RUTA suponiendo una URL: antes debe verificarse la ruta real existente del proceso móvil de ruta/entrega.
 - La configuración PWA debe preservar sesión/permisos y no crear una segunda autenticación.
 - Sin cambios de Supabase ni variables Vercel.
+
+
+## Hotfix build Flota · variables vehicle_type/chassis_vin · 2026-09-23
+- Vercel Preview del commit 39bc74a compiló JavaScript pero falló en validación TypeScript en `src/app/flota/actions.ts:80`.
+- Causa exacta: `updateVehicle` enviaba las propiedades abreviadas `vehicle_type` y `chassis_vin` sin declararlas previamente en el scope de la función.
+- Corregido leyendo ambos campos desde FormData antes del update; VIN se normaliza a mayúsculas y ambos continúan opcionales/editables.
+- Commit de corrección: `2ed2603b9d7bb13003fa738e45f2df0ed54dc1d7`.
+- No cambia esquema Supabase, reglas de negocio, permisos ni variables Vercel.
+- Validación pendiente: nuevo build de Vercel debe superar Linting and checking validity of types. `npm run build` y `npx tsc --noEmit` no se ejecutan localmente porque esta sesión no dispone de terminal del repositorio.
