@@ -14,11 +14,19 @@ export default async function FlotaPage(){
  if(!user)redirect("/login");
  const {data:profile}=await supabase.from("user_profiles").select("id,full_name,email,role,active").eq("id",user.id).maybeSingle();
  if(!profile?.active)redirect("/");
+ const admin=profile.role==="Admin Total";
+ const [{data:allowed},{data:service}]=await Promise.all([
+  supabase.rpc("has_additional_service_access",{p_service_code:"flota"}),
+  supabase.from("additional_services").select("status,display_name").eq("service_code","flota").maybeSingle(),
+ ]);
+ if(!admin&&!allowed)redirect("/");
+ if(!service||service.status==="INACTIVO")redirect("/");
+ const demoMode=service.status==="DEMO";
  // Fase base: no se consulta ni modifica Materiales/Bodega. Vehículos se conectarán tras aprobar el esquema Flota.
  const vehicles=demo;
  return <main className="fleetPage">
   <header className="fleetHero">
-   <div><p className="fleetEyebrow">ALEMSI · FLOTA</p><h1>Control de Flota</h1><p>Vehículos, documentos, uso y alertas en un solo expediente.</p></div>
+   <div><p className="fleetEyebrow">ALEMSI · FLOTA{demoMode?" · MODO DEMO":""}</p><h1>Control de Flota</h1><p>Vehículos, documentos, uso y alertas en un solo expediente.</p></div>
    <div className="fleetHeroActions"><Link href="/" className="fleetBtn fleetBtnGhost">Volver</Link><button className="fleetBtn fleetBtnPrimary" disabled>+ Nuevo vehículo</button></div>
   </header>
   <section className="fleetMetrics" aria-label="Resumen de flota">
