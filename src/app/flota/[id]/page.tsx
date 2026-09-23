@@ -2,14 +2,14 @@ import Link from "next/link";
 import {notFound,redirect} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
 import {documentAlert,mileageAlert,remainingKm} from "@/modules/flota/domain";
-import {returnVehicle,takeVehicle} from "../actions";
+import {returnVehicle,takeVehicle,updateVehicle} from "../actions";
 import "../flota.css";
 
 type View="resumen"|"documentos"|"historial";
 const dateTime=(v:string|null)=>v?new Intl.DateTimeFormat("es-CL",{dateStyle:"short",timeStyle:"short"}).format(new Date(v)):"—";
 const km=(v:number|null)=>v==null?"—":new Intl.NumberFormat("es-CL").format(v)+" km";
 export default async function VehiclePage({params,searchParams}:{params:Promise<{id:string}>,searchParams:Promise<{vista?:string}>}){
- const {id}=await params;const q=await searchParams;const view=(["resumen","documentos","historial"].includes(q.vista||"")?q.vista:"resumen") as View;
+ const {id}=await params;const q=await searchParams;const notice=(q as any).notice;const view=(["resumen","documentos","historial"].includes(q.vista||"")?q.vista:"resumen") as View;
  const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)redirect("/login");
  const {data:p}=await supabase.from("user_profiles").select("full_name,role,active").eq("id",user.id).single();if(!p?.active)redirect("/");
  const {data:allowed}=await supabase.rpc("has_additional_service_access",{p_service_code:"flota"});if(p.role!=="Admin Total"&&!allowed)redirect("/");
@@ -23,6 +23,8 @@ export default async function VehiclePage({params,searchParams}:{params:Promise<
  const currentUse=(uses??[]).find((x:any)=>!x.returned_at);const currentDocs=(docs??[]).filter((x:any)=>x.is_current);const openDamage=(damage??[]).filter((x:any)=>["Posible deterioro","Deterioro confirmado"].includes(x.status));
  const oil=mileageAlert(Number(v.current_km),v.next_oil_change_km==null?null:Number(v.next_oil_change_km));const left=remainingKm(Number(v.current_km),v.next_oil_change_km==null?null:Number(v.next_oil_change_km));
  return <main className="fleetPage"><header className="fleetHero"><div><p className="fleetEyebrow">ALEMSI · FLOTA</p><h1>{v.plate} · {v.label}</h1><p>{v.brand||""} {v.model||""}{v.year?" · "+v.year:""}</p></div><div className="fleetHeroActions"><Link className="fleetBtn fleetBtnGhost" href="/flota">Volver a Flota</Link></div></header>
+ {notice&&<div className={"fleetNotice "+(notice==="edit-error"||notice==="duplicate"?"fleetNoticeError":"")}>{notice==="updated"?"Datos del vehículo actualizados.":notice==="duplicate"?"La patente ya pertenece a otro vehículo.":"No fue posible actualizar el vehículo."}</div>}
+ {p.role==="Admin Total"&&<details className="fleetCreate"><summary>Editar datos del vehículo</summary><form action={updateVehicle} className="fleetCreateGrid"><input type="hidden" name="vehicle_id" value={v.id}/><label>Patente<input name="plate" defaultValue={v.plate} required maxLength={10}/></label><label>Nombre o identificación<input name="label" defaultValue={v.label} required maxLength={80}/></label><label>Marca<input name="brand" defaultValue={v.brand||""} maxLength={60}/></label><label>Modelo<input name="model" defaultValue={v.model||""} maxLength={60}/></label><label>Año<input name="year" type="number" min="1950" max="2100" defaultValue={v.year||""}/></label><label>Kilometraje actual<input name="current_km" type="number" min="0" defaultValue={v.current_km} required/></label><button className="fleetBtn fleetBtnPrimary">Guardar cambios</button></form></details>}
  <nav className="fleetTabs" aria-label="Expediente del vehículo">{(["resumen","documentos","historial"] as View[]).map(x=><Link key={x} className={"fleetTab "+(view===x?"fleetTabActive":"")} href={"/flota/"+id+"?vista="+x}>{x.toUpperCase()}</Link>)}</nav>
 {view==="resumen"&&<><section className="fleetActionPanel"><div><span className="fleetStepLabel">ACCIÓN PRINCIPAL</span><h2>{currentUse?"Devolver vehículo":"Tomar vehículo"}</h2><p>{currentUse?"Registra el kilometraje final y cualquier observación antes de cerrar el uso.":"Registra quién lo toma y el kilometraje visible. La inspección fotográfica 7/7 se incorporará en el siguiente bloque."}</p></div>
  {currentUse?<form action={returnVehicle} className="fleetActionForm"><input type="hidden" name="vehicle_id" value={v.id}/><input type="hidden" name="assignment_id" value={currentUse.id}/><label>Kilometraje final<input name="end_km" type="number" min={currentUse.start_km} defaultValue={v.current_km} required/></label><label>Observación<textarea name="comment" placeholder="Sin observaciones"/></label><button className="fleetBtn fleetBtnPrimary">Confirmar devolución</button></form>:
