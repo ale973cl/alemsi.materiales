@@ -353,3 +353,14 @@
 - El alta correcta también devuelve confirmación visible y un error genérico de persistencia se presenta sin exponer detalles internos.
 - Siguiente validación: esperar deployment Preview de estos commits, recargar /flota y confirmar que aparece el vehículo ya registrado.
 - Sin cambios de esquema, Materiales/Bodega/Rendiciones ni variables Vercel.
+
+
+## Flota · garaje visual por fotografía · 2026-09-23
+- La referencia visual aprobada pasa a ser criterio de interfaz real, no boceto: la portada de Flota muestra una grilla de vehículos basada en fotografías grandes.
+- Toda la tarjeta/fotografía es botón y abre directamente `/flota/[id]`; se elimina la dependencia visual de “Ver expediente” como acción separada.
+- Cada tarjeta muestra fotografía frontal, estado, patente, identificación/modelo y kilometraje.
+- Se agregó `fleet_vehicles.cover_photo_path` para la miniatura identificadora. Es una referencia derivada; los originales de inspección permanecen inmutables en `fleet_photos`.
+- Mientras un vehículo no tenga primera foto frontal, aparece un espacio explícito “FOTO FRONTAL · Se asignará en la primera inspección”; no se inventan imágenes.
+- La siguiente implementación debe hacer que la primera captura Frontal del flujo 7/7 cree/asigne esta portada automáticamente y mantenga el original histórico.
+- La interfaz mantiene responsive móvil: una tarjeta fotográfica por fila y acceso táctil sobre toda la tarjeta.
+- Sin variables nuevas de Vercel ni dependencia con Materiales/Bodega.
