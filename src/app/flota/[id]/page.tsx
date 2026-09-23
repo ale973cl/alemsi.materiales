@@ -22,9 +22,18 @@ export default async function VehiclePage({params,searchParams}:{params:Promise<
   supabase.from("fleet_maintenance").select("*").eq("vehicle_id",id).order("service_date",{ascending:false}),
   supabase.from("fleet_deterioration_events").select("*").eq("vehicle_id",id).order("created_at",{ascending:false})
  ]);if(!v)notFound();
+ let coverUrl:string|null=null;
+ if(v.cover_photo_path){
+  if(String(v.cover_photo_path).startsWith("/"))coverUrl=String(v.cover_photo_path);
+  else{const {data:cover}=await supabase.storage.from("fleet-photos").createSignedUrl(String(v.cover_photo_path),3600);coverUrl=cover?.signedUrl??null;}
+ }
  const currentUse=(uses??[]).find((x:any)=>!x.returned_at);const currentDocs=(docs??[]).filter((x:any)=>x.is_current);const openDamage=(damage??[]).filter((x:any)=>["Posible deterioro","Deterioro confirmado"].includes(x.status));
  const oil=mileageAlert(Number(v.current_km),v.next_oil_change_km==null?null:Number(v.next_oil_change_km));const left=remainingKm(Number(v.current_km),v.next_oil_change_km==null?null:Number(v.next_oil_change_km));
  return <main className="fleetPage"><header className="fleetHero"><div><p className="fleetEyebrow">ALEMSI · FLOTA</p><h1>{v.plate} · {v.label}</h1><p>{v.brand||""} {v.model||""}{v.year?" · "+v.year:""}</p></div><div className="fleetHeroActions"><Link className="fleetBtn fleetBtnGhost" href="/flota">Volver a Flota</Link></div></header>
+ <section className="fleetVehicleProfileHero" aria-label={"Fotografía de "+v.plate}>
+  {coverUrl==="/flota/fleet-profiles.webp"?<div className={"fleetProfileSprite fleetProfileSprite"+v.plate} role="img" aria-label={"Fotografía "+v.plate}/>:coverUrl?<img src={coverUrl} alt={"Fotografía de perfil "+v.plate}/>:<div className="fleetPhotoPending"><span>FOTO DEL VEHÍCULO</span><small>Sin fotografía de perfil</small></div>}
+  <div className="fleetVehicleProfileInfo"><span className={"fleetStatus "+(v.status==="Disponible"?"fleetStatusOk":v.status==="En uso"?"fleetStatusWarning":"fleetStatusCritical")}>{v.status}</span><strong>{v.plate}</strong><span>{v.label}</span></div>
+ </section>
  {notice&&<div className={"fleetNotice "+(notice==="edit-error"||notice==="duplicate"?"fleetNoticeError":"")}>{notice==="updated"?"Datos del vehículo actualizados.":notice==="duplicate"?"La patente ya pertenece a otro vehículo.":"No fue posible actualizar el vehículo."}</div>}
  {p.role==="Admin Total"&&<details className="fleetCreate"><summary>Editar datos del vehículo</summary><form action={updateVehicle} className="fleetCreateGrid"><input type="hidden" name="vehicle_id" value={v.id}/><label>Patente<input name="plate" defaultValue={v.plate} required maxLength={10}/></label><label>Nombre o identificación<input name="label" defaultValue={v.label} required maxLength={80}/></label><label>Tipo de vehículo<input name="vehicle_type" defaultValue={v.vehicle_type||""} maxLength={40}/></label><label>Marca<input name="brand" defaultValue={v.brand||""} maxLength={60}/></label><label>Modelo<input name="model" defaultValue={v.model||""} maxLength={60}/></label><label>N° chasis / VIN<input name="chassis_vin" defaultValue={v.chassis_vin||""} maxLength={40}/></label><label>Año<input name="year" type="number" min="1950" max="2100" defaultValue={v.year||""}/></label><label>Kilometraje actual<input name="current_km" type="number" min="0" defaultValue={v.current_km} required/></label><button className="fleetBtn fleetBtnPrimary">Guardar cambios</button></form></details>}
  <nav className="fleetTabs" aria-label="Expediente del vehículo">{(["resumen","documentos","historial"] as View[]).map(x=><Link key={x} className={"fleetTab "+(view===x?"fleetTabActive":"")} href={"/flota/"+id+"?vista="+x}>{x.toUpperCase()}</Link>)}</nav>
