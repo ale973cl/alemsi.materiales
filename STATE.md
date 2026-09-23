@@ -382,3 +382,14 @@
 - RBHJ56 existente fue corregido con la fuente: AUTOMOVIL · MG · 3 HATCH BACK 1.5 AUT · chasis/VIN 1S54C5TGM2220603 · año 2021. Se conserva kilometraje operativo 146.998 y portada MG.
 - Los otros cuatro no se crean todavía con datos operativos inventados; al darlos de alta se usarán exactamente los datos maestros entregados y seguirán editables.
 - Sin variables nuevas de Vercel.
+
+
+## Flota · compactación visual del garaje · 2026-09-23
+- Se trabajó directamente sobre la UI real de `/flota`; no se generó ni sustituyó el diseño por un boceto.
+- En escritorio ancho (>=1180px), el garaje usa 6 columnas para permitir visualizar aproximadamente seis vehículos simultáneamente.
+- Se redujeron altura/padding de indicadores, tipografías, espacios y metadatos de tarjetas sin eliminar información.
+- La fotografía continúa siendo el botón completo de acceso al expediente.
+- “Agregar nuevo vehículo” se compactó a la misma escala visual de las tarjetas y deja de ocupar un bloque desproporcionado.
+- Tablet mantiene 3 columnas y móvil 1 columna táctil.
+- Este cambio es solo visual; no modifica Supabase, lógica de Flota, permisos, Materiales/Bodega/Rendiciones ni variables Vercel.
+- Pendiente separado: reemplazar la portada MG por una fuente/recorte de mayor resolución para eliminar pixelación sin alterar el layout.
