@@ -295,3 +295,14 @@
 - Si el proveedor tiene purchase_order_email/commercial_email se usa solo como valor inicial editable; si no existe, el campo queda vacío.
 - queuePurchaseOrderEmail recibe recipient_email, valida un destino básico y conserva la cola central, idempotencia, trazabilidad y políticas del entorno.
 - No se modifica el correo maestro del proveedor, Supabase, authorization.ts ni variables Vercel.
+
+
+## Inicio extensión FLOTA · 2026-09-23
+- Nueva rama: `feature/flota-base`, creada desde `feature/rediseno-shell-navegacion`; `main` no fue modificado.
+- Se creó la ruta dedicada `/flota` con experiencia responsive propia, moderna y orientada a tareas.
+- Se creó `src/modules/flota/domain.ts` con tipos y reglas puras iniciales para estado, documentos, fotos obligatorias, alertas por fecha/kilometraje y rendimiento FULL→FULL.
+- Flota queda explícitamente desacoplada de Materiales/Bodega: no consume sus indicadores, inventario, OC, contratos ni presupuesto.
+- La ruta reutiliza únicamente autenticación/perfil existente. No se hicieron cambios de esquema Supabase ni variables Vercel.
+- Alta de vehículos, persistencia, cámara/IA, retiro/devolución, combustible, GPS puntual, deterioros e informes permanecen deshabilitados hasta aprobar y crear el esquema propio de Flota.
+- Siguiente paso: validar que `/flota` compile/despliegue en Preview y presentar esquema mínimo de datos Flota antes de cualquier migración Supabase.
+- `npm run build` y `npx tsc --noEmit`: pendientes de CI/Preview; esta sesión opera mediante conector GitHub sin terminal del repositorio.
