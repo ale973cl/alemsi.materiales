@@ -14,7 +14,7 @@ export async function createVehicle(formData:FormData){
  if(!allowed)throw new Error("Flota no está habilitada para este usuario.");
  const plate=clean(formData.get("plate"),10).toUpperCase().replace(/[^A-Z0-9]/g,"");
  const label=clean(formData.get("label"),80);
- const brand=clean(formData.get("brand"),60)||null,model=clean(formData.get("model"),60)||null;
+ const brand=clean(formData.get("brand"),60)||null,model=clean(formData.get("model"),60)||null,vehicle_type=clean(formData.get("vehicle_type"),40)||null,chassis_vin=clean(formData.get("chassis_vin"),40).toUpperCase()||null;
  const yearRaw=Number(formData.get("year")||0),km=Number(formData.get("current_km")||0);
  if(plate.length<4||!label||!Number.isInteger(km)||km<0)throw new Error("Revisa patente, identificación y kilometraje.");
  const year=yearRaw?Math.trunc(yearRaw):null;
@@ -77,7 +77,7 @@ export async function updateVehicle(formData:FormData){
  const yearRaw=Number(formData.get("year")||0),km=Number(formData.get("current_km")||0);
  if(!id||plate.length<4||!label||!Number.isInteger(km)||km<0)throw new Error("Revisa los datos del vehículo.");
  const year=yearRaw?Math.trunc(yearRaw):null;if(year!==null&&(year<1950||year>2100))throw new Error("Año inválido.");
- const {error}=await supabase.from("fleet_vehicles").update({plate,label,brand,model,year,current_km:km,updated_at:new Date().toISOString()}).eq("id",id);
+ const {error}=await supabase.from("fleet_vehicles").update({plate,label,brand,model,vehicle_type,chassis_vin,year,current_km:km,updated_at:new Date().toISOString()}).eq("id",id);
  if(error){if(error.code==="23505")redirect("/flota/"+id+"?notice=duplicate");redirect("/flota/"+id+"?notice=edit-error");}
  revalidatePath("/flota");revalidatePath("/flota/"+id);redirect("/flota/"+id+"?notice=updated");
 }
