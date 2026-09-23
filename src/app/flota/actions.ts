@@ -74,6 +74,8 @@ export async function updateVehicle(formData:FormData){
  if(profile.role!=="Admin Total")throw new Error("Solo Admin Total puede editar los datos maestros del vehículo.");
  const id=clean(formData.get("vehicle_id"),80),plate=clean(formData.get("plate"),10).toUpperCase().replace(/[^A-Z0-9]/g,""),label=clean(formData.get("label"),80);
  const brand=clean(formData.get("brand"),60)||null,model=clean(formData.get("model"),60)||null;
+ const vehicle_type=clean(formData.get("vehicle_type"),40)||null;
+ const chassis_vin=clean(formData.get("chassis_vin"),40).toUpperCase()||null;
  const yearRaw=Number(formData.get("year")||0),km=Number(formData.get("current_km")||0);
  if(!id||plate.length<4||!label||!Number.isInteger(km)||km<0)throw new Error("Revisa los datos del vehículo.");
  const year=yearRaw?Math.trunc(yearRaw):null;if(year!==null&&(year<1950||year>2100))throw new Error("Año inválido.");
