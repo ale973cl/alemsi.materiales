@@ -494,3 +494,13 @@
 - Lectura automática de odómetro/tacómetro sigue pendiente de motor visual real.
 - Validación pendiente: Vercel Preview READY del commit 8a5a71bd y prueba Android/Chrome.
 - Variables Vercel: ninguna nueva.
+
+
+## Flota · retiro de guías superpuestas en cámara · 2026-09-23
+- Por decisión del dueño se eliminaron las guías visuales superpuestas dentro de la cámara de inspección.
+- La cámara ahora muestra la imagen en vivo sin silueta ni marco de alineación; conserva únicamente la instrucción breve para encuadrar el vehículo o el tablero.
+- Se mantienen las 7 posiciones obligatorias y la captura/persistencia de fotografías.
+- Las referencias visuales de las tarjetas de inspección no se eliminaron en este cambio; el retiro solicitado aplica a la cámara.
+- No se modificó Supabase ni Materiales.
+- Validación pendiente: Preview Vercel y prueba de apertura/captura en Android.
+- Variables Vercel: ninguna nueva.
