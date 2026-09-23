@@ -16,6 +16,7 @@ export async function setAdditionalServiceStatus(formData:FormData){
  if(error)throw new Error(error.message);
  revalidatePath("/");
  revalidatePath("/rendiciones");
+ revalidatePath("/flota");
 }
 
 export async function setAdditionalServiceUserAccess(formData:FormData){
@@ -23,5 +24,5 @@ export async function setAdditionalServiceUserAccess(formData:FormData){
  const {data:profile}=await supabase.from("user_profiles").select("role,active").eq("id",user.id).single(); if(!profile?.active||profile.role!=="Admin Total")throw new Error("Solo Admin Total puede asignar servicios adicionales.");
  const serviceCode=String(formData.get("service_code")||"").trim(),targetUserId=String(formData.get("user_id")||"").trim(),active=String(formData.get("active")||"false")==="true";
  if(!["rendiciones","flota","cotizaciones"].includes(serviceCode)||!targetUserId)throw new Error("Asignación inválida.");
- const {error}=await supabase.from("additional_service_user_access").upsert({service_code:serviceCode,user_id:targetUserId,active,granted_by:user.id,updated_at:new Date().toISOString()},{onConflict:"service_code,user_id"}); if(error)throw new Error(error.message); revalidatePath("/"); revalidatePath("/rendiciones");
+ const {error}=await supabase.from("additional_service_user_access").upsert({service_code:serviceCode,user_id:targetUserId,active,granted_by:user.id,updated_at:new Date().toISOString()},{onConflict:"service_code,user_id"}); if(error)throw new Error(error.message); revalidatePath("/"); revalidatePath("/rendiciones"); revalidatePath("/flota");
 }
