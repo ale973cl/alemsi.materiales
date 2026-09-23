@@ -25,7 +25,7 @@ export default async function FlotaPage({searchParams}:{searchParams:Promise<{no
  const demoMode=service.status==="DEMO";
  const {data:rows,error:vehiclesError}=await supabase.from("fleet_vehicles").select("id,plate,label,brand,model,year,status,current_km,next_oil_change_km,cover_photo_path").eq("active",true).order("plate");
  if(vehiclesError)throw new Error("No fue posible cargar Flota.");
- const signed=await Promise.all((rows??[]).map(async(v:any)=>{let photoUrl:string|null=null;if(v.cover_photo_path){const {data}=await supabase.storage.from("fleet-photos").createSignedUrl(v.cover_photo_path,3600);photoUrl=data?.signedUrl??null}return {...v,photoUrl}}));
+ const signed=await Promise.all((rows??[]).map(async(v:any)=>{let photoUrl:string|null=null;if(v.cover_photo_path){if(v.cover_photo_path.startsWith("/"))photoUrl=v.cover_photo_path;else{const {data}=await supabase.storage.from("fleet-photos").createSignedUrl(v.cover_photo_path,3600);photoUrl=data?.signedUrl??null}}return {...v,photoUrl}}));
  const vehicles=signed.map((v:any)=>({id:v.id,plate:v.plate,label:v.label,status:v.status,currentKm:Number(v.current_km||0),nextOilChangeKm:v.next_oil_change_km==null?null:Number(v.next_oil_change_km),brand:v.brand,model:v.model,year:v.year,photoUrl:v.photoUrl}));
  const noticeText=notice==="duplicate"?"La patente ya está registrada. No se creó un duplicado.":notice==="created"?"Vehículo registrado correctamente.":notice==="create-error"?"No fue posible registrar el vehículo. Intenta nuevamente.":null;
  return <main className="fleetPage">
