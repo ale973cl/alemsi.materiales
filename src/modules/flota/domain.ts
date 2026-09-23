@@ -1,6 +1,6 @@
 export type VehicleOperationalStatus="Disponible"|"En uso"|"Fuera de servicio";
 export type FleetAlertLevel="ok"|"warning"|"critical";
-export type FleetDocumentKind="Seguro"|"Revisión técnica"|"Permiso de circulación";
+export type FleetDocumentKind="PADRON"|"REVISION_TECNICA"|"PERMISO_CIRCULACION"|"SOAP"|"SEGURO_AUTOMOTRIZ"|"MANTENCION"|"OTRO";
 export type FleetPhotoPosition="Frontal"|"Trasera"|"Lateral izquierdo"|"Lateral derecho"|"Tablero"|"Interior 1"|"Interior 2";
 
 export const REQUIRED_FLEET_PHOTOS:readonly FleetPhotoPosition[]=["Frontal","Trasera","Lateral izquierdo","Lateral derecho","Tablero","Interior 1","Interior 2"];
