@@ -58,6 +58,14 @@
 - El destinatario manual editable se conserva.
 - `Enviar OC` ahora se muestra solo cuando `PURCHASE_ORDER_MANAGE` es efectivo; el Server Action mantiene la misma autorización como segunda barrera.
 
+## Cierre de auditoría local · 2026-09-23
+- Matriz completa: `docs/AUDITORIA_PRE_MERGE_2026-09-23.md`.
+- `npx tsc --noEmit`: aprobado.
+- `npm run build`: aprobado; persisten dos warnings no bloqueantes y preexistentes de Autoprefixer por `align-items: end` en `globals.css`.
+- Legacy: sin borrados. `Common.tsx` y `materiales-store.ts` no tienen referencias entrantes; `materiales-store.ts` sí importa `materiales-domain.ts`, por lo que la limpieza se difiere a una tarea exclusiva.
+- Preview y prueba manual de los siete perfiles: pendientes después de publicar esta rama.
+- Resultado global: `REQUIERE DECISIÓN` por transacción/RPC de inventario y `REQUIERE CORRECCIÓN` hasta completar la validación de Preview. No fusionar automáticamente.
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.
