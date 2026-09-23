@@ -471,3 +471,14 @@
 - Las 25 siluetas PNG extraídas de la lámina original siguen disponibles como material preparado, pero no se publicaron como binarios en GitHub en este cambio; para evitar mantener la vista anterior, la app usa guías vectoriales específicas por tipo/patente en código.
 - Siguiente validación: Preview Vercel de esta rama; probar Android/Chrome: abrir cámara desde cada tarjeta, overlay correcto por patente, captura 7/7 y persistencia.
 - Variables Vercel: ninguna nueva.
+
+
+## Flota · guía exterior única estandarizada a furgón · 2026-09-23
+- Decisión del dueño: dejar de variar la silueta exterior por patente/modelo. Se usa una única guía estándar tipo furgón para TODOS los vehículos.
+- Frontal, Trasera, Lateral izquierdo y Lateral derecho usan el mismo lenguaje gráfico de furgón; lateral derecho es la orientación inversa de la misma guía.
+- La misma guía se muestra en la tarjeta y superpuesta dentro de la cámara. No se incrusta en la fotografía guardada.
+- Se eliminó de FleetInspectionCamera la selección BODY por LKDG49/RBHJ56/SRYB45/SPZJ40/TTHG24 para evitar que vuelva a aparecer un automóvil genérico distinto.
+- Se corrigió además el desborde visual de Tablero, Interior 1 e Interior 2 dentro de sus tarjetas.
+- La lectura automática del odómetro sigue pendiente de motor visual real; esta corrección no simula lectura.
+- Validación pendiente: Preview Vercel READY de los commits 344e4fde y 0cb5e2c8, prueba visual escritorio + Android y apertura de cámara.
+- Variables Vercel: ninguna nueva.
