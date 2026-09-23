@@ -14,6 +14,12 @@
 - Cada circuito se corregirá en commits independientes, con validación UI → handler → Server Action/API → Supabase → estado resultante → navegación/histórico.
 - Validación de cierre obligatoria: siete perfiles oficiales, `npm run build` y `npx tsc --noEmit`.
 
+## Abastecimiento por capabilities · 2026-09-23
+- La UI de Necesidades y abastecimiento consulta `SUPPLY_MANAGE` antes de mostrar cualquier acción de creación de OC.
+- Supervisora conserva consulta de campañas, familias, carencias, consolidado y origen por instalación, pero no ve OC manual, proveedor, cantidades/precios editables ni `Generar OC en borrador`.
+- `/api/supply/context` valida usuario activo, devuelve el rol efectivo y restringe proveedores/datos comerciales de OC cuando el perfil no administra abastecimiento.
+- La autorización de servidor de `createPurchaseOrderFromConsolidated` y `createFreePurchaseOrder` se mantiene como segunda barrera; no se amplió `SUPPLY_MANAGE` ni `PURCHASE_ORDER_MANAGE`.
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.

@@ -3,6 +3,7 @@ import {useEffect,useMemo,useState} from "react";
 import {useRouter} from "next/navigation";
 import {createFreePurchaseOrder,createPurchaseOrderFromConsolidated} from "@/app/supply-actions";
 import AlemsiActionButton from "@/components/ui/AlemsiActionButton";
+import {CAPABILITIES,roleCan} from "@/lib/authorization";
 
 type Material={id?:string;name?:string|null;family?:string|null;presentation?:string|null;unit?:string|null;supplier_code?:string|null};
 type SurveyLine={id?:string;material_id:string;shortage_qty?:number|null;unit_net_price?:number|null;materials?:Material|null};
@@ -19,6 +20,7 @@ const familyName=(row:any)=>String(row.material?.family||"Sin familia").trim()||
 
 export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}){
  const router=useRouter();
+ const [canManageSupply,setCanManageSupply]=useState(false);
  const [mode,setMode]=useState<Mode>(null);
  const [campaignId,setCampaignId]=useState("");
  const [showInstallationDetail,setShowInstallationDetail]=useState(false);
@@ -38,7 +40,7 @@ export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}
  const [observations,setObservations]=useState("");
  const [freeSaving,setFreeSaving]=useState(false);
  const [freeMessage,setFreeMessage]=useState("");
- const loadSupplyContext=async()=>{try{const response=await fetch("/api/supply/context",{cache:"no-store"});const data=await response.json();if(response.ok){setSuppliers(data.suppliers||[]);setOrders(data.orders||[])}}catch{}};
+ const loadSupplyContext=async()=>{try{const response=await fetch("/api/supply/context",{cache:"no-store"});const data=await response.json();if(response.ok){setSuppliers(data.suppliers||[]);setOrders(data.orders||[]);setCanManageSupply(roleCan(data.role,CAPABILITIES.SUPPLY_MANAGE))}}catch{setCanManageSupply(false)}};
  useEffect(()=>{void loadSupplyContext()},[]);
 
  const confirmedSurveys=useMemo(()=>surveys.filter(s=>s.status==="Confirmada"&&Boolean(s.confirmed_at)),[surveys]);
@@ -66,14 +68,14 @@ export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}
   <style dangerouslySetInnerHTML={{__html:`
    .ocChoiceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}.ocChoiceGrid button{display:grid;gap:7px;text-align:left;padding:22px;border:1px solid #c7dbe5;border-radius:14px;background:#fff;color:#173650}.ocChoiceGrid button:hover{border-color:#5daea2;background:#f6fbfa}.ocChoiceGrid b{font-size:18px;color:#0b2f4a}.ocChoiceGrid span{font-size:13px;line-height:1.45;color:#557084}.ocStepHead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}.ocFamilyGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.ocFamilyGrid button{display:grid;gap:4px;text-align:left;padding:14px;border:1px solid #c8dce8;border-radius:12px;background:#fff}.ocFamilyGrid button.active{border-color:#55aa9e;background:#eaf7f4}.ocFamilyGrid small{color:#557084}.ocSummaryStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.ocSummaryStrip span{padding:12px;border-radius:10px;background:#f2f6f8}.ocSummaryStrip b,.ocSummaryStrip small{display:block}.ocInstallationDetail{margin-top:12px}.ocBack{margin-bottom:12px}.ocCampaignPicker{margin:6px 0 12px}.ocCampaignPickerHead{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:6px}.ocCampaignPickerHead b,.ocCampaignPickerHead small{display:block}.ocCampaignPickerHead small{font-size:11px;color:#557084}.ocCampaignList{border:1px solid #c8dce8;border-radius:10px;overflow:hidden}.ocCampaignList button{width:100%;display:grid;grid-template-columns:minmax(220px,1fr) 160px 90px;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border:0;border-bottom:1px solid #dbe7ec;border-radius:0;background:#fff;text-align:left;color:#173650}.ocCampaignList button:last-child{border-bottom:0}.ocCampaignList button:hover,.ocCampaignList button.active{background:#eef8f6}.ocCampaignList button.active{box-shadow:inset 3px 0 #5daea2}.ocCampaignList span b,.ocCampaignList span small{display:block}.ocCampaignList span b{font-size:12px;color:#0b2f4a}.ocCampaignList span small{margin-top:2px;font-size:10px;color:#557084}.ocCampaignList strong{font-size:10px;color:#087a73;text-align:right}@media(max-width:900px){.ocFamilyGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.ocSummaryStrip{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.ocChoiceGrid,.ocFamilyGrid,.ocSummaryStrip{grid-template-columns:1fr}.ocCampaignList button{grid-template-columns:1fr auto}.ocCampaignList button>strong{grid-column:1/-1;text-align:left}.ocCampaignPickerHead{align-items:start;flex-direction:column}}
   `}}/>
-  <div className="catalogIntro"><div><h2>Generar orden de compra</h2><p>Elige primero el origen de la compra. Solo se despliega el proceso que vas a utilizar.</p></div></div>
+  <div className="catalogIntro"><div><h2>{canManageSupply?"Generar orden de compra":"Necesidades y consolidado"}</h2><p>{canManageSupply?"Elige primero el origen de la compra. Solo se despliega el proceso que vas a utilizar.":"Consulta las carencias consolidadas dentro de tu alcance. La creación de órdenes de compra corresponde a perfiles autorizados."}</p></div></div>
 
   {!mode&&<div className="ocChoiceGrid">
-   <button type="button" onClick={()=>setMode("manual")}><b>Generar OC manual</b><span>Para servicios, software, arriendos, mantenciones o cualquier compra que ALEMSI necesite realizar fuera de una campaña.</span></button>
-   <button type="button" onClick={()=>setMode("requirement")}><b>Generar OC desde requerimiento</b><span>Parte desde una campaña con conteos confirmados, toma el consolidado y permite seleccionar las familias que se comprarán.</span></button>
+   {canManageSupply&&<button type="button" onClick={()=>setMode("manual")}><b>Generar OC manual</b><span>Para servicios, software, arriendos, mantenciones o cualquier compra que ALEMSI necesite realizar fuera de una campaña.</span></button>}
+   <button type="button" onClick={()=>setMode("requirement")}><b>{canManageSupply?"Generar OC desde requerimiento":"Consultar consolidado"}</b><span>Parte desde una campaña con conteos confirmados y muestra las necesidades agrupadas por familia y material.</span></button>
   </div>}
 
-  {mode==="manual"&&<div>
+  {mode==="manual"&&canManageSupply&&<div>
    <button type="button" className="linkBtn ocBack" onClick={()=>setMode(null)}>← Volver a opciones</button>
    <section className="panel">
     <div className="catalogIntro"><div><h3>OC manual / administrativa</h3><p>No nace de campaña ni modifica carencias. Se genera con folio propio y queda en borrador para revisión.</p></div><span className="catalogCount">Borrador</span></div>
@@ -97,16 +99,16 @@ export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}
      <h4>2. Familias a comprar</h4>
      {families.length?<div className="ocFamilyGrid">{families.map(item=><button type="button" key={item.family} className={selectedFamilies.includes(item.family)?"active":""} onClick={()=>toggleFamily(item.family)}><b>{item.family}</b><small>{item.products} producto{item.products===1?"":"s"} · {item.qty} unidades</small></button>)}</div>:<div className="empty"><b>Sin necesidades pendientes</b><span>La campaña no contiene carencias para generar una OC.</span></div>}
      {selectedFamilies.length>0&&<>
-      <div className="catalogIntro"><div><h4>3. Preparar OC</h4><p>{selectedFamilies.length} familia{selectedFamilies.length===1?"":"s"} seleccionada{selectedFamilies.length===1?"":"s"}. El detalle por instalación queda disponible solo como respaldo.</p></div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button type="button" onClick={takeAllPending}>Tomar todo pendiente</button><button type="button" className="linkBtn" onClick={()=>setQuantities({})}>Limpiar</button><button type="button" className="linkBtn" onClick={()=>setShowInstallationDetail(v=>!v)}>{showInstallationDetail?"Ocultar origen":"Ver origen por instalación"}</button></div></div>
+      <div className="catalogIntro"><div><h4>{canManageSupply?"3. Preparar OC":"3. Consultar necesidades"}</h4><p>{selectedFamilies.length} familia{selectedFamilies.length===1?"":"s"} seleccionada{selectedFamilies.length===1?"":"s"}. El detalle por instalación queda disponible como respaldo operacional.</p></div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{canManageSupply&&<><button type="button" onClick={takeAllPending}>Tomar todo pendiente</button><button type="button" className="linkBtn" onClick={()=>setQuantities({})}>Limpiar</button></>}<button type="button" className="linkBtn" onClick={()=>setShowInstallationDetail(v=>!v)}>{showInstallationDetail?"Ocultar origen":"Ver origen por instalación"}</button></div></div>
       {showInstallationDetail&&<div className="ocInstallationDetail">{installations.filter(x=>x.lines.length).map(group=><article className="campaignCard" key={group.installation_id}><div className="campaignCardHead"><span><b>{group.name}</b><small>{group.client} · {group.contract}{group.region?` · ${group.region}`:""}</small></span><strong>{group.lines.length} líneas</strong></div><div className="table">{group.lines.map((line:SurveyLine)=><div className="row" key={line.id||line.material_id}><span><b>{line.materials?.name||"Material"}</b><small>{line.materials?.family||"Sin familia"}</small></span><b>{Number(line.shortage_qty||0)}</b></div>)}</div></article>)}</div>}
-      <label>Proveedor<select value={supplierId} onChange={e=>setSupplierId(e.target.value)}><option value="">Seleccionar proveedor para esta OC</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.legal_name}</option>)}</select></label>
-      <div className="table" style={{marginTop:12}}>{visibleRows.map(row=>{const ordered=Number(orderedByMaterial.get(row.material_id)||0);const pending=Math.max(Number(row.qty||0)-ordered,0);return <div className="row" key={`oc-${row.material_id}`}><span><b>{row.material?.name||"Material"}</b><small>{familyName(row)} · Necesidad {row.qty} · Ya en OC {ordered} · Pendiente {pending}</small></span><label>Cantidad OC<input type="number" min="0" max={Math.ceil(pending)} step="1" value={quantities[row.material_id]??""} disabled={pending<=0} onChange={e=>setQuantities(current=>({...current,[row.material_id]:Number(e.target.value)}))}/></label><label>Precio neto<input type="number" min="0" step="any" value={prices[row.material_id]??row.unit_net_price??0} onChange={e=>setPrices(current=>({...current,[row.material_id]:Number(e.target.value)}))}/></label></div>})}</div>
-      <div className="campaignCardHead" style={{marginTop:12}}><span><small>Total neto de esta OC</small><b>{money(orderTotal)}</b></span><AlemsiActionButton type="button" loading={saving} loadingText="Generando OC…" onClick={createOrder}>Generar OC en borrador</AlemsiActionButton></div>
+      {canManageSupply&&<label>Proveedor<select value={supplierId} onChange={e=>setSupplierId(e.target.value)}><option value="">Seleccionar proveedor para esta OC</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.legal_name}</option>)}</select></label>}
+      <div className="table" style={{marginTop:12}}>{visibleRows.map(row=>{const ordered=Number(orderedByMaterial.get(row.material_id)||0);const pending=Math.max(Number(row.qty||0)-ordered,0);return <div className="row" key={`oc-${row.material_id}`}><span><b>{row.material?.name||"Material"}</b><small>{familyName(row)} · Necesidad {row.qty} · Ya en OC {ordered} · Pendiente {pending}</small></span>{canManageSupply&&<><label>Cantidad OC<input type="number" min="0" max={Math.ceil(pending)} step="1" value={quantities[row.material_id]??""} disabled={pending<=0} onChange={e=>setQuantities(current=>({...current,[row.material_id]:Number(e.target.value)}))}/></label><label>Precio neto<input type="number" min="0" step="any" value={prices[row.material_id]??row.unit_net_price??0} onChange={e=>setPrices(current=>({...current,[row.material_id]:Number(e.target.value)}))}/></label></>}</div>})}</div>
+      {canManageSupply&&<div className="campaignCardHead" style={{marginTop:12}}><span><small>Total neto de esta OC</small><b>{money(orderTotal)}</b></span><AlemsiActionButton type="button" loading={saving} loadingText="Generando OC…" onClick={createOrder}>Generar OC en borrador</AlemsiActionButton></div>}
       {message&&<p className="note"><b>{message}</b></p>}
      </>}
     </>}
    </section>
   </div>}
-  <p className="note"><b>Flujo posterior:</b> OC borrador → revisión/envío al proveedor → recepción → factura → cotejo de cantidades y precios → aceptación → inventario y Finanzas.</p>
+  <p className="note"><b>Flujo posterior:</b> {canManageSupply?"OC borrador → revisión/envío al proveedor → recepción → factura → cotejo de cantidades y precios → aceptación → inventario y Finanzas.":"La consulta no permite crear ni modificar órdenes de compra."}</p>
  </section>;
 }
