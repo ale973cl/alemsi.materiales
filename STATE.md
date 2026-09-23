@@ -434,3 +434,14 @@
 - No se inventó una API/clave de IA y no se agregó variable Vercel.
 - Siguiente paso exacto: localizar/conectar el lector real reutilizable de Rendiciones (si existe en la rama/base efectiva) o definir proveedor autorizado; luego almacenar original privado y poblar extracted_data antes de la confirmación.
 - Validación requerida: Preview Vercel + TypeScript/build.
+
+
+## Hotfix Flota · error 1234292577 en Documentos · 2026-09-23
+- Confirmado en Runtime Vercel: POST /flota/[id] devolvía 500 con digest 1234292577 al guardar documento.
+- Causa: constraint legado fleet_documents_kind_check solo aceptaba Seguro/Revisión técnica/Permiso de circulación/Mantención, mientras la UI nueva guarda PADRON/REVISION_TECNICA/PERMISO_CIRCULACION/SOAP/SEGURO_AUTOMOTRIZ/MANTENCION/OTRO.
+- Aplicada migración flota_document_kinds_v2 para alinear el constraint con el expediente documental actual.
+- Alineado también FleetDocumentKind en domain.ts.
+- No se modificaron Materiales/Bodega/Rendiciones.
+- Pendiente inmediato: implementar flujo fotográfico 7/7 real para toma/devolución, cámara móvil con capture=environment, guía gráfica por posición y almacenamiento de originales; todavía NO está implementado y no debe simularse.
+- Pendiente lector documental: contrato dirigido listo, motor visual binario aún sin proveedor conectado.
+- Validación: repetir guardado de documento en Preview y revisar siguiente deployment.
