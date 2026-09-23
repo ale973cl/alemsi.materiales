@@ -412,3 +412,12 @@
 - Commit de corrección: `2ed2603b9d7bb13003fa738e45f2df0ed54dc1d7`.
 - No cambia esquema Supabase, reglas de negocio, permisos ni variables Vercel.
 - Validación pendiente: nuevo build de Vercel debe superar Linting and checking validity of types. `npm run build` y `npx tsc --noEmit` no se ejecutan localmente porque esta sesión no dispone de terminal del repositorio.
+
+
+## Flota · carga inicial de los cinco vehículos · 2026-09-23
+- Se completó el alta de los cinco vehículos maestros entregados por el usuario: LKDG49, RBHJ56, SPZJ40, SRYB45 y TTHG24.
+- LKDG49 fue normalizado con los datos maestros entregados; SPZJ40, SRYB45 y TTHG24 fueron incorporados.
+- RBHJ56 conserva su kilometraje real previamente registrado de 146.998 km.
+- Los vehículos aún no completados por el usuario mantienen kilometraje inicial 0 como valor técnico pendiente del formulario actual; el usuario indicó que completará sus datos. No debe interpretarse 0 como lectura física confirmada.
+- Todos quedan editables por Admin Total desde su expediente.
+- No se alteraron Materiales/Bodega/Rendiciones ni variables Vercel.
