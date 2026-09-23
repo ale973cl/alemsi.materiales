@@ -374,3 +374,11 @@
 - La fotografía de portada inicial no sustituye el futuro original 7/7. Cuando exista inspección, el original se guarda en `fleet_photos` y la portada puede apuntar a su miniatura sin perder evidencia.
 - Próximo paso: cargador/cámara 7/7 y edición/cambio controlado de fotografía de portada.
 - Sin variables nuevas de Vercel; Materiales/Bodega/Rendiciones no fueron modificados.
+
+
+## Flota · datos básicos maestros · 2026-09-23
+- Fuente entregada por usuario define 5 vehículos: LKDG49 Ford Escape Titanium AWD 2.0 AUT 2019; RBHJ56 MG 3 Hatch Back 1.5 AUT 2021; SPZJ40 Opel Vivaro TD 150 2.0 2023; SRYB45 JAC T8 DCAB 4X4 2.0 2023; TTHG24 Opel Combo L1 1.5 2025.
+- Se agregaron campos maestros editables `vehicle_type` y `chassis_vin`.
+- RBHJ56 existente fue corregido con la fuente: AUTOMOVIL · MG · 3 HATCH BACK 1.5 AUT · chasis/VIN 1S54C5TGM2220603 · año 2021. Se conserva kilometraje operativo 146.998 y portada MG.
+- Los otros cuatro no se crean todavía con datos operativos inventados; al darlos de alta se usarán exactamente los datos maestros entregados y seguirán editables.
+- Sin variables nuevas de Vercel.
