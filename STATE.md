@@ -344,3 +344,12 @@
 - Siguiente paso exacto: flujo guiado 7/7 + ubicación puntual en toma/devolución, preservando originales; después combustible y documentos.
 - Sin cambios en Materiales/Bodega/Rendiciones ni variables Vercel.
 - Build/tsc continúan pendientes de Preview/CI por ausencia de terminal del repositorio.
+
+
+## Hotfix Flota · alta duplicada · 2026-09-23
+- Detectado en Runtime de Vercel el error mostrado con digest 2123351204: POST /flota devolvía 500 porque se intentó registrar nuevamente la patente ya existente RBHJ56.
+- La primera alta sí quedó persistida correctamente: RBHJ56 · MG 3 · Disponible · 146.998 km.
+- Se mantiene el bloqueo de patente única; se corrigió únicamente la experiencia de error para que un duplicado vuelva a /flota con aviso visible y no provoque pantalla de excepción.
+- El alta correcta también devuelve confirmación visible y un error genérico de persistencia se presenta sin exponer detalles internos.
+- Siguiente validación: esperar deployment Preview de estos commits, recargar /flota y confirmar que aparece el vehículo ya registrado.
+- Sin cambios de esquema, Materiales/Bodega/Rendiciones ni variables Vercel.
