@@ -8,7 +8,8 @@ import "./flota.css";
 const fmtKm=(n:number)=>new Intl.NumberFormat("es-CL").format(n)+" km";
 const tone=(level:string)=>level==="critical"?"fleetStatus fleetStatusCritical":level==="warning"?"fleetStatus fleetStatusWarning":"fleetStatus fleetStatusOk";
 
-export default async function FlotaPage(){
+export default async function FlotaPage({searchParams}:{searchParams:Promise<{notice?:string}>}){
+ const notice=(await searchParams).notice;
  const supabase=await createClient();
  const {data:{user}}=await supabase.auth.getUser();
  if(!user)redirect("/login");
@@ -25,11 +26,13 @@ export default async function FlotaPage(){
  const {data:rows,error:vehiclesError}=await supabase.from("fleet_vehicles").select("id,plate,label,status,current_km,next_oil_change_km").eq("active",true).order("plate");
  if(vehiclesError)throw new Error("No fue posible cargar Flota.");
  const vehicles: FleetVehicleSummary[]=(rows??[]).map((v:any)=>({id:v.id,plate:v.plate,label:v.label,status:v.status,currentKm:Number(v.current_km||0),nextOilChangeKm:v.next_oil_change_km==null?null:Number(v.next_oil_change_km)}));
+ const noticeText=notice==="duplicate"?"La patente ya está registrada. No se creó un duplicado.":notice==="created"?"Vehículo registrado correctamente.":notice==="create-error"?"No fue posible registrar el vehículo. Intenta nuevamente.":null;
  return <main className="fleetPage">
   <header className="fleetHero">
    <div><p className="fleetEyebrow">ALEMSI · FLOTA{demoMode?" · MODO DEMO":""}</p><h1>Control de Flota</h1><p>Vehículos, documentos, uso y alertas en un solo expediente.</p></div>
    <div className="fleetHeroActions"><Link href="/" className="fleetBtn fleetBtnGhost">Volver</Link>{admin&&<a href="#nuevo-vehiculo" className="fleetBtn fleetBtnPrimary">+ Nuevo vehículo</a>}</div>
   </header>
+  {noticeText&&<div className={"fleetNotice "+(notice==="create-error"?"fleetNoticeError":"")}>{noticeText}</div>}
   {admin&&<details id="nuevo-vehiculo" className="fleetCreate"><summary>Registrar vehículo</summary><form action={createVehicle} className="fleetCreateGrid"><label>Patente<input name="plate" required maxLength={10}/></label><label>Nombre o identificación<input name="label" required maxLength={80}/></label><label>Marca<input name="brand" maxLength={60}/></label><label>Modelo<input name="model" maxLength={60}/></label><label>Año<input name="year" type="number" min="1950" max="2100"/></label><label>Kilometraje actual<input name="current_km" type="number" min="0" required defaultValue="0"/></label><button className="fleetBtn fleetBtnPrimary">Guardar vehículo</button></form></details>}
   <section className="fleetMetrics" aria-label="Resumen de flota">
    <article><span>Vehículos</span><strong>{vehicles.length}</strong></article>
