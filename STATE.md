@@ -552,3 +552,15 @@
 - Tanda 4: (1) alertas configurables, (2) notificaciones por rol, (3) reporte mensual.
 - No avanzar de tanda mientras cualquiera de sus 3 circuitos no esté probado extremo a extremo.
 - Variables Vercel: por definir solo cuando se conecte el motor visual; no inventar proveedor/API.
+
+
+## Rutas · Supervisora no podía iniciar ruta · 2026-09-23
+- Falla confirmada: el botón Iniciar ruta sí llamaba startDeliveryRoute, pero este intentaba mover cada despacho mediante transition_dispatch_v1; esa RPC solo autorizaba Admin Total/Admin/Bodega y rechazaba a Supervisora.
+- La fecha NO era la causa. Ruta de prueba p3 estaba planificada 2026-09-23, estado Preparada, asignada a Supervisor (rol Supervisora), con 2 despachos En preparación.
+- Corrección DB aplicada: migración fix_supervisora_start_assigned_route_v1 crea RPC transaccional start_delivery_route_v1(uuid).
+- Seguridad: Supervisora solo puede iniciar una ruta si es exactamente delivery_assignee_id. No se amplió su permiso general sobre despachos ajenos.
+- La RPC mueve de forma atómica los despachos En preparación → Listo para despacho → En tránsito, registra movimientos de inventario/auditoría y finalmente cambia la ruta a En tránsito. Si falla cualquier paso, la transacción revierte completa.
+- route-actions.ts ahora usa start_delivery_route_v1 en vez de encadenar transition_dispatch_v1 desde el cliente servidor.
+- Commit de código: bf062ac7697c7cfe3cfde166f400656d952d2bb5.
+- Validación manual pendiente: entrar como Supervisora asignada, abrir p3, pulsar Iniciar ruta y comprobar ruta + 2 guías En tránsito después de recargar.
+- Variables Vercel: ninguna nueva.
