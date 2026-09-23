@@ -6,18 +6,34 @@ type View="Frontal"|"Trasera"|"Lateral izquierdo"|"Lateral derecho"|"Tablero"|"I
 const VIEWS:View[]=["Frontal","Trasera","Lateral izquierdo","Lateral derecho","Tablero","Interior 1","Interior 2"];
 type Props={vehicleId:string;plate:string;driverName:string;currentKm:number;assignmentId?:string;mode:"take"|"return";startKm?:number};
 
-const BODY:Record<string,"suv"|"hatch"|"pickup"|"van">={LKDG49:"suv",RBHJ56:"hatch",SRYB45:"pickup",SPZJ40:"van",TTHG24:"van"};
-
-function Silhouette({plate,view,overlay=false}:{plate:string;view:View;overlay?:boolean}){
- const body=BODY[plate]??"suv"; if(view==="Tablero")return <div className={overlay?"fleetDashOverlay":"fleetInteriorGuide"}>ODO<br/><small>Tablero completo</small></div>;
+function Silhouette({view,overlay=false}:{view:View;overlay?:boolean}){
+ if(view==="Tablero")return <div className={overlay?"fleetDashOverlay":"fleetInteriorGuide"}>ODO<br/><small>Tablero completo</small></div>;
  if(view.startsWith("Interior"))return <div className={overlay?"fleetDashOverlay":"fleetInteriorGuide"}>▱<br/><small>{view}</small></div>;
- const side=view.startsWith("Lateral"); const flip=view==="Lateral derecho";
+
+ const side=view.startsWith("Lateral");
+ const flip=view==="Lateral derecho";
  if(side){
-  const roof=body==="pickup"?"M22 62 L50 34 L104 31 L132 57 L182 60":body==="van"?"M18 61 L34 25 L142 25 L178 57":body==="hatch"?"M20 63 L48 35 L118 32 L157 58 L181 61":"M18 63 L48 30 L125 28 L165 58 L184 62";
-  return <svg className={(overlay?"fleetSvgOverlay ":"fleetSvgGuide ")+(flip?"fleetGuideFlip":"")} viewBox="0 0 200 100" aria-label={view}><g fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={roof}/><path d="M15 64 L187 64 L190 77 L180 82 L24 82 L10 76 Z"/><circle cx="48" cy="79" r="13"/><circle cx="158" cy="79" r="13"/><path d="M48 66 V92 M158 66 V92"/>{body==="pickup"&&<><path d="M112 39 V64"/><path d="M132 57 H184"/></>}{body==="van"&&<><path d="M72 28 V64 M128 28 V64"/><path d="M84 42 H118"/></>}<path d="M55 38 L64 61 M126 38 L142 61"/></g></svg>;
+  return <svg className={(overlay?"fleetSvgOverlay ":"fleetSvgGuide ")+(flip?"fleetGuideFlip":"")} viewBox="0 0 220 110" aria-label={view}>
+   <g fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15 71 L20 46 L39 25 L151 25 L187 52 L204 58 L207 79 L194 84 L27 84 L12 78 Z"/>
+    <path d="M42 29 L43 67 M151 29 L174 56 M43 67 L177 67 M96 27 L96 67"/>
+    <path d="M24 48 H40 M179 55 H201 M57 47 H86 M113 47 H142"/>
+    <circle cx="57" cy="82" r="15"/><circle cx="170" cy="82" r="15"/>
+    <circle cx="57" cy="82" r="7"/><circle cx="170" cy="82" r="7"/>
+    <path d="M40 84 H27 M72 84 H155 M185 84 H194"/>
+   </g>
+  </svg>;
  }
  const rear=view==="Trasera";
- return <svg className={overlay?"fleetSvgOverlay":"fleetSvgGuide"} viewBox="0 0 150 110" aria-label={view}><g fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={body==="van"?"M28 22 Q75 12 122 22 L132 91 H18 Z":"M35 28 Q75 12 115 28 L130 88 H20 Z"}/><path d="M39 32 H111 L117 60 H33 Z"/><path d="M20 70 H130 M28 91 H122"/><path d="M28 58 H18 M122 58 H132"/>{rear?<><rect x="57" y="70" width="36" height="12" rx="2"/><path d="M37 66 V78 M113 66 V78"/></>:<><path d="M39 67 H55 M95 67 H111"/><path d="M57 75 H93"/></>}</g></svg>;
+ return <svg className={overlay?"fleetSvgOverlay":"fleetSvgGuide"} viewBox="0 0 170 120" aria-label={view}>
+  <g fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+   <path d="M35 17 Q85 8 135 17 L146 100 H24 Z"/>
+   <path d="M42 25 H128 L133 64 H37 Z"/>
+   <path d="M85 24 V64"/><path d="M24 76 H146 M31 100 H139"/>
+   <path d="M25 57 H15 V76 H25 M145 57 H155 V76 H145"/>
+   {rear?<><path d="M85 65 V98"/><rect x="65" y="75" width="40" height="13" rx="2"/><path d="M39 72 V87 M131 72 V87"/></>:<><path d="M40 71 H61 M109 71 H130"/><path d="M62 81 H108"/><path d="M74 67 H96"/></>}
+  </g>
+ </svg>;
 }
 export default function FleetInspectionCamera({vehicleId,plate,driverName,currentKm,assignmentId,mode,startKm}:Props){
  const [photos,setPhotos]=useState<(File|null)[]>(Array(7).fill(null)); const [active,setActive]=useState<number|null>(null); const [error,setError]=useState("");
@@ -30,11 +46,11 @@ export default function FleetInspectionCamera({vehicleId,plate,driverName,curren
  return <form action={action} className="fleetInspectionForm"><input type="hidden" name="vehicle_id" value={vehicleId}/>{assignmentId&&<input type="hidden" name="assignment_id" value={assignmentId}/>}
   <div className="fleetActionForm">{mode==="take"?<><label>Conductor<input value={driverName} readOnly/></label><label>RUT<input name="driver_rut" required placeholder="12.345.678-9"/></label><label>Kilometraje inicial<input name="start_km" type="number" min={currentKm} defaultValue={currentKm} required/></label></>:<label>Kilometraje final<input name="end_km" type="number" min={startKm??currentKm} defaultValue={currentKm} required/></label>}<label>Observación<textarea name="comment" placeholder="Sin observaciones"/></label></div>
   <div className="fleetInspectionHead"><div><span className="fleetStepLabel">INSPECCIÓN · {plate}</span><h3>{complete}/7 fotografías</h3></div><progress value={complete} max={7}/></div>
-  <div className="fleetInspectionGrid">{VIEWS.map((view,i)=><button type="button" key={view} className={"fleetInspectionTile "+(photos[i]?"fleetInspectionDone":"")} onClick={()=>openCamera(i)}>{photos[i]?<img src={URL.createObjectURL(photos[i]!)} alt={"Foto "+view}/>:<Silhouette plate={plate} view={view}/>}<strong>{photos[i]?"✓ ":""}{view}</strong><span>{photos[i]?"Tocar para repetir":"Tocar para abrir cámara"}</span></button>)}</div>
+  <div className="fleetInspectionGrid">{VIEWS.map((view,i)=><button type="button" key={view} className={"fleetInspectionTile "+(photos[i]?"fleetInspectionDone":"")} onClick={()=>openCamera(i)}>{photos[i]?<img src={URL.createObjectURL(photos[i]!)} alt={"Foto "+view}/>:<Silhouette view={view}/>}<strong>{photos[i]?"✓ ":""}{view}</strong><span>{photos[i]?"Tocar para repetir":"Tocar para abrir cámara"}</span></button>)}</div>
   {photos.map((file,i)=>file&&<FileBridge key={i} file={file} name={"photo_"+i}/>)}
   {photos[4]&&<div className="fleetDashboardRead"><strong>Tablero capturado</strong><span>La foto queda guardada como evidencia. La lectura automática de odómetro se activará cuando el motor visual esté conectado; no se inventan valores.</span></div>}
   {error&&<p className="fleetCameraError">{error}</p>}<button className="fleetBtn fleetBtnPrimary fleetConfirmInspection" disabled={complete!==7}>{mode==="take"?"Confirmar toma":"Confirmar devolución"} · {complete}/7</button>
-  {active!==null&&<div className="fleetCameraModal" role="dialog" aria-modal="true"><div className="fleetCameraTop"><strong>{plate} · {VIEWS[active]} · {active+1}/7</strong><button type="button" onClick={closeCamera}>Cerrar</button></div><div className="fleetCameraViewport"><video ref={videoRef} autoPlay playsInline muted/><Silhouette plate={plate} view={VIEWS[active]} overlay/><div className="fleetCameraFrame"/><p>{VIEWS[active]==="Tablero"?"Encuadra el tablero completo y deja visible el odómetro":"Alinea el vehículo con la silueta"}</p></div><button type="button" className="fleetShutter" onClick={capture} aria-label="Tomar foto"><span/></button></div>}
+  {active!==null&&<div className="fleetCameraModal" role="dialog" aria-modal="true"><div className="fleetCameraTop"><strong>{plate} · {VIEWS[active]} · {active+1}/7</strong><button type="button" onClick={closeCamera}>Cerrar</button></div><div className="fleetCameraViewport"><video ref={videoRef} autoPlay playsInline muted/><Silhouette view={VIEWS[active]} overlay/><div className="fleetCameraFrame"/><p>{VIEWS[active]==="Tablero"?"Encuadra el tablero completo y deja visible el odómetro":"Alinea el vehículo con la silueta"}</p></div><button type="button" className="fleetShutter" onClick={capture} aria-label="Tomar foto"><span/></button></div>}
  </form>
 }
 function FileBridge({file,name}:{file:File;name:string}){const ref=useRef<HTMLInputElement>(null);useEffect(()=>{if(!ref.current)return;const dt=new DataTransfer();dt.items.add(file);ref.current.files=dt.files},[file]);return <input ref={ref} type="file" name={name} hidden readOnly/>}
