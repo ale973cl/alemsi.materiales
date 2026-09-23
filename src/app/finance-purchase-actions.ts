@@ -163,20 +163,41 @@ export async function reconcilePurchaseDocument(formData: FormData) {
   } else if (!r.no_oc_reason) {
     throw new Error("La compra sin OC requiere justificación");
   }
-  for (const line of (r as any).receipt_lines || []) {
-    const { error: moveError } = await supabase
-      .from("inventory_movements")
-      .insert({
-        material_id: line.material_id,
-        receipt_line_id: line.id,
-        movement_type: "receipt",
-        quantity: Number(line.received_qty),
-        signed_quantity: Number(line.received_qty),
-        created_by: user.id,
-        observation: `Documento ${r.document_folio || "sin folio"} validado por Finanzas`,
-      });
-    if (moveError) throw new Error(moveError.message);
+  const receiptLines = ((r as any).receipt_lines || []) as any[];
+  if (!receiptLines.length)
+    throw new Error("El documento no tiene materiales recibidos para cargar");
+  const receiptLineIds = receiptLines.map((line) => String(line.id));
+  const { data: existingMovements, error: existingMovementError } =
     await supabase
+      .from("inventory_movements")
+      .select("id,receipt_line_id")
+      .in("receipt_line_id", receiptLineIds);
+  if (existingMovementError)
+    throw new Error(
+      "No se pudo verificar si la recepción ya tiene movimientos de inventario",
+    );
+  const postedLineIds = new Set(
+    (existingMovements || []).map((movement: any) =>
+      String(movement.receipt_line_id),
+    ),
+  );
+  for (const line of receiptLines) {
+    if (!postedLineIds.has(String(line.id))) {
+      const { error: moveError } = await supabase
+        .from("inventory_movements")
+        .insert({
+          material_id: line.material_id,
+          receipt_line_id: line.id,
+          movement_type: "receipt",
+          quantity: Number(line.received_qty),
+          signed_quantity: Number(line.received_qty),
+          created_by: user.id,
+          observation: `Documento ${r.document_folio || "sin folio"} validado por Finanzas`,
+        });
+      if (moveError) throw new Error(moveError.message);
+      postedLineIds.add(String(line.id));
+    }
+    const { error: priceError } = await supabase
       .from("materials")
       .update({
         current_net_price: Number(line.actual_unit_net),
@@ -184,13 +205,14 @@ export async function reconcilePurchaseDocument(formData: FormData) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", line.material_id);
+    if (priceError) throw new Error(priceError.message);
   }
   const status = r.purchase_order_id
     ? hasDifference
       ? "Con diferencia"
       : "Conforme"
     : "Confirmada sin OC";
-  const { error: updateError } = await supabase
+  const { data: postedReceipt, error: updateError } = await supabase
     .from("receipts")
     .update({
       reconciliation_status: status,
@@ -199,8 +221,15 @@ export async function reconcilePurchaseDocument(formData: FormData) {
       reconciled_by: user.id,
       reconciled_at: new Date().toISOString(),
     })
-    .eq("id", receiptId);
+    .eq("id", receiptId)
+    .eq("inventory_posted", false)
+    .select("id")
+    .maybeSingle();
   if (updateError) throw new Error(updateError.message);
+  if (!postedReceipt)
+    throw new Error(
+      "La recepción fue procesada por otra sesión. Actualiza la pantalla antes de continuar",
+    );
   await supabase.from("activity_log").insert({
     actor_id: user.id,
     actor_name: profile.full_name || profile.email,
@@ -208,7 +237,11 @@ export async function reconcilePurchaseDocument(formData: FormData) {
     action: "Cotejar documento y cargar inventario",
     entity_table: "receipts",
     entity_id: receiptId,
-    new_data: { status, inventory_posted: true },
+    new_data: {
+      status,
+      inventory_posted: true,
+      recovered_existing_movements: existingMovements?.length || 0,
+    },
   });
   revalidatePath("/");
   return { ok: true, status };

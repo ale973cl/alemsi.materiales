@@ -37,6 +37,12 @@
 - Se bloquea el registro duplicado de tipo + folio + proveedor antes de insertar, sin cambio de esquema.
 - El lector actual reconoce tipo, folio, fecha, proveedor/RUT, referencia OC, líneas, cantidad, unidad, neto unitario, neto línea, neto, IVA y total; continúa como previsualización y nunca carga inventario automáticamente.
 
+## Integridad de `reconcilePurchaseDocument` · 2026-09-23
+- Se confirmó que el flujo no es atómico: inserta movimientos, actualiza precios y luego marca `inventory_posted`.
+- Se agregó recuperación idempotente por `receipt_line_id`: un reintento detecta movimientos ya creados y solo completa las líneas faltantes, evitando duplicación secuencial tras una falla intermedia.
+- Cada actualización de precio ahora valida su error y el cierre de la recepción usa condición `inventory_posted = false` para detectar una sesión competidora.
+- **Riesgo residual / REQUIERE DECISIÓN:** dos solicitudes realmente simultáneas aún pueden leer cero movimientos antes de insertar. La garantía total exige una transacción SQL/RPC y, de preferencia, unicidad de `inventory_movements.receipt_line_id`. No se ejecutó por requerir autorización explícita de esquema.
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.
