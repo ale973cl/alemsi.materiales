@@ -306,3 +306,14 @@
 - Alta de vehículos, persistencia, cámara/IA, retiro/devolución, combustible, GPS puntual, deterioros e informes permanecen deshabilitados hasta aprobar y crear el esquema propio de Flota.
 - Siguiente paso: validar que `/flota` compile/despliegue en Preview y presentar esquema mínimo de datos Flota antes de cualquier migración Supabase.
 - `npm run build` y `npx tsc --noEmit`: pendientes de CI/Preview; esta sesión opera mediante conector GitHub sin terminal del repositorio.
+
+
+## Integración Flota con Servicios adicionales · 2026-09-23
+- `/flota` reutiliza la arquitectura existente creada junto a Rendiciones/Cotizaciones: `additional_services`, `additional_service_user_access` y RPC `has_additional_service_access('flota')`.
+- No se creó un segundo sistema de permisos ni activación.
+- Servicio INACTIVO no permite abrir Flota; DEMO identifica visualmente el modo; ACTIVO abre la aplicación según acceso. Admin Total conserva administración del servicio, pero un servicio INACTIVO tampoco abre la ruta.
+- Servicios adicionales muestra “Abrir Flota” cuando Flota no está INACTIVO.
+- Cambiar estado/acceso de servicios revalida también `/flota`.
+- Materiales/Bodega siguen sin dependencia funcional hacia Flota.
+- Próximo bloque: esquema propio de persistencia de Flota (vehículos, documentos/versiones, usos, fotos, combustible, mantenciones, alertas/deterioros y configuración). Requiere autorización explícita antes de modificar Supabase.
+- Build/tsc: pendientes de Preview/CI; no hay terminal del repositorio en esta sesión.
