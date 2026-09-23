@@ -421,3 +421,16 @@
 - Los vehículos aún no completados por el usuario mantienen kilometraje inicial 0 como valor técnico pendiente del formulario actual; el usuario indicó que completará sus datos. No debe interpretarse 0 como lectura física confirmada.
 - Todos quedan editables por Admin Total desde su expediente.
 - No se alteraron Materiales/Bodega/Rendiciones ni variables Vercel.
+
+
+## Flota · expediente documental y contrato de lector · 2026-09-23
+- Autorizado por usuario y aplicada migración `flota_document_reader_fields_v1` sobre tablas propias de Flota.
+- `fleet_documents` ahora separa `extracted_data` (propuesta del lector) de `confirmed_data` (dato humano confirmado), además de estado/confianza de lectura, patente/VIN documental y updated_at.
+- Creado `src/modules/flota/document-reader.ts`: contrato dirigido por tipo para PADRON, REVISION_TECNICA, PERMISO_CIRCULACION, SOAP, SEGURO_AUTOMOTRIZ y MANTENCION.
+- Cada plantilla define títulos/alias, zonas prioritarias, campos esperados y, para pólizas, términos específicos de grúa/remolque, auto de reemplazo, reparación en terreno, combustible, conductor, repuestos y asistencia legal.
+- Expediente DOCUMENTOS incorpora alta/renovación, campos confirmables/editables y tabla de versión vigente; al renovar se conserva la versión anterior como histórica.
+- Validación cruzada: patente/VIN documental distinto del vehículo marca el registro para revisión.
+- IMPORTANTE: el contrato/buscador dirigido ya está codificado, pero el motor visual/IA que lee el binario de JPG/PNG/WEBP/PDF todavía NO está conectado. El input de archivo se muestra como preparación y no debe anunciarse como lectura automática activa hasta conectar el proveedor existente o uno autorizado.
+- No se inventó una API/clave de IA y no se agregó variable Vercel.
+- Siguiente paso exacto: localizar/conectar el lector real reutilizable de Rendiciones (si existe en la rama/base efectiva) o definir proveedor autorizado; luego almacenar original privado y poblar extracted_data antes de la confirmación.
+- Validación requerida: Preview Vercel + TypeScript/build.
