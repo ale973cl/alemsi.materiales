@@ -1,42 +1,92 @@
 "use server";
-import {CAPABILITIES,roleCan} from "@/lib/authorization";
-import {revalidatePath} from "next/cache";
-import {createClient} from "@/lib/supabase/server";
-import {enqueueModuleEmail} from "@/lib/email-queue";
+import { CAPABILITIES, roleCan } from "@/lib/authorization";
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { enqueueModuleEmail } from "@/lib/email-queue";
 
-async function context(){
-  const supabase=await createClient();
-  const {data:{user}}=await supabase.auth.getUser();
-  if(!user)throw new Error("Sesión no válida");
-  const {data:profile}=await supabase.from("user_profiles").select("role,active,full_name,email").eq("id",user.id).single();
-  if(!profile?.active||!roleCan(profile.role,CAPABILITIES.PURCHASE_ORDER_MANAGE))throw new Error("No autorizado para enviar órdenes de compra");
-  return{supabase,user,profile};
+async function context() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Sesión no válida");
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("role,active,full_name,email")
+    .eq("id", user.id)
+    .single();
+  if (
+    !profile?.active ||
+    !roleCan(profile.role, CAPABILITIES.PURCHASE_ORDER_MANAGE)
+  )
+    throw new Error("No autorizado para enviar órdenes de compra");
+  return { supabase, user, profile };
 }
 
-export async function queuePurchaseOrderEmail(formData:FormData){
-  const {supabase,user,profile}=await context();
-  const id=String(formData.get("purchase_order_id")||"").trim();
-  const manualRecipient=String(formData.get("recipient_email")||"").trim().toLowerCase();
-  if(!id)throw new Error("Orden de compra no válida");
-  const {data:po,error}=await supabase.from("purchase_orders").select("id,order_number,status,total_net,total_amount,currency,suppliers(legal_name,purchase_order_email,commercial_email)").eq("id",id).single();
-  if(error||!po)throw new Error("Orden de compra no encontrada");
-  const supplier:any=Array.isArray(po.suppliers)?po.suppliers[0]:po.suppliers;
-  const recipient=manualRecipient||String(supplier?.purchase_order_email||supplier?.commercial_email||"").trim().toLowerCase();
-  if(!recipient||!recipient.includes("@")||recipient.startsWith("@")||recipient.endsWith("@"))throw new Error("Ingresa un correo de destino válido");
-  const folio=po.order_number||po.id;
-  const queued=await enqueueModuleEmail(supabase,{
-    module:"purchase_orders",
-    event:"supplier_order_ready",
-    emailType:"purchase_order_supplier",
-    relatedTable:"purchase_orders",
-    relatedId:po.id,
-    to:[recipient],
-    subject:`Orden de compra ${folio} · ALEMSI`,
-    summary:"ALEMSI ha generado una orden de compra para su gestión. Los datos principales quedan registrados en este correo transaccional.",
-    facts:{"Orden de compra":folio,"Proveedor":supplier?.legal_name||"—","Estado":po.status||"—","Total neto":Number(po.total_net||0),"Moneda":po.currency||"CLP"},
-    idempotencyKey:`purchase_orders:supplier_order_ready:${po.id}`
+export async function queuePurchaseOrderEmail(formData: FormData) {
+  const { supabase, user, profile } = await context();
+  const id = String(formData.get("purchase_order_id") || "").trim();
+  const manualRecipient = String(formData.get("recipient_email") || "")
+    .trim()
+    .toLowerCase();
+  if (!id) throw new Error("Orden de compra no válida");
+  const { data: po, error } = await supabase
+    .from("purchase_orders")
+    .select(
+      "id,order_number,status,total_net,total_amount,currency,suppliers(legal_name,purchase_order_email,commercial_email)",
+    )
+    .eq("id", id)
+    .single();
+  if (error || !po) throw new Error("Orden de compra no encontrada");
+  const supplier: any = Array.isArray(po.suppliers)
+    ? po.suppliers[0]
+    : po.suppliers;
+  const recipient =
+    manualRecipient ||
+    String(supplier?.purchase_order_email || supplier?.commercial_email || "")
+      .trim()
+      .toLowerCase();
+  if (
+    !recipient ||
+    !recipient.includes("@") ||
+    recipient.startsWith("@") ||
+    recipient.endsWith("@")
+  )
+    throw new Error("Ingresa un correo de destino válido");
+  const folio = po.order_number || po.id;
+  const queued = await enqueueModuleEmail(supabase, {
+    module: "purchase_orders",
+    event: "supplier_order_ready",
+    emailType: "purchase_order_supplier",
+    relatedTable: "purchase_orders",
+    relatedId: po.id,
+    to: [recipient],
+    subject: `Orden de compra ${folio} · ALEMSI`,
+    summary:
+      "ALEMSI ha generado una orden de compra para su gestión. El documento comercial se adjunta en formato PDF.",
+    facts: {
+      "Orden de compra": folio,
+      Proveedor: supplier?.legal_name || "—",
+      "Total neto": Number(po.total_net || 0),
+      Moneda: po.currency || "CLP",
+    },
+    idempotencyKey: `purchase_orders:supplier_order_ready:${po.id}`,
   });
-  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Órdenes de compra",action:queued.queued?"Encolar correo a proveedor":"Correo a proveedor ya en cola",entity_table:"purchase_orders",entity_id:po.id,new_data:{recipient,email_queue_id:(queued as any).id||null,status:(queued as any).status||null}});
+  await supabase.from("activity_log").insert({
+    actor_id: user.id,
+    actor_name: profile.full_name || profile.email,
+    module: "Órdenes de compra",
+    action: queued.queued
+      ? "Encolar correo a proveedor"
+      : "Correo a proveedor ya en cola",
+    entity_table: "purchase_orders",
+    entity_id: po.id,
+    new_data: {
+      recipient,
+      email_queue_id: (queued as any).id || null,
+      status: (queued as any).status || null,
+    },
+  });
   revalidatePath("/");
   revalidatePath(`/ordenes-compra/${id}`);
 }

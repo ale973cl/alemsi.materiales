@@ -1,15 +1,210 @@
 "use client";
-import {CAPABILITIES,roleCan} from "@/lib/authorization";
-import {useState,useTransition} from "react";
-import {queuePurchaseOrderEmail} from "@/app/purchase-order-email-actions";
-import {derivePurchaseOrderSafe} from "@/app/purchase-order-actions";
-const money=(n:number)=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n||0);
-export default function PurchaseOrdersModule({orders,role}:{orders:any[];role:string}){
- const canOperate=roleCan(role,CAPABILITIES.PURCHASE_ORDER_MANAGE);
- const [emailOrder,setEmailOrder]=useState<any|null>(null),[message,setMessage]=useState(""),[recipientEmail,setRecipientEmail]=useState("");
- const [pending,start]=useTransition();
- const sendOrder=()=>{if(!emailOrder)return;const fd=new FormData();fd.set("purchase_order_id",emailOrder.id);fd.set("recipient_email",recipientEmail.trim());setMessage("");start(async()=>{try{await queuePurchaseOrderEmail(fd);setMessage("Acción ejecutada por el motor de correos. En Preview los destinatarios externos quedan bloqueados por seguridad.")}catch(e:any){setMessage(e?.message||"No se pudo procesar el correo")}})};
- const derive=(id:string)=>{const fd=new FormData();fd.set("purchase_order_id",id);setMessage("");start(async()=>{try{const r=await derivePurchaseOrderSafe(fd);setMessage(r.alreadyDerived?"La OC ya estaba derivada. No se duplicó el movimiento ni el correo.":"OC derivada a Finanzas y notificación procesada.")}catch(e:any){setMessage(e?.message||"No se pudo derivar la OC")}})};
- if(emailOrder)return <section className="panel"><div className="catalogIntro"><div><h2>Enviar orden de compra</h2><p>{emailOrder.order_number||"OC sin folio"} · {emailOrder.suppliers?.legal_name||"Proveedor"}</p></div><button type="button" className="clearFilters" onClick={()=>{setEmailOrder(null);setMessage("")}}>← Volver a órdenes de compra</button></div><div style={{marginTop:16}}><div className="surveyCampaignFilters"><label>Destino<input type="email" value={recipientEmail} onChange={e=>setRecipientEmail(e.target.value)} placeholder="correo@proveedor.cl" autoComplete="email"/></label><label>Asunto<input readOnly value={`Orden de compra ${emailOrder.order_number||""} · ALEMSI`}/></label></div><div className="contractActions" style={{marginTop:12,display:"flex",gap:8,flexWrap:"wrap"}}><button type="button" disabled={pending||!recipientEmail.trim()} onClick={sendOrder}>{pending?"Procesando...":"Enviar por motor ALEMSI"}</button><a href={`/ordenes-compra/${emailOrder.id}`} rel="noreferrer" className="linkBtn">Abrir OC / PDF</a></div>{message&&<p className="note"><b>{message}</b></p>}<p className="note">El envío usa la cola central, idempotencia, trazabilidad y la política de destinatarios del entorno. En Preview no se envía a proveedores ni clientes externos.</p></div></section>;
- return <section className="panel"><div className="catalogIntro"><div><h2>Órdenes de compra</h2><p>Selecciona una OC para verla, enviarla o derivarla a Finanzas.</p></div></div>{message&&<p className="note"><b>{message}</b></p>}<div className="table" style={{marginTop:16}}>{orders.length?orders.map(o=><div className="row" key={o.id} style={{alignItems:"center",gap:10}}><span style={{minWidth:180}}><b>{o.order_number||"OC sin folio"}</b><small>{o.suppliers?.legal_name||"Proveedor"}</small>{o.suppliers?.purchase_order_email&&<small>{o.suppliers.purchase_order_email}</small>}</span><strong>{money(Number(o.total_net||0))} neto</strong><em>{o.status}</em><span className="contractActions" style={{display:"flex",flexWrap:"wrap",gap:6}}><a className="linkBtn" href={`/ordenes-compra/${o.id}`}>Ver OC</a><button type="button" onClick={()=>{setEmailOrder(o);setRecipientEmail(o.suppliers?.purchase_order_email||o.suppliers?.commercial_email||"");setMessage("")}}>Enviar OC</button>{canOperate&&<button type="button" disabled={pending} onClick={()=>derive(o.id)}>Derivar a Finanzas</button>}</span></div>):<div className="empty"><b>Sin órdenes de compra</b><span>Las nuevas OC aparecerán aquí.</span></div>}</div><p className="note"><b>Flujo:</b> revisar OC → enviar por motor ALEMSI → derivar a Finanzas → factura y recepción → cotejo.</p></section>;
+import { CAPABILITIES, roleCan } from "@/lib/authorization";
+import { useState, useTransition } from "react";
+import { queuePurchaseOrderEmail } from "@/app/purchase-order-email-actions";
+import { derivePurchaseOrderSafe } from "@/app/purchase-order-actions";
+const money = (n: number) =>
+  new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    maximumFractionDigits: 0,
+  }).format(n || 0);
+export default function PurchaseOrdersModule({
+  orders,
+  role,
+}: {
+  orders: any[];
+  role: string;
+}) {
+  const canOperate = roleCan(role, CAPABILITIES.PURCHASE_ORDER_MANAGE);
+  const [emailOrder, setEmailOrder] = useState<any | null>(null),
+    [message, setMessage] = useState(""),
+    [recipientEmail, setRecipientEmail] = useState("");
+  const [pending, start] = useTransition();
+  const sendOrder = () => {
+    if (!emailOrder) return;
+    const fd = new FormData();
+    fd.set("purchase_order_id", emailOrder.id);
+    fd.set("recipient_email", recipientEmail.trim());
+    setMessage("");
+    start(async () => {
+      try {
+        await queuePurchaseOrderEmail(fd);
+        setMessage(
+          "Acción ejecutada por el motor de correos. En Preview los destinatarios externos quedan bloqueados por seguridad.",
+        );
+      } catch (e: any) {
+        setMessage(e?.message || "No se pudo procesar el correo");
+      }
+    });
+  };
+  const derive = (id: string) => {
+    const fd = new FormData();
+    fd.set("purchase_order_id", id);
+    setMessage("");
+    start(async () => {
+      try {
+        const r = await derivePurchaseOrderSafe(fd);
+        setMessage(
+          r.alreadyDerived
+            ? "La OC ya estaba derivada. No se duplicó el movimiento ni el correo."
+            : "OC derivada a Finanzas y notificación procesada.",
+        );
+      } catch (e: any) {
+        setMessage(e?.message || "No se pudo derivar la OC");
+      }
+    });
+  };
+  if (emailOrder)
+    return (
+      <section className="panel">
+        <div className="catalogIntro">
+          <div>
+            <h2>Enviar orden de compra</h2>
+            <p>
+              {emailOrder.order_number || "OC sin folio"} ·{" "}
+              {emailOrder.suppliers?.legal_name || "Proveedor"}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="clearFilters"
+            onClick={() => {
+              setEmailOrder(null);
+              setMessage("");
+            }}
+          >
+            ← Volver a órdenes de compra
+          </button>
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <div className="surveyCampaignFilters">
+            <label>
+              Destino
+              <input
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                placeholder="correo@proveedor.cl"
+                autoComplete="email"
+              />
+            </label>
+            <label>
+              Asunto
+              <input
+                readOnly
+                value={`Orden de compra ${emailOrder.order_number || ""} · ALEMSI`}
+              />
+            </label>
+          </div>
+          <div
+            className="contractActions"
+            style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}
+          >
+            <button
+              type="button"
+              disabled={pending || !recipientEmail.trim()}
+              onClick={sendOrder}
+            >
+              {pending ? "Procesando..." : "Enviar por motor ALEMSI"}
+            </button>
+            <a
+              href={`/ordenes-compra/${emailOrder.id}`}
+              rel="noreferrer"
+              className="linkBtn"
+            >
+              Abrir OC / PDF
+            </a>
+          </div>
+          {message && (
+            <p className="note">
+              <b>{message}</b>
+            </p>
+          )}
+          <p className="note">
+            El envío usa la cola central, idempotencia, trazabilidad y la
+            política de destinatarios del entorno. En Preview no se envía a
+            proveedores ni clientes externos.
+          </p>
+        </div>
+      </section>
+    );
+  return (
+    <section className="panel">
+      <div className="catalogIntro">
+        <div>
+          <h2>Órdenes de compra</h2>
+          <p>Selecciona una OC para verla, enviarla o derivarla a Finanzas.</p>
+        </div>
+      </div>
+      {message && (
+        <p className="note">
+          <b>{message}</b>
+        </p>
+      )}
+      <div className="table" style={{ marginTop: 16 }}>
+        {orders.length ? (
+          orders.map((o) => (
+            <div
+              className="row"
+              key={o.id}
+              style={{ alignItems: "center", gap: 10 }}
+            >
+              <span style={{ minWidth: 180 }}>
+                <b>{o.order_number || "OC sin folio"}</b>
+                <small>{o.suppliers?.legal_name || "Proveedor"}</small>
+                {o.suppliers?.purchase_order_email && (
+                  <small>{o.suppliers.purchase_order_email}</small>
+                )}
+              </span>
+              <strong>{money(Number(o.total_net || 0))} neto</strong>
+              <em>{o.status}</em>
+              <span
+                className="contractActions"
+                style={{ display: "flex", flexWrap: "wrap", gap: 6 }}
+              >
+                <a className="linkBtn" href={`/ordenes-compra/${o.id}`}>
+                  Ver OC
+                </a>
+                {canOperate && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailOrder(o);
+                      setRecipientEmail(
+                        o.suppliers?.purchase_order_email ||
+                          o.suppliers?.commercial_email ||
+                          "",
+                      );
+                      setMessage("");
+                    }}
+                  >
+                    Enviar OC
+                  </button>
+                )}
+                {canOperate && (
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => derive(o.id)}
+                  >
+                    Derivar a Finanzas
+                  </button>
+                )}
+              </span>
+            </div>
+          ))
+        ) : (
+          <div className="empty">
+            <b>Sin órdenes de compra</b>
+            <span>Las nuevas OC aparecerán aquí.</span>
+          </div>
+        )}
+      </div>
+      <p className="note">
+        <b>Flujo:</b> revisar OC → enviar por motor ALEMSI → derivar a Finanzas
+        → factura y recepción → cotejo.
+      </p>
+    </section>
+  );
 }

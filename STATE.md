@@ -51,6 +51,13 @@
 - Crear ruta exige `ROUTE_MANAGE`. Marcar preparada o iniciar exige capability de gestión o ser la persona asignada, además del estado previo exacto (`Asignada` / `Preparada`).
 - `Completada` permanece fuera de activas y visible en `Rutas listas`; guías conformes/observadas permanecen en `Entregadas`; entregas parciales continúan en `Pendientes material`.
 
+## Correo de orden de compra · 2026-09-23
+- Se reutiliza el motor central y su soporte SMTP de adjuntos; no se creó otro motor.
+- `purchase_order_supplier` genera y adjunta un PDF de la OC desde los datos persistidos de proveedor, líneas, cantidades, valores y condiciones.
+- El correo y el PDF comercial omiten el estado interno `Borrador`; el estado sigue visible únicamente dentro de la aplicación.
+- El destinatario manual editable se conserva.
+- `Enviar OC` ahora se muestra solo cuando `PURCHASE_ORDER_MANAGE` es efectivo; el Server Action mantiene la misma autorización como segunda barrera.
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.
