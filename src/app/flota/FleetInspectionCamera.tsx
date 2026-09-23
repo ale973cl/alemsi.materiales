@@ -13,16 +13,11 @@ function Silhouette({view,overlay=false}:{view:View;overlay?:boolean}){
  const side=view.startsWith("Lateral");
  const flip=view==="Lateral derecho";
  if(side){
-  return <svg className={(overlay?"fleetSvgOverlay ":"fleetSvgGuide ")+(flip?"fleetGuideFlip":"")} viewBox="0 0 220 110" aria-label={view}>
-   <g fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 71 L20 46 L39 25 L151 25 L187 52 L204 58 L207 79 L194 84 L27 84 L12 78 Z"/>
-    <path d="M42 29 L43 67 M151 29 L174 56 M43 67 L177 67 M96 27 L96 67"/>
-    <path d="M24 48 H40 M179 55 H201 M57 47 H86 M113 47 H142"/>
-    <circle cx="57" cy="82" r="15"/><circle cx="170" cy="82" r="15"/>
-    <circle cx="57" cy="82" r="7"/><circle cx="170" cy="82" r="7"/>
-    <path d="M40 84 H27 M72 84 H155 M185 84 H194"/>
-   </g>
-  </svg>;
+  return <img
+   className={(overlay?"fleetImageOverlay ":"fleetImageGuide ")+(flip?"fleetGuideFlip":"")}
+   src="/flota/guias/pickup-lateral-izquierda.svg"
+   alt={view}
+  />;
  }
  const rear=view==="Trasera";
  return <svg className={overlay?"fleetSvgOverlay":"fleetSvgGuide"} viewBox="0 0 170 120" aria-label={view}>
