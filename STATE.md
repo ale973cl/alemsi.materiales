@@ -393,3 +393,13 @@
 - Tablet mantiene 3 columnas y móvil 1 columna táctil.
 - Este cambio es solo visual; no modifica Supabase, lógica de Flota, permisos, Materiales/Bodega/Rendiciones ni variables Vercel.
 - Pendiente separado: reemplazar la portada MG por una fuente/recorte de mayor resolución para eliminar pixelación sin alterar el layout.
+
+
+## Flota · jerarquía cromática y accesos móviles · 2026-09-23
+- Se mejoró directamente la visual real de Flota: fondo más limpio, teal corporativo más definido, estados Disponible/En uso/Fuera de servicio con jerarquía verde/ámbar/rojo, bordes y foco de tarjetas más claros.
+- Se conserva la grilla compacta de 6 vehículos en escritorio y la fotografía como botón completo.
+- El usuario solicita accesos directos de teléfono con sus iconos entregados para FLOTA, RENDICIÓN y RUTA.
+- Los archivos entregados identificados en la conversación son flota_junto.png, rendicion_junto.png y materiales_junto (1).png; no deben regenerarse ni sustituirse por iconos inventados.
+- No se implementa todavía un destino RUTA suponiendo una URL: antes debe verificarse la ruta real existente del proceso móvil de ruta/entrega.
+- La configuración PWA debe preservar sesión/permisos y no crear una segunda autenticación.
+- Sin cambios de Supabase ni variables Vercel.
