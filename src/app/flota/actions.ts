@@ -20,8 +20,12 @@ export async function createVehicle(formData:FormData){
  const year=yearRaw?Math.trunc(yearRaw):null;
  if(year!==null&&(year<1950||year>2100))throw new Error("Año de vehículo inválido.");
  const {error}=await supabase.from("fleet_vehicles").insert({plate,label,brand,model,year,current_km:km,created_by:user.id});
- if(error){if(error.code==="23505")throw new Error("La patente ya está registrada.");throw new Error("No fue posible registrar el vehículo.");}
+ if(error){
+  if(error.code==="23505")redirect("/flota?notice=duplicate");
+  redirect("/flota?notice=create-error");
+ }
  revalidatePath("/flota");
+ redirect("/flota?notice=created");
 }
 
 
