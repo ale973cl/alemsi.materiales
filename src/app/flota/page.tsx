@@ -2,9 +2,9 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
 import {documentAlert,mileageAlert,remainingKm,type FleetVehicleSummary} from "@/modules/flota/domain";
+import {createVehicle} from "./actions";
 import "./flota.css";
 
-const demo: FleetVehicleSummary[]=[];
 const fmtKm=(n:number)=>new Intl.NumberFormat("es-CL").format(n)+" km";
 const tone=(level:string)=>level==="critical"?"fleetStatus fleetStatusCritical":level==="warning"?"fleetStatus fleetStatusWarning":"fleetStatus fleetStatusOk";
 
@@ -22,13 +22,15 @@ export default async function FlotaPage(){
  if(!admin&&!allowed)redirect("/");
  if(!service||service.status==="INACTIVO")redirect("/");
  const demoMode=service.status==="DEMO";
- // Fase base: no se consulta ni modifica Materiales/Bodega. Vehículos se conectarán tras aprobar el esquema Flota.
- const vehicles=demo;
+ const {data:rows,error:vehiclesError}=await supabase.from("fleet_vehicles").select("id,plate,label,status,current_km,next_oil_change_km").eq("active",true).order("plate");
+ if(vehiclesError)throw new Error("No fue posible cargar Flota.");
+ const vehicles: FleetVehicleSummary[]=(rows??[]).map((v:any)=>({id:v.id,plate:v.plate,label:v.label,status:v.status,currentKm:Number(v.current_km||0),nextOilChangeKm:v.next_oil_change_km==null?null:Number(v.next_oil_change_km)}));
  return <main className="fleetPage">
   <header className="fleetHero">
    <div><p className="fleetEyebrow">ALEMSI · FLOTA{demoMode?" · MODO DEMO":""}</p><h1>Control de Flota</h1><p>Vehículos, documentos, uso y alertas en un solo expediente.</p></div>
-   <div className="fleetHeroActions"><Link href="/" className="fleetBtn fleetBtnGhost">Volver</Link><button className="fleetBtn fleetBtnPrimary" disabled>+ Nuevo vehículo</button></div>
+   <div className="fleetHeroActions"><Link href="/" className="fleetBtn fleetBtnGhost">Volver</Link>{admin&&<a href="#nuevo-vehiculo" className="fleetBtn fleetBtnPrimary">+ Nuevo vehículo</a>}</div>
   </header>
+  {admin&&<details id="nuevo-vehiculo" className="fleetCreate"><summary>Registrar vehículo</summary><form action={createVehicle} className="fleetCreateGrid"><label>Patente<input name="plate" required maxLength={10}/></label><label>Nombre o identificación<input name="label" required maxLength={80}/></label><label>Marca<input name="brand" maxLength={60}/></label><label>Modelo<input name="model" maxLength={60}/></label><label>Año<input name="year" type="number" min="1950" max="2100"/></label><label>Kilometraje actual<input name="current_km" type="number" min="0" required defaultValue="0"/></label><button className="fleetBtn fleetBtnPrimary">Guardar vehículo</button></form></details>}
   <section className="fleetMetrics" aria-label="Resumen de flota">
    <article><span>Vehículos</span><strong>{vehicles.length}</strong></article>
    <article><span>En uso</span><strong>{vehicles.filter(v=>v.status==="En uso").length}</strong></article>
@@ -39,7 +41,7 @@ export default async function FlotaPage(){
   </div></section>
   <section className="fleetSection">
    <div className="fleetSectionHead"><div><h2>Vehículos</h2><p>Estado actual y próximas atenciones.</p></div></div>
-   {vehicles.length===0?<div className="fleetEmpty"><div className="fleetEmptyMark">F</div><h3>Flota lista para configurar</h3><p>La interfaz base está separada de Materiales y Bodega. El alta de vehículos se habilitará al conectar el esquema propio de Flota.</p></div>:
+   {vehicles.length===0?<div className="fleetEmpty"><div className="fleetEmptyMark">F</div><h3>Flota lista para configurar</h3><p>No hay vehículos activos registrados. Usa “Nuevo vehículo” para comenzar el expediente de Flota.</p></div>:
    <div className="fleetVehicleGrid">{vehicles.map(v=>{const oil=mileageAlert(v.currentKm,v.nextOilChangeKm),doc=documentAlert(v.insuranceExpiresAt),left=remainingKm(v.currentKm,v.nextOilChangeKm);return <article className="fleetVehicleCard" key={v.id}>
     <div className="fleetVehicleTop"><div><span className="fleetPlate">{v.plate}</span><h3>{v.label}</h3></div><span className={v.status==="Disponible"?"fleetStatus fleetStatusOk":"fleetStatus"}>{v.status}</span></div>
     <div className="fleetCurrent"><span>Kilometraje</span><strong>{fmtKm(v.currentKm)}</strong></div>
