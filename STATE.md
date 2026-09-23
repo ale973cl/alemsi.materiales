@@ -525,3 +525,13 @@
 - No se modificó Supabase, Materiales ni reglas de toma/devolución.
 - Validación pendiente: Preview Vercel y prueba visual escritorio/Android.
 - Variables Vercel: ninguna nueva.
+
+
+## Flota · corrección fotografías de perfiles y láminas · 2026-09-23
+- Se corrigió el recorte del atlas fotográfico maestro: 3 vehículos en fila superior y 2 en fila inferior.
+- El expediente individual ahora muestra explícitamente la fotografía maestra del vehículo, además de patente, identificación y estado.
+- Las fotografías de inspección 7/7 continúan separadas y no reemplazan la portada.
+- Se mantiene la familia de siete láminas line-art limpia para Frontal, Trasera, Lateral izquierdo, Lateral derecho, Tablero, Interior 1 e Interior 2 en todos los vehículos.
+- Se corrigió el texto que todavía indicaba alinear con una guía; la cámara permanece limpia, sin overlay.
+- Validación pendiente: nuevo Preview Vercel, comprobar fotografías en listado y expediente individual y las 7 tarjetas en Android.
+- Variables Vercel: ninguna nueva.
