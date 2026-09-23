@@ -2,6 +2,7 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
 import {documentAlert,mileageAlert,remainingKm,type FleetVehicleSummary} from "@/modules/flota/domain";
+import "./flota.css";
 
 const demo: FleetVehicleSummary[]=[];
 const fmtKm=(n:number)=>new Intl.NumberFormat("es-CL").format(n)+" km";
