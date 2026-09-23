@@ -1,8 +1,18 @@
 # STATE — ALEMSI Materiales
 ## Estado actual
-- **Rama activa:** fix/levantamientos-vista-independiente
-- **Último cambio:** feedback inmediato de botones + galería inferior de comprobantes en Rendiciones.
-- **Fecha:** 2026-09-21
+- **Rama activa:** `audit/cierre-operacional-pre-merge`
+- **Base funcional verificada:** `fix/levantamientos-vista-independiente` en `ed7f4df4285257d68180849af7b5f1882d950ae1`.
+- **Tronco histórico declarado:** `work/maestros-unificados-ui` en `dd46e0f`; la base funcional actual desciende de ese tronco y contiene los avances posteriores.
+- **Punto de restauración:** `backup/pre-auditoria-operacional-20260923` en `ed7f4df4285257d68180849af7b5f1882d950ae1`, verificado en remoto antes de modificar código.
+- **Objetivo actual:** auditoría y cierre operacional pre-merge de Abastecimiento, Recepción, Inventario, Campañas, Rutas, Guías, Entregas, históricos, permisos y correo de OC.
+- **Fecha:** 2026-09-23
+
+## Inicio de auditoría pre-merge · 2026-09-23
+- `main` y Production quedan fuera de alcance; no se fusionará automáticamente.
+- `feature/finance-turquesa-evaluacion` queda excluida por ser una prueba visual descartada.
+- No se autoriza cambio de esquema Supabase. Si la integridad de inventario exige transacción SQL/RPC, se documentará el riesgo y la propuesta sin ejecutarla.
+- Cada circuito se corregirá en commits independientes, con validación UI → handler → Server Action/API → Supabase → estado resultante → navegación/histórico.
+- Validación de cierre obligatoria: siete perfiles oficiales, `npm run build` y `npx tsc --noEmit`.
 
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
