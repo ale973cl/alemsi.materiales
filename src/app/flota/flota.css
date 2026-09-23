@@ -56,3 +56,8 @@
 @media(max-width:900px){.fleetActionPanelCamera{grid-template-columns:1fr}.fleetInspectionGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.fleetInspectionTile{grid-template-rows:105px auto auto;min-height:150px}.fleetInspectionTile img,.fleetInteriorGuide{height:105px}.fleetCameraOverlay{width:86vw;height:58vh}.fleetCameraFrame{width:92vw;height:64vh}}
 
 .fleetSvgGuide{width:100%;height:82px;color:#5f8396}.fleetSvgOverlay{position:absolute;z-index:2;width:min(78vw,720px);height:min(56vh,500px);color:rgba(255,255,255,.72);filter:drop-shadow(0 0 5px rgba(30,210,220,.65));pointer-events:none}.fleetDashOverlay{position:absolute;z-index:2;width:min(76vw,620px);height:min(45vh,360px);border:3px solid rgba(255,255,255,.72);border-radius:22px;display:grid;place-items:center;align-content:center;color:#fff;font-size:44px;font-weight:900;background:rgba(11,47,74,.12);pointer-events:none}.fleetDashOverlay small{font-size:14px}.fleetDashboardRead{margin-top:10px;border:1px solid #9ac9c2;background:#edf8f6;border-radius:10px;padding:9px 11px;display:grid;gap:3px;color:#173650}.fleetDashboardRead span{font-size:11px;color:#496878}@media(max-width:900px){.fleetSvgGuide{height:105px}.fleetSvgOverlay{width:86vw;height:54vh}.fleetDashOverlay{width:86vw;height:42vh}}
+
+/* Corrección 2026-09-23: tarjetas interiores sin desborde. */
+.fleetInspectionTile .fleetInteriorGuide{width:100%;height:82px;min-height:0;display:grid;place-items:center;align-content:center;font-size:26px;line-height:1;color:#5f8396;overflow:hidden}
+.fleetInspectionTile .fleetInteriorGuide small{font-size:10px;line-height:1.15;margin-top:4px}
+@media(max-width:900px){.fleetInspectionTile .fleetInteriorGuide{height:105px;font-size:28px}}
