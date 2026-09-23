@@ -317,3 +317,18 @@
 - Materiales/Bodega siguen sin dependencia funcional hacia Flota.
 - Próximo bloque: esquema propio de persistencia de Flota (vehículos, documentos/versiones, usos, fotos, combustible, mantenciones, alertas/deterioros y configuración). Requiere autorización explícita antes de modificar Supabase.
 - Build/tsc: pendientes de Preview/CI; no hay terminal del repositorio en esta sesión.
+
+
+## Flota operativa base y persistencia · 2026-09-23
+- Autorizado y aplicado en Supabase `alemsi-materiales` el migration `flota_operational_core_v1`.
+- Tablas propias creadas: `fleet_vehicles`, `fleet_documents`, `fleet_assignments`, `fleet_locations`, `fleet_photos`, `fleet_fuel_entries`, `fleet_maintenance`, `fleet_deterioration_events`, `fleet_settings`.
+- Todas las tablas Flota tienen RLS y dependen de `has_additional_service_access('flota')`; no se modificaron tablas de Materiales, Bodega ni Rendiciones.
+- Se protege una sola asignación abierta por vehículo y una sola versión vigente por tipo de documento; las versiones históricas permanecen.
+- Configuración inicial conserva 15/7 días, 750/500 km, 7 posiciones fotográficas, roles Gerencia/Finanzas/Operaciones, comparación visual y ubicación puntual.
+- `/flota` ya lee vehículos reales desde Supabase; actualmente hay 0 vehículos.
+- Admin Total puede registrar el primer vehículo desde la misma pantalla; patente duplicada queda bloqueada.
+- Creado expediente `/flota/[id]` con las tres vistas acordadas: RESUMEN | DOCUMENTOS | HISTORIAL.
+- Flota está actualmente configurada en `ACTIVO` y `ALL_AUTHENTICATED` en Servicios adicionales, tal como existe hoy en la base.
+- Siguiente bloque: casos de uso guiados Tomar/Devolver vehículo, captura de 7 fotos y ubicación; después documentos/combustible/mantenciones.
+- Build y `tsc --noEmit`: pendientes de Preview/CI porque esta sesión no dispone de terminal del repositorio.
+- Variables Vercel nuevas: ninguna.
