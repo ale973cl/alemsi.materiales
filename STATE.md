@@ -364,3 +364,13 @@
 - La siguiente implementación debe hacer que la primera captura Frontal del flujo 7/7 cree/asigne esta portada automáticamente y mantenga el original histórico.
 - La interfaz mantiene responsive móvil: una tarjeta fotográfica por fila y acceso táctil sobre toda la tarjeta.
 - Sin variables nuevas de Vercel ni dependencia con Materiales/Bodega.
+
+
+## Flota · portada MG y vehículos editables · 2026-09-23
+- Se utilizó la imagen entregada por el usuario como fuente visual y se incorporó el recorte del MG como activo inicial `/public/flota/rbhj56-mg.svg`; no se generó un vehículo alternativo.
+- RBHJ56 quedó asociado en Supabase a `/flota/rbhj56-mg.svg` como portada inicial.
+- La portada admite dos fuentes: activo inicial local o futura fotografía privada de inspección en Storage.
+- Admin Total puede editar desde el expediente patente, identificación, marca, modelo, año y kilometraje; se conserva unicidad de patente.
+- La fotografía de portada inicial no sustituye el futuro original 7/7. Cuando exista inspección, el original se guarda en `fleet_photos` y la portada puede apuntar a su miniatura sin perder evidencia.
+- Próximo paso: cargador/cámara 7/7 y edición/cambio controlado de fotografía de portada.
+- Sin variables nuevas de Vercel; Materiales/Bodega/Rendiciones no fueron modificados.
