@@ -514,3 +514,14 @@
 - No se alteró Materiales ni el flujo de toma/devolución.
 - Validación pendiente: Preview Vercel y revisión visual de los cinco recortes en escritorio/Android.
 - Variables Vercel: ninguna nueva.
+
+
+## Flota · láminas 7/7 estandarizadas para todos los vehículos · 2026-09-23
+- Se aplicó una única familia gráfica limpia a TODOS los vehículos de Flota, sin depender de patente/modelo.
+- Las siete tarjetas usan line-art uniforme: Frontal, Trasera, Lateral izquierdo, Lateral derecho, Tablero, Interior 1 e Interior 2.
+- Se retiraron de las tarjetas los placeholders de texto ODO y los rombos simples de interiores; ahora Tablero e interiores tienen dibujo lineal completo.
+- La cámara sigue SIN guía superpuesta, según decisión anterior; las láminas solo sirven para elegir la fotografía antes de abrir la cámara.
+- Las 7 fotografías continúan siendo obligatorias y se guardan como evidencia limpia.
+- No se modificó Supabase, Materiales ni reglas de toma/devolución.
+- Validación pendiente: Preview Vercel y prueba visual escritorio/Android.
+- Variables Vercel: ninguna nueva.
