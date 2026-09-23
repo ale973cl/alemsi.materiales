@@ -460,3 +460,14 @@
 - Tablero/Interior todavía usan guía neutra porque el usuario no ha entregado imágenes originales para esas tres posiciones; no se inventaron gráficos.
 - Validación pendiente: deployment Preview del commit más reciente, permiso de cámara en Android/Chrome, captura 7/7, persistencia Storage/DB y devolución 7/7.
 - No se agregaron variables Vercel. Materiales/Bodega/Rendiciones no fueron modificados.
+
+
+## Flota · guías por vehículo en cámara · 2026-09-23
+- Rama de tarea: feature/flota-siluetas-modelos, creada desde feature/flota-base; main/Production no se tocaron.
+- FleetInspectionCamera ahora recibe la patente y selecciona una silueta distinta según los cinco vehículos cargados: LKDG49 SUV/Ford Escape, RBHJ56 hatch/MG 3, SRYB45 pickup/JAC T8, SPZJ40 van/Opel Vivaro y TTHG24 van/Opel Combo.
+- Frontal, trasera, lateral izquierdo y lateral derecho se dibujan como guías vectoriales dentro de la cámara; la guía no se incrusta en la evidencia.
+- Tablero mantiene captura obligatoria y ahora muestra instrucción específica para encuadrar tablero completo y dejar visible el odómetro.
+- IMPORTANTE: lectura automática del odómetro todavía NO está conectada a un motor visual. La foto del tablero se almacena como evidencia y la UI lo declara explícitamente; no se inventan lecturas.
+- Las 25 siluetas PNG extraídas de la lámina original siguen disponibles como material preparado, pero no se publicaron como binarios en GitHub en este cambio; para evitar mantener la vista anterior, la app usa guías vectoriales específicas por tipo/patente en código.
+- Siguiente validación: Preview Vercel de esta rama; probar Android/Chrome: abrir cámara desde cada tarjeta, overlay correcto por patente, captura 7/7 y persistencia.
+- Variables Vercel: ninguna nueva.
