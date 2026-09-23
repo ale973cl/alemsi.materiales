@@ -37,7 +37,7 @@ export default function FleetInspectionCamera({vehicleId,driverName,currentKm,as
   <div className="fleetInspectionGrid">{POSITIONS.map((p,i)=><button type="button" key={p.name} className={"fleetInspectionTile "+(photos[i]?"fleetInspectionDone":"")} onClick={()=>openCamera(i)}>
    {photos[i]?<img src={URL.createObjectURL(photos[i]!)} alt={"Foto "+p.name}/>:p.guide?<img className={p.flip?"fleetGuideFlip":""} src={p.guide} alt={"Guía "+p.name}/>:<div className="fleetInteriorGuide">{p.name==="Tablero"?"▤":"▱"}</div>}
    <strong>{photos[i]?"✓ ":""}{p.name}</strong><span>{photos[i]?"Tocar para repetir":"Tocar para abrir cámara"}</span>
-   <input type="file" name={"photo_"+i} hidden readOnly/>
+
   </button>)}</div>
   {photos.map((file,i)=>file&&<FileBridge key={i} file={file} name={"photo_"+i}/>)}
   {error&&<p className="fleetCameraError">{error}</p>}
