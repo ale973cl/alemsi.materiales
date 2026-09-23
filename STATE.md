@@ -482,3 +482,15 @@
 - La lectura automática del odómetro sigue pendiente de motor visual real; esta corrección no simula lectura.
 - Validación pendiente: Preview Vercel READY de los commits 344e4fde y 0cb5e2c8, prueba visual escritorio + Android y apertura de cámara.
 - Variables Vercel: ninguna nueva.
+
+
+## Flota · guía gráfica lateral incorporada físicamente a la app · 2026-09-23
+- Se incorporó al repositorio la imagen line-art solicitada para la cámara: public/flota/guias/pickup-lateral-izquierda.svg, optimizada para uso web.
+- FleetInspectionCamera dejó de dibujar el lateral mediante SVG genérico en código y ahora carga este activo gráfico real.
+- Lateral izquierdo usa el activo directamente; lateral derecho reutiliza el mismo activo invertido horizontalmente para mantener un estándar único.
+- La misma imagen se muestra en la tarjeta 7/7 y como overlay semitransparente sobre la cámara en vivo.
+- La guía visual no se incrusta en la fotografía capturada; la evidencia continúa guardándose limpia.
+- Frontal/trasera permanecen con la guía vectorial actual hasta disponer/incorporar sus activos gráficos equivalentes.
+- Lectura automática de odómetro/tacómetro sigue pendiente de motor visual real.
+- Validación pendiente: Vercel Preview READY del commit 8a5a71bd y prueba Android/Chrome.
+- Variables Vercel: ninguna nueva.
