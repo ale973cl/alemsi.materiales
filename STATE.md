@@ -43,6 +43,14 @@
 - Cada actualización de precio ahora valida su error y el cierre de la recepción usa condición `inventory_posted = false` para detectar una sesión competidora.
 - **Riesgo residual / REQUIERE DECISIÓN:** dos solicitudes realmente simultáneas aún pueden leer cero movimientos antes de insertar. La garantía total exige una transacción SQL/RPC y, de preferencia, unicidad de `inventory_movements.receipt_line_id`. No se ejecutó por requerir autorización explícita de esquema.
 
+## Rutas, guías e histórico por alcance · 2026-09-23
+- El servidor de rutas valida `ROUTE_ACCESS`; ya no entrega todas las rutas a cualquier sesión autenticada.
+- Supervisora recibe rutas donde está asignada o cuyos despachos pertenecen a `user_installation_access` / `user_territorial_scopes`.
+- La misma regla protege la apertura directa de una guía terminada y del consolidado de ruta; el filtro visual dejó de ser la única barrera.
+- Perfiles con `ROUTE_MANAGE` pueden consultar todas las rutas; perfiles operativos reciben únicamente el conjunto ya filtrado por servidor.
+- Crear ruta exige `ROUTE_MANAGE`. Marcar preparada o iniciar exige capability de gestión o ser la persona asignada, además del estado previo exacto (`Asignada` / `Preparada`).
+- `Completada` permanece fuera de activas y visible en `Rutas listas`; guías conformes/observadas permanecen en `Entregadas`; entregas parciales continúan en `Pendientes material`.
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.
