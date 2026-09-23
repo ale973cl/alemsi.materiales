@@ -27,6 +27,16 @@
 - El cierre queda registrado en `activity_log` con estado y fecha anterior/nueva.
 - El control que solo expande la tarjeta se renombró a `Ver/Ocultar instalaciones` para no confundirlo con el cierre operacional.
 
+## Recepción con OC opcional · 2026-09-23
+- Recepción ofrece dos entradas explícitas: `Recepción con OC` y `Recepción / factura sin OC`.
+- Se reutiliza `registerPurchaseWithoutOc()` para el camino sin OC; Bodega/Operaciones/Admin autorizados por `RECEIPT_REGISTER` pueden registrar recepción física y Finanzas/Gerencia mantienen el acceso previo.
+- Ningún registro aumenta inventario: ambos caminos quedan en `Pendiente cotejo` con `inventory_posted = false`.
+- La sugerencia de OC exige proveedor y coincidencia exacta de `material_id`; se muestran cantidades ordenada, recibida y pendiente. La persona debe seleccionar expresamente la OC o continuar sin asociarla.
+- El servidor revalida que cada línea pertenezca a la OC, que material y línea coincidan y que la cantidad no supere el saldo pendiente.
+- Recepciones parciales actualizan la OC a `Recepción parcial`; solo queda `Recibida` cuando todas sus líneas alcanzan la cantidad ordenada.
+- Se bloquea el registro duplicado de tipo + folio + proveedor antes de insertar, sin cambio de esquema.
+- El lector actual reconoce tipo, folio, fecha, proveedor/RUT, referencia OC, líneas, cantidad, unidad, neto unitario, neto línea, neto, IVA y total; continúa como previsualización y nunca carga inventario automáticamente.
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.
