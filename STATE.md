@@ -504,3 +504,13 @@
 - No se modificó Supabase ni Materiales.
 - Validación pendiente: Preview Vercel y prueba de apertura/captura en Android.
 - Variables Vercel: ninguna nueva.
+
+
+## Flota · fotografías maestras cargadas en perfiles · 2026-09-23
+- Se incorporó public/flota/fleet-profiles.webp, optimizado desde la fotografía entregada por el dueño.
+- Se asignó cover_photo_path=/flota/fleet-profiles.webp a LKDG49, RBHJ56, SRYB45, SPZJ40 y TTHG24.
+- La pantalla principal de Flota recorta el activo por patente para mostrar a cada vehículo con su fotografía correspondiente.
+- Estas son fotografías maestras de perfil: las fotos 7/7 de inspección NO reemplazan automáticamente la portada.
+- No se alteró Materiales ni el flujo de toma/devolución.
+- Validación pendiente: Preview Vercel y revisión visual de los cinco recortes en escritorio/Android.
+- Variables Vercel: ninguna nueva.
