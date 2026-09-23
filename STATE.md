@@ -445,3 +445,18 @@
 - Pendiente inmediato: implementar flujo fotográfico 7/7 real para toma/devolución, cámara móvil con capture=environment, guía gráfica por posición y almacenamiento de originales; todavía NO está implementado y no debe simularse.
 - Pendiente lector documental: contrato dirigido listo, motor visual binario aún sin proveedor conectado.
 - Validación: repetir guardado de documento en Preview y revisar siguiente deployment.
+
+
+## Flota · cámara guiada 7/7 activa · 2026-09-23
+- Se integró cámara web real en Tomar/Devolver vehículo mediante getUserMedia, priorizando cámara trasera (facingMode environment).
+- La inspección exige 7 posiciones antes de habilitar confirmación: Frontal, Trasera, Lateral izquierdo, Lateral derecho, Tablero, Interior 1 e Interior 2.
+- Las referencias originales entregadas por el usuario para frontal/trasera/lateral se incorporaron como guías visuales dentro de la cámara; lateral derecho reutiliza la referencia invertida.
+- La guía se superpone semitransparente sobre video en vivo, pero NO se incrusta en la fotografía guardada. La evidencia almacenada es la captura limpia.
+- Cada posición se abre tocando su propia tarjeta/figura; no se presenta “Cargar archivo” como flujo operativo.
+- Creado bucket privado fleet-photos, máximo 8 MB por imagen, con acceso condicionado a has_additional_service_access('flota').
+- Toma y devolución almacenan las 7 evidencias en fleet_photos y Storage asociadas al uso.
+- El botón Confirmar permanece deshabilitado hasta 7/7.
+- Se incorporó manejo idempotente en el flujo nuevo: si el vehículo ya no está Disponible o el uso ya fue devuelto, vuelve a la ficha en vez de provocar el 500 observado por doble envío.
+- Tablero/Interior todavía usan guía neutra porque el usuario no ha entregado imágenes originales para esas tres posiciones; no se inventaron gráficos.
+- Validación pendiente: deployment Preview del commit más reciente, permiso de cámara en Android/Chrome, captura 7/7, persistencia Storage/DB y devolución 7/7.
+- No se agregaron variables Vercel. Materiales/Bodega/Rendiciones no fueron modificados.
