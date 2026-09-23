@@ -1,6 +1,6 @@
 # STATE — ALEMSI Materiales
 ## Estado actual
-- **Rama activa:** feature/rediseno-shell-navegacion
+- **Rama activa:** fix/levantamientos-vista-independiente
 - **Último cambio:** feedback inmediato de botones + galería inferior de comprobantes en Rendiciones.
 - **Fecha:** 2026-09-21
 
@@ -295,3 +295,12 @@
 - Si el proveedor tiene purchase_order_email/commercial_email se usa solo como valor inicial editable; si no existe, el campo queda vacío.
 - queuePurchaseOrderEmail recibe recipient_email, valida un destino básico y conserva la cola central, idempotencia, trazabilidad y políticas del entorno.
 - No se modifica el correo maestro del proveedor, Supabase, authorization.ts ni variables Vercel.
+
+
+## Levantamientos en vista independiente · 2026-09-22
+- Campañas/Levantamientos usa una lista compacta y continua de instalaciones con Cliente | Contrato | Instalación | Estado | Acción | Accesos.
+- Hacer levantamiento y Ver / editar conteo abren una vista de trabajo independiente; el formulario ya no se expande dentro de la fila.
+- Guardar levantamiento / Guardar corrección vuelve a la lista de instalaciones de la misma campaña, conservando la campaña seleccionada.
+- La regla es común para todos los perfiles que ya tengan acceso; no modifica permisos, carencia, máximos autorizados, Server Actions ni Supabase.
+- Rama de tarea: fix/levantamientos-vista-independiente, creada desde feature/rediseno-shell-navegacion. main/Production no se modifican.
+- Validación pendiente: Preview Vercel en escritorio y Android; esta sesión no dispone de terminal local para ejecutar npm run build ni npx tsc --noEmit.
