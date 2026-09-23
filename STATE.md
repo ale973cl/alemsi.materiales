@@ -295,3 +295,12 @@
 - Si el proveedor tiene purchase_order_email/commercial_email se usa solo como valor inicial editable; si no existe, el campo queda vacío.
 - queuePurchaseOrderEmail recibe recipient_email, valida un destino básico y conserva la cola central, idempotencia, trazabilidad y políticas del entorno.
 - No se modifica el correo maestro del proveedor, Supabase, authorization.ts ni variables Vercel.
+
+
+## Evaluación visual Finanzas turquesa · 2026-09-23
+- Rama de evaluación: feature/finance-turquesa-evaluacion, creada desde feature/rediseno-shell-navegacion; main/Production no se modifican.
+- Resumen financiero reorganiza la jerarquía visual: contexto → KPIs → consumo contractual por región.
+- Se intensifica el turquesa ALEMSI (#5daea2 / #79bdb1) en acentos, progreso, estados y jerarquía, manteniendo azul #0b2f4a para lectura y blanco como superficie.
+- Cambio exclusivamente UX/UI del dashboard financiero: no modifica cálculos, permisos, Server Actions, Supabase, esquema ni variables Vercel.
+- Pendiente: validar Preview en escritorio/Android y decidir si este patrón se extiende a Facturas, Recepción e Inventario.
+- npm run build / npx tsc --noEmit: pendientes; esta sesión no dispone de terminal local del repositorio. Validar build de Vercel Preview.
