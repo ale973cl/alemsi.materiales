@@ -535,3 +535,20 @@
 - Se corrigió el texto que todavía indicaba alinear con una guía; la cámara permanece limpia, sin overlay.
 - Validación pendiente: nuevo Preview Vercel, comprobar fotografías en listado y expediente individual y las 7 tarjetas en Android.
 - Variables Vercel: ninguna nueva.
+
+
+## Auditoría funcional Flota y plan por tandas de 3 · 2026-09-23
+- Criterio corregido: una función NO se considera operativa solo porque exista tabla/código; debe completar UI → servidor → Storage/DB → lectura visible posterior.
+- Foto maestra por vehículo: FALLA funcional. Los 5 vehículos apuntan al atlas local /flota/fleet-profiles.webp, pero la presentación en perfiles no está validada/visible correctamente.
+- Inspección 7/7: PARCIAL, no cerrada. En SRYB45 existen 14 archivos reales en fleet-photos (7 Toma + 7 Devolución) y 14 filas fleet_photos; dos usos previos de RBHJ56 tienen 0 fotos. Además la UI no expone una galería/historial de evidencias, por lo que para el usuario aparenta no guardar. Se considera FALLA operacional hasta que captura, persistencia y consulta visible estén verificadas extremo a extremo.
+- Documentos: FALLA. fleet_documents registra metadatos, pero document_file no se sube a Storage y no existe circuito Ver archivo.
+- Combustible, mantenciones, deterioros y ubicaciones: tablas preparadas, pero 0 registros y sin circuito UI completo; NO activos.
+- Lector documental y lector de tablero/odómetro: diseño/plantillas preparadas, motor visual NO conectado.
+- Historial: parcial; muestra asignaciones/mantenciones/deterioros, pero no expone fotos, documentos, combustible ni ubicaciones.
+- Método acordado: trabajar en tandas estrictas de 3 correcciones, validar Preview/Android y persistencia real antes de iniciar la siguiente tanda.
+- Tanda 1 propuesta: (1) foto maestra visible por vehículo, (2) 7/7 guardar + galería visible Toma/Devolución, (3) documentos subir/guardar/ver archivo.
+- Tanda 2: (1) odómetro/tablero con confirmación humana, (2) GPS puntual Toma/Devolución, (3) historial unificado visible.
+- Tanda 3: (1) mantenciones, (2) combustible, (3) deterioro/comparación.
+- Tanda 4: (1) alertas configurables, (2) notificaciones por rol, (3) reporte mensual.
+- No avanzar de tanda mientras cualquiera de sus 3 circuitos no esté probado extremo a extremo.
+- Variables Vercel: por definir solo cuando se conecte el motor visual; no inventar proveedor/API.
