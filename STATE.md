@@ -332,3 +332,15 @@
 - Siguiente bloque: casos de uso guiados Tomar/Devolver vehículo, captura de 7 fotos y ubicación; después documentos/combustible/mantenciones.
 - Build y `tsc --noEmit`: pendientes de Preview/CI porque esta sesión no dispone de terminal del repositorio.
 - Variables Vercel nuevas: ninguna.
+
+
+## Flota · toma y devolución base · 2026-09-23
+- Implementado el caso de uso real Tomar vehículo / Devolver vehículo sobre `fleet_assignments`.
+- La toma registra conductor desde la sesión, RUT ingresado, kilometraje inicial y observación opcional; revalida que el vehículo siga Disponible.
+- La devolución registra kilometraje final, observación opcional y fecha/hora; impide kilometraje menor al inicial y devuelve el vehículo a Disponible.
+- El expediente RESUMEN prioriza ahora una única acción principal según estado, con formulario compacto y táctil para móvil.
+- El historial existente recibe automáticamente cada uso porque consume `fleet_assignments`.
+- No se incorporaron todavía las 7 fotos ni ubicación dentro de la confirmación: deben implementarse como flujo guiado previo a confirmar, para no simular una inspección que aún no existe.
+- Siguiente paso exacto: flujo guiado 7/7 + ubicación puntual en toma/devolución, preservando originales; después combustible y documentos.
+- Sin cambios en Materiales/Bodega/Rendiciones ni variables Vercel.
+- Build/tsc continúan pendientes de Preview/CI por ausencia de terminal del repositorio.
