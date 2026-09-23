@@ -38,12 +38,21 @@ export async function createCampaign(formData:FormData) {
 }
 
 export async function closeCampaign(formData:FormData) {
-  const {supabase}=await context(["Admin Total","Gerencia","Admin"]); const id=String(formData.get("campaign_id")||"");
+  const {supabase,user,profile}=await context(["Admin Total","Gerencia","Admin"]); const id=String(formData.get("campaign_id")||"");
+  if(!id)throw new Error("Campaña no válida");
+  const {data:campaign,error:campaignError}=await supabase.from("campaigns").select("id,status,label,closed_at").eq("id",id).single();
+  if(campaignError||!campaign)throw new Error("Campaña no encontrada");
+  if(campaign.status==="Cerrada")return;
+  if(campaign.status!=="Abierta")throw new Error(`La campaña está en estado ${campaign.status} y no puede cerrarse`);
   const {data:pending}=await supabase.from("campaign_installations").select("installation_id,status,justification").eq("campaign_id",id).neq("status","Completada");
   const unjustified=(pending||[]).filter((x:any)=>!x.justification?.trim());
   if(unjustified.length) throw new Error(`No se puede cerrar: ${unjustified.length} instalaciones están pendientes sin justificación`);
-  const {error}=await supabase.from("campaigns").update({status:"Cerrada",closed_at:new Date().toISOString()}).eq("id",id);
-  if(error) throw error; revalidatePath("/");
+  const closedAt=new Date().toISOString();
+  const {data:closed,error}=await supabase.from("campaigns").update({status:"Cerrada",closed_at:closedAt}).eq("id",id).eq("status","Abierta").select("id,status,closed_at").maybeSingle();
+  if(error)throw error;
+  if(!closed)throw new Error("La campaña cambió mientras se cerraba. Actualiza la pantalla y vuelve a revisar");
+  await audit(supabase,user,profile,{module:"Campañas",action:"Cerrar campaña",entity_table:"campaigns",entity_id:id,old_data:{status:campaign.status,closed_at:campaign.closed_at},new_data:{status:closed.status,closed_at:closed.closed_at}});
+  revalidatePath("/");
 }
 
 export async function derivePurchaseOrder(formData:FormData) {

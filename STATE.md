@@ -20,6 +20,13 @@
 - `/api/supply/context` valida usuario activo, devuelve el rol efectivo y restringe proveedores/datos comerciales de OC cuando el perfil no administra abastecimiento.
 - La autorización de servidor de `createPurchaseOrderFromConsolidated` y `createFreePurchaseOrder` se mantiene como segunda barrera; no se amplió `SUPPLY_MANAGE` ni `PURCHASE_ORDER_MANAGE`.
 
+## Cierre manual de campañas · 2026-09-23
+- El cierre exige confirmación explícita en interfaz y revalidación completa en servidor.
+- El servidor acepta únicamente campañas `Abierta`, vuelve a comprobar instalaciones completadas o justificadas y actualiza con condición de concurrencia `status = Abierta`.
+- Reintentar una campaña ya cerrada es idempotente; no se altera su histórico.
+- El cierre queda registrado en `activity_log` con estado y fecha anterior/nueva.
+- El control que solo expande la tarjeta se renombró a `Ver/Ocultar instalaciones` para no confundirlo con el cierre operacional.
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.
