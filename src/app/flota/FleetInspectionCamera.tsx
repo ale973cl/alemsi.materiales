@@ -6,26 +6,47 @@ type View="Frontal"|"Trasera"|"Lateral izquierdo"|"Lateral derecho"|"Tablero"|"I
 const VIEWS:View[]=["Frontal","Trasera","Lateral izquierdo","Lateral derecho","Tablero","Interior 1","Interior 2"];
 type Props={vehicleId:string;plate:string;driverName:string;currentKm:number;assignmentId?:string;mode:"take"|"return";startKm?:number};
 
-function Silhouette({view,overlay=false}:{view:View;overlay?:boolean}){
- if(view==="Tablero")return <div className={overlay?"fleetDashOverlay":"fleetInteriorGuide"}>ODO<br/><small>Tablero completo</small></div>;
- if(view.startsWith("Interior"))return <div className={overlay?"fleetDashOverlay":"fleetInteriorGuide"}>▱<br/><small>{view}</small></div>;
-
- const side=view.startsWith("Lateral");
+function Silhouette({view}:{view:View}){
  const flip=view==="Lateral derecho";
- if(side){
-  return <img
-   className={(overlay?"fleetImageOverlay ":"fleetImageGuide ")+(flip?"fleetGuideFlip":"")}
-   src="/flota/guias/pickup-lateral-izquierda.svg"
-   alt={view}
-  />;
+ if(view==="Lateral izquierdo"||view==="Lateral derecho"){
+  return <svg className={"fleetSvgGuide "+(flip?"fleetGuideFlip":"")} viewBox="0 0 220 120" aria-label={view}>
+   <g fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 79 L28 55 Q33 45 49 42 L83 36 L139 36 Q154 37 164 49 L178 62 L203 67 L208 84 L196 88 H27 L16 84 Z"/>
+    <path d="M52 43 L84 39 V63 H38 Q42 50 52 43 Z M90 39 H137 Q149 40 158 52 L168 63 H90 Z"/>
+    <path d="M84 39 V87 M139 38 L142 87 M34 64 H177 M65 69 H75 M111 69 H121"/>
+    <circle cx="52" cy="87" r="16"/><circle cx="52" cy="87" r="8"/><circle cx="174" cy="87" r="16"/><circle cx="174" cy="87" r="8"/>
+   </g>
+  </svg>;
+ }
+ if(view==="Tablero"){
+  return <svg className="fleetSvgGuide" viewBox="0 0 220 120" aria-label={view}>
+   <g fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 44 Q110 20 208 44 L201 94 H19 Z"/><circle cx="62" cy="68" r="27"/><circle cx="62" cy="68" r="18"/>
+    <path d="M62 50 V86 M44 68 H80"/><rect x="102" y="43" width="49" height="28" rx="3"/><path d="M109 80 H145 M109 87 H145 M163 49 H194 M163 59 H194 M163 69 H194"/>
+   </g>
+  </svg>;
+ }
+ if(view==="Interior 1"){
+  return <svg className="fleetSvgGuide" viewBox="0 0 220 120" aria-label={view}>
+   <g fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 102 L33 32 Q110 15 187 32 L202 102"/><rect x="42" y="43" width="49" height="38" rx="12"/><rect x="129" y="43" width="49" height="38" rx="12"/>
+    <path d="M37 105 Q39 76 66 76 Q93 76 96 105 M124 105 Q127 76 153 76 Q181 76 183 105 M101 65 H119 V105"/>
+   </g>
+  </svg>;
+ }
+ if(view==="Interior 2"){
+  return <svg className="fleetSvgGuide" viewBox="0 0 220 120" aria-label={view}>
+   <g fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 101 L29 38 Q110 20 191 38 L202 101"/><rect x="42" y="43" width="38" height="30" rx="10"/><rect x="91" y="39" width="38" height="30" rx="10"/><rect x="140" y="43" width="38" height="30" rx="10"/>
+    <path d="M32 104 Q34 69 61 69 H159 Q186 69 188 104 M83 70 V104 M137 70 V104"/>
+   </g>
+  </svg>;
  }
  const rear=view==="Trasera";
- return <svg className={overlay?"fleetSvgOverlay":"fleetSvgGuide"} viewBox="0 0 170 120" aria-label={view}>
+ return <svg className="fleetSvgGuide" viewBox="0 0 170 120" aria-label={view}>
   <g fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-   <path d="M35 17 Q85 8 135 17 L146 100 H24 Z"/>
-   <path d="M42 25 H128 L133 64 H37 Z"/>
-   <path d="M85 24 V64"/><path d="M24 76 H146 M31 100 H139"/>
-   <path d="M25 57 H15 V76 H25 M145 57 H155 V76 H145"/>
+   <path d="M35 17 Q85 8 135 17 L146 100 H24 Z"/><path d="M42 25 H128 L133 64 H37 Z"/><path d="M85 24 V64"/>
+   <path d="M24 76 H146 M31 100 H139"/><path d="M25 57 H15 V76 H25 M145 57 H155 V76 H145"/>
    {rear?<><path d="M85 65 V98"/><rect x="65" y="75" width="40" height="13" rx="2"/><path d="M39 72 V87 M131 72 V87"/></>:<><path d="M40 71 H61 M109 71 H130"/><path d="M62 81 H108"/><path d="M74 67 H96"/></>}
   </g>
  </svg>;
