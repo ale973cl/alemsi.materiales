@@ -58,6 +58,15 @@
 - **Clasificación:** `OPERATIVA` por persistencia/consulta y datos reales; apertura visual autenticada queda pendiente de Preview.
 - **Commit de sección:** `8e5adf36db07ee305d3c222a1c61f5c3530aa7fd`.
 
+## Sección 2 · documentos privados y versionado · 2026-09-24
+- **Roto:** `document_file` era un input pasivo; `saveFleetDocument()` ignoraba el binario, no existía bucket documental Flota, no se completaban `storage_path`/`source_file_name`, el texto decía que el lector estaba pendiente y no existía “Ver archivo”.
+- **Reparado:** selección PDF/JPG/PNG/WEBP → lector visual real → propuesta editable → confirmación humana → carga privada → registro `fleet_documents` → recarga → tabla de vigentes/históricos → URL firmada “Ver archivo”.
+- **Versionado:** cada renovación crea una ruta y versión nueva, cierra `is_current` de la anterior y conserva el original histórico; si falla el insert se elimina el objeto huérfano y se restaura la versión anterior.
+- **Archivos modificados:** `src/app/api/flota/read-document/route.ts`, `src/app/flota/FleetDocumentForm.tsx`, `src/app/flota/actions.ts`, `src/app/flota/[id]/page.tsx`, `src/app/flota/flota.css`, `supabase/migrations/20260924024520_fleet_documents_storage_v1.sql`, `STATE.md`.
+- **Supabase aplicado:** bucket privado `fleet-documents`, máximo 10 MB, MIME PDF/JPG/PNG/WEBP; políticas SELECT/INSERT para acceso efectivo a Flota y DELETE limitado al propietario para compensar cargas huérfanas. No se modificaron tablas de Materiales/Rendiciones.
+- **Prueba realizada:** consulta real confirmó bucket privado y tres políticas; `npx tsc --noEmit` limpio; `npm run build` limpio e incluye `/api/flota/read-document`.
+- **Clasificación:** `OPERATIVA` por código, persistencia configurada y build; falta prueba autenticada de archivo real en Preview para certificación final.
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.
