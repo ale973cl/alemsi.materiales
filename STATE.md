@@ -23,6 +23,7 @@
 - **Prueba realizada:** consulta real confirmó SRYB45 con 7 fotos Toma + 7 Devolución en una asignación; `npx tsc --noEmit` limpio; `npm run build` limpio con dos warnings preexistentes de Autoprefixer (`align-items: end`).
 - **Clasificación:** foto maestra `OPERATIVA` por código/build; galería histórica `OPERATIVA` con datos reales consultados; captura Android queda pendiente de prueba interactiva en Preview.
 - **Pendiente:** validar visualmente el Preview autenticado en Android/Chrome y comprobar apertura de las 14 URLs firmadas con sesión real.
+- **Commit de sección:** `d06c417ab0a10cdb555bfd34b38b37858ba36c2a`.
 
 ## Sección 3 · toma y devolución · 2026-09-23
 - **Roto:** coexistían `takeVehicle/returnVehicle` y `takeVehicleWithPhotos/returnVehicleWithPhotos`; solo el segundo par está referenciado por la UI. El flujo activo no leía Tablero, no exigía confirmación humana de km, no registraba GPS y podía dejar asignación/fotos parciales ante ciertos errores.
@@ -34,6 +35,7 @@
 - **Prueba realizada:** `npx tsc --noEmit` limpio; el endpoint valida sesión, servicio Flota, MIME/tamaño y normaliza toda lectura dudosa a nulo/Revisar.
 - **Riesgo pendiente / REQUIERE DECISIÓN:** una garantía atómica frente a dos POST realmente simultáneos requiere RPC transaccional y unicidad por `(assignment_id, phase, position)`. No se ejecutó DDL.
 - **Pendiente:** prueba interactiva del permiso Cámara/GPS y del lector en Preview Android; comprobar propuesta contra foto real de Tablero sin aceptar automáticamente ningún número.
+- **Commit de sección:** `1978fef5856d9ce6375a9f0b114213627c0dfc2d`.
 
 ## Sección 5 · combustible, mantenciones y deterioros · 2026-09-23
 - **Roto:** existían tablas pero ningún formulario/handler operativo; no había consulta posterior ni cierre humano de deterioros.
@@ -45,6 +47,7 @@
 - **Prueba realizada:** `npx tsc --noEmit` limpio; validaciones de MIME/tamaño, valores no negativos, permisos y compensación de archivo si falla el insert.
 - **Limitación actual:** `fleet_maintenance` no tiene columna estructurada `provider`; se guarda de forma trazable como `Proveedor/taller: …` dentro de `notes`. Agregar columna sería DDL y no se ejecutó.
 - **Pendiente:** prueba funcional autenticada en Preview con un registro de cada tipo y apertura posterior del comprobante (la UI de archivo firmado se completa junto al bloque documental).
+- **Commit de sección:** `d662c0f7cf644c6e25be0d58a8e45ffa7a8ea8c3`.
 
 ## Sección 4 · historial operacional · 2026-09-23
 - **Roto:** HISTORIAL solo mezclaba usos, mantenciones y deterioros como textos; no mostraba RUT, distancia, fotos recuperables, documentos, ubicaciones ni combustible.
@@ -53,6 +56,7 @@
 - **Tablas utilizadas:** `fleet_assignments`, `fleet_photos`, `fleet_documents`, `fleet_locations`, `fleet_fuel_entries`, `fleet_maintenance`, `fleet_deterioration_events`.
 - **Prueba realizada:** consulta real de SRYB45 confirmó una asignación con 14 evidencias; `npx tsc --noEmit` limpio.
 - **Clasificación:** `OPERATIVA` por persistencia/consulta y datos reales; apertura visual autenticada queda pendiente de Preview.
+- **Commit de sección:** `8e5adf36db07ee305d3c222a1c61f5c3530aa7fd`.
 
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
