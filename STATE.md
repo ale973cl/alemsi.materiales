@@ -35,6 +35,17 @@
 - **Riesgo pendiente / REQUIERE DECISIÓN:** una garantía atómica frente a dos POST realmente simultáneos requiere RPC transaccional y unicidad por `(assignment_id, phase, position)`. No se ejecutó DDL.
 - **Pendiente:** prueba interactiva del permiso Cámara/GPS y del lector en Preview Android; comprobar propuesta contra foto real de Tablero sin aceptar automáticamente ningún número.
 
+## Sección 5 · combustible, mantenciones y deterioros · 2026-09-23
+- **Roto:** existían tablas pero ningún formulario/handler operativo; no había consulta posterior ni cierre humano de deterioros.
+- **Reparado:** OPERACIÓN registra combustible con litros, monto, odómetro, nivel, lleno/parcial y comprobante de imagen privado. Rendimiento se calcula únicamente al cerrar ciclos confirmados FULL→FULL, sumando litros desde el lleno anterior.
+- **Reparado:** mantenciones registran fecha, km, trabajo, proveedor/taller rotulado en `notes`, costo, comprobante de imagen y próximo servicio por km/fecha; `next_oil_change_km` se actualiza cuando corresponde.
+- **Reparado:** deterioros solo se crean como `Posible deterioro` para revisión; una persona autorizada resuelve Confirmado / No corresponde / Ya existía / Reparado-cerrado. No hay acusación ni diagnóstico automático.
+- **Archivos modificados:** `src/app/flota/operation-actions.ts`, `src/app/flota/[id]/page.tsx`, `src/app/flota/flota.css`, `STATE.md`.
+- **Persistencia utilizada:** `fleet_fuel_entries`, `fleet_maintenance`, `fleet_deterioration_events`, `fleet_vehicles`; comprobantes JPG/PNG/WEBP bajo `fleet-photos/evidence`. Sin cambios de esquema.
+- **Prueba realizada:** `npx tsc --noEmit` limpio; validaciones de MIME/tamaño, valores no negativos, permisos y compensación de archivo si falla el insert.
+- **Limitación actual:** `fleet_maintenance` no tiene columna estructurada `provider`; se guarda de forma trazable como `Proveedor/taller: …` dentro de `notes`. Agregar columna sería DDL y no se ejecutó.
+- **Pendiente:** prueba funcional autenticada en Preview con un registro de cada tipo y apertura posterior del comprobante (la UI de archivo firmado se completa junto al bloque documental).
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.
