@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
+import {useFormStatus} from "react-dom";
 import {takeVehicleWithPhotos,returnVehicleWithPhotos} from "./photo-actions";
 
 type View="Frontal"|"Trasera"|"Lateral izquierdo"|"Lateral derecho"|"Tablero"|"Interior 1"|"Interior 2";
@@ -62,11 +63,13 @@ export default function FleetInspectionCamera({vehicleId,plate,driverName,curren
  return <form action={action} className="fleetInspectionForm"><input type="hidden" name="vehicle_id" value={vehicleId}/>{assignmentId&&<input type="hidden" name="assignment_id" value={assignmentId}/>}
   <div className="fleetActionForm">{mode==="take"?<><label>Conductor<input value={driverName} readOnly/></label><label>RUT<input name="driver_rut" required placeholder="12.345.678-9"/></label><label>Kilometraje inicial<input name="start_km" type="number" min={currentKm} defaultValue={currentKm} required/></label></>:<label>Kilometraje final<input name="end_km" type="number" min={startKm??currentKm} defaultValue={currentKm} required/></label>}<label>Observación<textarea name="comment" placeholder="Sin observaciones"/></label></div>
   <div className="fleetInspectionHead"><div><span className="fleetStepLabel">INSPECCIÓN · {plate}</span><h3>{complete}/7 fotografías</h3></div><progress value={complete} max={7}/></div>
-  <div className="fleetInspectionGrid">{VIEWS.map((view,i)=><button type="button" key={view} className={"fleetInspectionTile "+(photos[i]?"fleetInspectionDone":"")} onClick={()=>openCamera(i)}>{photos[i]?<img src={URL.createObjectURL(photos[i]!)} alt={"Foto "+view}/>:<Silhouette view={view}/>}<strong>{photos[i]?"✓ ":""}{view}</strong><span>{photos[i]?"Tocar para repetir":"Tocar para abrir cámara"}</span></button>)}</div>
+  <div className="fleetInspectionGrid">{VIEWS.map((view,i)=><button type="button" key={view} className={"fleetInspectionTile "+(photos[i]?"fleetInspectionDone":"")} onClick={()=>openCamera(i)}>{photos[i]?<PhotoPreview file={photos[i]!} alt={"Foto "+view}/>:<Silhouette view={view}/>}<strong>{photos[i]?"✓ ":""}{view}</strong><span>{photos[i]?"Tocar para reemplazar":"Tocar para abrir cámara"}</span></button>)}</div>
   {photos.map((file,i)=>file&&<FileBridge key={i} file={file} name={"photo_"+i}/>)}
   {photos[4]&&<div className="fleetDashboardRead"><strong>Tablero capturado</strong><span>La foto queda guardada como evidencia. La lectura automática de odómetro se activará cuando el motor visual esté conectado; no se inventan valores.</span></div>}
-  {error&&<p className="fleetCameraError">{error}</p>}<button className="fleetBtn fleetBtnPrimary fleetConfirmInspection" disabled={complete!==7}>{mode==="take"?"Confirmar toma":"Confirmar devolución"} · {complete}/7</button>
+  {error&&<p className="fleetCameraError">{error}</p>}<InspectionSubmit complete={complete} mode={mode}/>
   {active!==null&&<div className="fleetCameraModal" role="dialog" aria-modal="true"><div className="fleetCameraTop"><strong>{plate} · {VIEWS[active]} · {active+1}/7</strong><button type="button" onClick={closeCamera}>Cerrar</button></div><div className="fleetCameraViewport"><video ref={videoRef} autoPlay playsInline muted/><p>{VIEWS[active]==="Tablero"?"Encuadra el tablero completo y deja visible el odómetro":"Encuadra el vehículo completo"}</p></div><button type="button" className="fleetShutter" onClick={capture} aria-label="Tomar foto"><span/></button></div>}
  </form>
 }
 function FileBridge({file,name}:{file:File;name:string}){const ref=useRef<HTMLInputElement>(null);useEffect(()=>{if(!ref.current)return;const dt=new DataTransfer();dt.items.add(file);ref.current.files=dt.files},[file]);return <input ref={ref} type="file" name={name} hidden readOnly/>}
+function PhotoPreview({file,alt}:{file:File;alt:string}){const [url,setUrl]=useState("");useEffect(()=>{const next=URL.createObjectURL(file);setUrl(next);return()=>URL.revokeObjectURL(next)},[file]);return url?<img src={url} alt={alt}/>:null}
+function InspectionSubmit({complete,mode}:{complete:number;mode:"take"|"return"}){const {pending}=useFormStatus();return <button className="fleetBtn fleetBtnPrimary fleetConfirmInspection" disabled={complete!==7||pending}>{pending?"Guardando fotos y registro…":(mode==="take"?"Confirmar toma":"Confirmar devolución")+" · "+complete+"/7"}</button>}

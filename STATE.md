@@ -13,6 +13,17 @@
 - Criterio de cierre: pantalla → handler → Server Action/API → Storage/Supabase → persistencia → recarga → consulta visible → histórico.
 - Cada sección se mantendrá en un commit reversible con auditoría, pruebas, tablas/buckets, archivos y pendientes documentados.
 
+## Sección 1 · vehículo y fotografías · 2026-09-23
+- **Roto:** las 14 evidencias reales de SRYB45 estaban en `fleet-photos` y `fleet_photos`, pero el expediente no las consultaba ni permitía abrirlas después de recargar; los avisos posteriores a Tomar/Devolver mostraban un error genérico equivocado.
+- **Reparado:** HISTORIAL agrupa cada asignación, separa Toma/Devolución, muestra 7/7, fecha/hora, posición y miniaturas con URL firmada privada; cada evidencia puede abrirse sin convertir el bucket en público.
+- **Reparado:** la cámara conserva captura → previsualización → reemplazo → 7/7 → confirmación, libera las URL temporales del navegador y bloquea doble clic mientras guarda Storage/DB.
+- **Foto maestra:** se mantiene el atlas local `public/flota/fleet-profiles.webp` con recorte específico para LKDG49, RBHJ56, SRYB45, SPZJ40 y TTHG24, visible tanto en Nuestros vehículos como en el expediente. Ninguna inspección modifica `cover_photo_path`.
+- **Archivos modificados:** `src/app/flota/[id]/page.tsx`, `src/app/flota/FleetInspectionCamera.tsx`, `src/app/flota/flota.css`, `STATE.md`.
+- **Persistencia utilizada:** bucket privado `fleet-photos`; tablas `fleet_photos`, `fleet_assignments`, `fleet_vehicles`. Sin cambios de esquema ni datos.
+- **Prueba realizada:** consulta real confirmó SRYB45 con 7 fotos Toma + 7 Devolución en una asignación; `npx tsc --noEmit` limpio; `npm run build` limpio con dos warnings preexistentes de Autoprefixer (`align-items: end`).
+- **Clasificación:** foto maestra `OPERATIVA` por código/build; galería histórica `OPERATIVA` con datos reales consultados; captura Android queda pendiente de prueba interactiva en Preview.
+- **Pendiente:** validar visualmente el Preview autenticado en Android/Chrome y comprobar apertura de las 14 URLs firmadas con sesión real.
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.
