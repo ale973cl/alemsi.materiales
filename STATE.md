@@ -1,8 +1,17 @@
 # STATE — ALEMSI Materiales
 ## Estado actual
-- **Rama activa:** feature/rediseno-shell-navegacion
-- **Último cambio:** feedback inmediato de botones + galería inferior de comprobantes en Rendiciones.
-- **Fecha:** 2026-09-21
+- **Rama activa:** `audit/flota-cierre-integral`.
+- **Base funcional:** `feature/flota-siluetas-modelos` en `2793cfd9bb661f2d41389cb862bfca2ecdb17b87`.
+- **Punto de restauración verificable:** `backup/pre-cierre-flota-20260923` en `2793cfd9bb661f2d41389cb862bfca2ecdb17b87`, confirmado en remoto antes de modificar código.
+- **Objetivo actual:** cierre integral de la extensión independiente Control de Flota, por secciones y sin integrar datos con Materiales, Bodega ni Rendiciones.
+- **Fecha:** 2026-09-23
+
+## Inicio cierre integral Flota · 2026-09-23
+- `main` y Production quedan fuera de alcance; no se realizará merge automático.
+- Se trabaja incrementalmente sobre la arquitectura existente de `feature/flota-siluetas-modelos`; no se reconstruye Flota desde cero.
+- No se autoriza DDL adicional sin demostrar primero que las tablas/campos actuales son insuficientes y solicitar decisión explícita.
+- Criterio de cierre: pantalla → handler → Server Action/API → Storage/Supabase → persistencia → recarga → consulta visible → histórico.
+- Cada sección se mantendrá en un commit reversible con auditoría, pruebas, tablas/buckets, archivos y pendientes documentados.
 
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
