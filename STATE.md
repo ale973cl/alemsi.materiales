@@ -46,6 +46,14 @@
 - **Limitación actual:** `fleet_maintenance` no tiene columna estructurada `provider`; se guarda de forma trazable como `Proveedor/taller: …` dentro de `notes`. Agregar columna sería DDL y no se ejecutó.
 - **Pendiente:** prueba funcional autenticada en Preview con un registro de cada tipo y apertura posterior del comprobante (la UI de archivo firmado se completa junto al bloque documental).
 
+## Sección 4 · historial operacional · 2026-09-23
+- **Roto:** HISTORIAL solo mezclaba usos, mantenciones y deterioros como textos; no mostraba RUT, distancia, fotos recuperables, documentos, ubicaciones ni combustible.
+- **Reparado:** cada asignación muestra persona, RUT, toma/devolución, km inicial/final, distancia y galerías 7/7 por fase. La cronología agrega versiones documentales, GPS puntual, cargas de combustible, mantenciones y estados de deterioro.
+- **Archivos modificados:** `src/app/flota/[id]/page.tsx`, `STATE.md`.
+- **Tablas utilizadas:** `fleet_assignments`, `fleet_photos`, `fleet_documents`, `fleet_locations`, `fleet_fuel_entries`, `fleet_maintenance`, `fleet_deterioration_events`.
+- **Prueba realizada:** consulta real de SRYB45 confirmó una asignación con 14 evidencias; `npx tsc --noEmit` limpio.
+- **Clasificación:** `OPERATIVA` por persistencia/consulta y datos reales; apertura visual autenticada queda pendiente de Preview.
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.
