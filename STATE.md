@@ -24,6 +24,17 @@
 - **Clasificación:** foto maestra `OPERATIVA` por código/build; galería histórica `OPERATIVA` con datos reales consultados; captura Android queda pendiente de prueba interactiva en Preview.
 - **Pendiente:** validar visualmente el Preview autenticado en Android/Chrome y comprobar apertura de las 14 URLs firmadas con sesión real.
 
+## Sección 3 · toma y devolución · 2026-09-23
+- **Roto:** coexistían `takeVehicle/returnVehicle` y `takeVehicleWithPhotos/returnVehicleWithPhotos`; solo el segundo par está referenciado por la UI. El flujo activo no leía Tablero, no exigía confirmación humana de km, no registraba GPS y podía dejar asignación/fotos parciales ante ciertos errores.
+- **Reparado:** el circuito activo analiza únicamente la captura `Tablero` mediante el motor visual central ya configurado; propone odómetro total, combustible y RPM, limita testigos a `Revisar`, admite nulos y obliga a confirmar/corregir km antes de enviar.
+- **Reparado:** GPS puntual se solicita una vez al abrir Tomar/Devolver; si el navegador concede permiso se inserta en `fleet_locations`, y si lo deniega la operación continúa sin seguimiento permanente.
+- **Reparado:** doble clic queda bloqueado en cliente; devolución detecta evidencia ya existente y los fallos secuenciales compensan filas/objetos antes de devolver error. Las funciones antiguas se conservan sin borrar porque la limpieza debe ser un commit independiente.
+- **Archivos modificados:** `src/app/api/flota/read-dashboard/route.ts`, `src/app/flota/FleetInspectionCamera.tsx`, `src/app/flota/photo-actions.ts`, `src/app/flota/flota.css`, `STATE.md`.
+- **Persistencia utilizada:** `fleet_assignments`, `fleet_photos`, `fleet_locations`, `fleet_vehicles`, bucket privado `fleet-photos`. Sin cambios de esquema ni variables nuevas.
+- **Prueba realizada:** `npx tsc --noEmit` limpio; el endpoint valida sesión, servicio Flota, MIME/tamaño y normaliza toda lectura dudosa a nulo/Revisar.
+- **Riesgo pendiente / REQUIERE DECISIÓN:** una garantía atómica frente a dos POST realmente simultáneos requiere RPC transaccional y unicidad por `(assignment_id, phase, position)`. No se ejecutó DDL.
+- **Pendiente:** prueba interactiva del permiso Cámara/GPS y del lector en Preview Android; comprobar propuesta contra foto real de Tablero sin aceptar automáticamente ningún número.
+
 ## Última tarea completada
 - Solo Rendiciones fue modificada.
 - Admin Total, Finanzas y Gerencia comparten la visual completa de bandeja general.
