@@ -622,3 +622,15 @@
 - No se modifican datos existentes, lector, esquema Supabase ni main/Production.
 - **Pendiente:** validar Preview, build y tsc.
 - **Variables Vercel:** ninguna nueva.
+
+
+## Flota · presentación íntegra en español y hora Chile continental · 2026-09-25
+- **Rama:** `fix/flota-presentacion-es-cl`, creada desde `fix/flota-documentos-espanol` SHA `515fe0e8bb5e3ef082fab7abb43baa105903cdb4`.
+- **Punto de restauración:** SHA base `515fe0e8bb5e3ef082fab7abb43baa105903cdb4`.
+- Cambio exclusivamente de presentación: las claves internas, IDs, nombres de columnas y contratos del código permanecen intactos.
+- El detalle documental ya no expone claves técnicas desconocidas en inglés; los campos conocidos usan etiqueta española y cualquier campo no catalogado se presenta como “Dato del documento”.
+- Fechas/horas visibles del expediente usan explícitamente `America/Santiago` con formato `es-CL`, respetando automáticamente horario de verano/invierno de Chile continental.
+- No se alteran timestamps almacenados, fechas documentales, datos existentes ni fecha actual del sistema.
+- No se modificó esquema Supabase, lector documental, reglas de negocio ni main/Production.
+- **Pendiente:** validar Preview, build y tsc.
+- **Variables Vercel:** ninguna nueva.
