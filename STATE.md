@@ -600,3 +600,15 @@
 - No se modificó esquema Supabase, no se copiaron ni eliminaron fotografías y no se tocó main/Production.
 - **Pendiente de validación:** Preview, apertura de las 14 fotos SRYB45, 7 fotos SPZJ40, `npm run build` y `npx tsc --noEmit`.
 - **Variables Vercel:** ninguna nueva.
+
+
+## Flota · detalle de atenciones documentales · 2026-09-25
+- **Rama:** `fix/flota-atenciones-documentales`, creada desde `fix/flota-recuperar-registro-fotografico` SHA `d4dff6a04cf3bf78ae988ab57947c8b110b10220`.
+- **Punto de restauración:** SHA base `d4dff6a04cf3bf78ae988ab57947c8b110b10220`.
+- La tarjeta Atenciones deja de contar como vencimiento los documentos que legítimamente no tienen `expires_at` (por ejemplo Padrón y Cambio de aceite).
+- Solo se consideran alertas documentales los documentos vigentes con fecha de expiración y estado warning/critical según la regla existente.
+- El contador de documentos es desplegable: al pulsarlo muestra tipo, fecha de vencimiento y estado; cada fila navega al expediente documental del mismo vehículo.
+- Verificación de datos SPZJ40: Permiso y SOAP vencen 31-03-2027; Revisión técnica 28-02-2028; Padrón y Cambio de aceite no tienen vencimiento documental. Con la fecha actual 25-09-2026 ninguno corresponde a vencimiento próximo según la regla vigente.
+- No se modificó esquema Supabase, datos, reglas de kilometraje, fotos ni main/Production.
+- **Pendiente:** validar Preview, build y tsc.
+- **Variables Vercel:** ninguna nueva.

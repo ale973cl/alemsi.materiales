@@ -103,3 +103,12 @@
 .fleetHistoryPhoto span{display:grid;place-items:center;padding:8px;text-align:center}
 .fleetHistoryPhoto strong{font-weight:800;line-height:1.2}
 @media(max-width:760px){.fleetUseRecord{padding:12px}.fleetUseRecordHead{flex-direction:column}.fleetHistoryGallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+
+/* Detalle navegable de atenciones documentales */
+.fleetAttentionDetails{margin-top:10px;border-top:1px solid #c8dce8;padding-top:10px}
+.fleetAttentionDetails summary{cursor:pointer;font-weight:800;color:#173650}
+.fleetAttentionList{display:grid;gap:7px;margin-top:10px}
+.fleetAttentionItem{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid #c8dce8;border-radius:10px;text-decoration:none;color:#173650;background:#fff}
+.fleetAttentionItem span:first-child{display:grid;gap:2px}
+.fleetAttentionItem small{font-size:12px;color:#49667b}
+@media(max-width:760px){.fleetAttentionItem{align-items:flex-start}}
