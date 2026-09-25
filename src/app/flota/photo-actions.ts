@@ -53,14 +53,16 @@ export async function takeVehicleWithPhotos(formData:FormData){
 }
 export async function returnVehicleWithPhotos(formData:FormData){
  const {supabase,user}=await context();const vehicleId=textValue(formData.get("vehicle_id"),80),assignmentId=textValue(formData.get("assignment_id"),80);
- const comment=textValue(formData.get("comment"));const endKm=Number(formData.get("end_km"));const photos=photoFiles(formData);
- if(!vehicleId||!assignmentId||!Number.isInteger(endKm)||endKm<0)throw new Error("Kilometraje de devolución inválido.");
+ const comment=textValue(formData.get("comment"));const endKmRaw=textValue(formData.get("end_km"),20);const endKm=Number(endKmRaw);const fuelLevel=textValue(formData.get("return_fuel_level"),20);const photos=photoFiles(formData);
+ const allowedFuelLevels=new Set(["Vacío","1/4","1/2","3/4","Lleno"]);
+ if(!vehicleId||!assignmentId||endKmRaw===""||!Number.isInteger(endKm)||endKm<0)throw new Error("Debes ingresar un kilometraje final válido.");
+ if(!allowedFuelLevels.has(fuelLevel))throw new Error("Debes registrar el nivel de combustible al devolver.");
  const {data:a}=await supabase.from("fleet_assignments").select("id,start_km,returned_at").eq("id",assignmentId).eq("vehicle_id",vehicleId).maybeSingle();
  if(!a)redirect("/flota/"+vehicleId+"?notice=assignment-missing");
  if(a.returned_at){revalidatePath("/flota/"+vehicleId);redirect("/flota/"+vehicleId+"?notice=already-returned");}
  if(endKm<Number(a.start_km))throw new Error("El kilometraje final no puede ser menor al inicial.");
  try{await uploadInspection(supabase,user.id,vehicleId,assignmentId,"Devolución",photos);}catch{throw new Error("No fue posible guardar la inspección fotográfica de devolución.");}
- const now=new Date().toISOString();const {error}=await supabase.from("fleet_assignments").update({returned_at:now,end_km:endKm,return_comment:comment||null,status:"Devuelto"}).eq("id",assignmentId).is("returned_at",null);
+ const now=new Date().toISOString();const {error}=await supabase.from("fleet_assignments").update({returned_at:now,end_km:endKm,return_fuel_level:fuelLevel,return_comment:comment||null,status:"Devuelto"}).eq("id",assignmentId).is("returned_at",null);
  if(error)throw new Error("No fue posible cerrar el uso.");
  const {error:updateError}=await supabase.from("fleet_vehicles").update({status:"Disponible",current_km:endKm,updated_at:now}).eq("id",vehicleId);
  if(updateError)throw new Error("La devolución quedó registrada, pero no se pudo actualizar el vehículo.");

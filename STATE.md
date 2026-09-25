@@ -646,3 +646,15 @@
 - No se modificaron IDs, datos, esquema Supabase, lector documental, archivos almacenados, reglas de negocio ni main/Production.
 - **Pendiente:** validar Preview en escritorio/móvil, build y tsc.
 - **Variables Vercel:** ninguna nueva.
+
+
+## Flota · devolución exige kilometraje y combustible · 2026-09-25
+- **Rama:** `fix/flota-devolucion-km-combustible`, creada desde `fix/flota-detalle-documento-inline` SHA `a777d5b5401af1a7c199b7e09660667010f88ab3`.
+- **Punto de restauración:** SHA base `a777d5b5401af1a7c199b7e09660667010f88ab3`.
+- Autorizado explícitamente cambio mínimo de esquema: migración `flota_return_fuel_level_v1` agrega `fleet_assignments.return_fuel_level` con valores Vacío, 1/4, 1/2, 3/4 o Lleno.
+- La devolución exige en interfaz y servidor: 7/7 fotografías, kilometraje final válido no inferior al inicial y nivel de combustible seleccionado.
+- El nivel de combustible queda asociado al mismo uso y se muestra en Historial. No se usa `fleet_fuel_entries` para evitar crear cargas ficticias de 0 litros/$0.
+- No se modificaron documentos, lector, cambio de aceite, Materiales, Rendiciones, main ni Production.
+- **Siguiente paso:** validar Preview Android/escritorio y luego implementar ubicación puntual de Toma/Devolución como tarea y commit separados.
+- **Pendiente técnico:** `npm run build` y `npx tsc --noEmit` no están certificados localmente en esta sesión; validar deployment Vercel.
+- **Variables Vercel:** ninguna nueva.
