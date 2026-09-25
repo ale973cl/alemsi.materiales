@@ -588,3 +588,15 @@
 - No se modificó esquema Supabase, registros existentes, captura 7/7, documentos ni Production/main.
 - **Pendiente de validación:** Preview, `npm run build` y `npx tsc --noEmit`.
 - **Variables Vercel:** ninguna nueva para esta corrección.
+
+
+## Flota · recuperación registro fotográfico 7/7 · 2026-09-25
+- **Rama:** `fix/flota-recuperar-registro-fotografico`, creada desde `fix/flota-resumen-km-datos-confirmados` SHA `7a52b8212f8bc7675078cbb37017c6d826b1d32e`.
+- **Punto de restauración:** SHA base `7a52b8212f8bc7675078cbb37017c6d826b1d32e`.
+- Se verificó antes de modificar que los registros fotográficos NO se perdieron: SPZJ40 conserva 7 fotos de Toma y SRYB45 conserva 14 fotos, 7 de Toma + 7 de Devolución, vinculadas a sus assignment_id.
+- La vista Historial consulta `fleet_photos`, genera URLs temporales privadas desde `fleet-photos` y agrupa las evidencias por uso y fase.
+- Cada uso muestra contador de fotos y galerías Toma/Devolución en el orden Frontal, Trasera, Lateral izquierdo, Lateral derecho, Tablero, Interior 1, Interior 2.
+- Las miniaturas abren la evidencia original mediante URL firmada temporal; no se hace público el bucket.
+- No se modificó esquema Supabase, no se copiaron ni eliminaron fotografías y no se tocó main/Production.
+- **Pendiente de validación:** Preview, apertura de las 14 fotos SRYB45, 7 fotos SPZJ40, `npm run build` y `npx tsc --noEmit`.
+- **Variables Vercel:** ninguna nueva.

@@ -90,3 +90,16 @@
 
 .fleetDocNameButton{border:0;background:transparent;padding:0;text-align:left;color:#173650;cursor:pointer;font:inherit}.fleetDocNameButton strong{display:block;font-weight:800;text-decoration:underline;text-underline-offset:3px}.fleetDocNameButton small{display:block;margin-top:4px;color:#5f7280}.fleetDocumentDetail{margin-top:18px;padding:18px;border:1px solid #c8dce8;border-radius:14px;background:#fff}.fleetDocumentDetail .fleetSectionHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.fleetReaderHint button{margin-top:10px}.fleetReaderHint button:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:700px){.fleetDocRow{grid-template-columns:1fr;gap:8px}.fleetDocumentDetail .fleetSectionHead{flex-direction:column}.fleetDocumentDetail .fleetBtn{width:100%;text-align:center}}
+
+/* Registro fotográfico 7/7 asociado a cada uso */
+.fleetUseRecord{margin:14px 0;padding:16px;border:1px solid #c8dce8;border-radius:14px;background:#fff}
+.fleetUseRecordHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.fleetUseRecordHead h3,.fleetPhotoPhase h4{margin:4px 0 8px;color:#173650}
+.fleetUseRecordHead p{margin:0;color:#173650}
+.fleetPhotoPhase{margin-top:16px}
+.fleetHistoryGallery{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.fleetHistoryPhoto{display:flex;flex-direction:column;gap:5px;text-decoration:none;color:#173650;font-size:12px}
+.fleetHistoryPhoto img,.fleetHistoryPhoto span{width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid #c8dce8;border-radius:10px;background:#f7fbfc}
+.fleetHistoryPhoto span{display:grid;place-items:center;padding:8px;text-align:center}
+.fleetHistoryPhoto strong{font-weight:800;line-height:1.2}
+@media(max-width:760px){.fleetUseRecord{padding:12px}.fleetUseRecordHead{flex-direction:column}.fleetHistoryGallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}

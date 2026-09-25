@@ -16,12 +16,13 @@ export default async function VehiclePage({params,searchParams}:{params:Promise<
  const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)redirect("/login");
  const {data:p}=await supabase.from("user_profiles").select("full_name,role,active").eq("id",user.id).single();if(!p?.active)redirect("/");
  const {data:allowed}=await supabase.rpc("has_additional_service_access",{p_service_code:"flota"});if(p.role!=="Admin Total"&&!allowed)redirect("/");
- const [{data:v},{data:docs},{data:uses},{data:maintenance},{data:damage}]=await Promise.all([
+ const [{data:v},{data:docs},{data:uses},{data:maintenance},{data:damage},{data:photos}]=await Promise.all([
   supabase.from("fleet_vehicles").select("*").eq("id",id).maybeSingle(),
   supabase.from("fleet_documents").select("*").eq("vehicle_id",id).order("created_at",{ascending:false}),
   supabase.from("fleet_assignments").select("*").eq("vehicle_id",id).order("taken_at",{ascending:false}),
   supabase.from("fleet_maintenance").select("*").eq("vehicle_id",id).order("service_date",{ascending:false}),
-  supabase.from("fleet_deterioration_events").select("*").eq("vehicle_id",id).order("created_at",{ascending:false})
+  supabase.from("fleet_deterioration_events").select("*").eq("vehicle_id",id).order("created_at",{ascending:false}),
+  supabase.from("fleet_photos").select("id,assignment_id,phase,position,storage_path,captured_at").eq("vehicle_id",id).order("captured_at",{ascending:true})
  ]);if(!v)notFound();
  let coverUrl:string|null=null;
  if(v.cover_photo_path){
@@ -30,6 +31,10 @@ export default async function VehiclePage({params,searchParams}:{params:Promise<
  }
  const currentUse=(uses??[]).find((x:any)=>!x.returned_at);const currentDocs=(docs??[]).filter((x:any)=>x.is_current);
  const documentRows=await Promise.all((docs??[]).map(async(d:any)=>{let file_url:string|null=null;if(d.storage_path){const {data}=await supabase.storage.from("fleet-documents").createSignedUrl(String(d.storage_path),3600);file_url=data?.signedUrl??null;}return {...d,file_url};}));
+ const photoRows=await Promise.all((photos??[]).map(async(photo:any)=>{const {data}=await supabase.storage.from("fleet-photos").createSignedUrl(String(photo.storage_path),3600);return {...photo,file_url:data?.signedUrl??null};}));
+ const photosByAssignment=new Map<string,any[]>();
+ for(const photo of photoRows){const list=photosByAssignment.get(photo.assignment_id)??[];list.push(photo);photosByAssignment.set(photo.assignment_id,list);}
+ const photoOrder=["Frontal","Trasera","Lateral izquierdo","Lateral derecho","Tablero","Interior 1","Interior 2"];
  const openDamage=(damage??[]).filter((x:any)=>["Posible deterioro","Deterioro confirmado"].includes(x.status));
  const latestOilDocument=currentDocs.find((d:any)=>d.kind==="MANTENCION"&&d.reader_status==="Confirmado");
  const confirmedNextOilKm=latestOilDocument?.confirmed_data?.next_service_km;
@@ -53,6 +58,8 @@ export default async function VehiclePage({params,searchParams}:{params:Promise<
   <article className="fleetDetailCard"><h3>Atenciones</h3><strong>{openDamage.length}</strong><p>deterioro(s) abiertos</p><p>{currentDocs.filter((d:any)=>documentAlert(d.expires_at)!=="ok").length} documento(s) próximos a vencer o sin vigencia.</p></article>
  </section></>}
  {view==="documentos"&&<section><div className="fleetSectionHead"><h2>Expediente documental</h2><p>Lista de documentos del vehículo. Selecciona el nombre para revisar su detalle o abre directamente el archivo original.</p></div><FleetDocumentManager vehicle={{id:v.id,plate:v.plate,chassis_vin:v.chassis_vin||null}} templates={FLEET_DOCUMENT_TEMPLATES} documents={documentRows} saveAction={saveFleetDocument}/></section>}
- {view==="historial"&&<section><h2>Historial cronológico</h2><div className="fleetTimeline">{[...(uses??[]).map((x:any)=>({at:x.taken_at,title:"Uso de vehículo",body:x.driver_name+" · "+km(x.start_km)+(x.returned_at?" → "+km(x.end_km):" · En curso")})),...(maintenance??[]).map((x:any)=>({at:x.service_date,title:x.activity,body:(x.cost!=null?"$ "+Number(x.cost).toLocaleString("es-CL")+" · ":"")+km(x.odometer_km)})),...(damage??[]).map((x:any)=>({at:x.created_at,title:x.status,body:x.review_note||x.ai_summary||"Revisión visual"}))].sort((a,b)=>String(b.at).localeCompare(String(a.at))).map((e,i)=><article key={i}><small>{dateTime(e.at)}</small><h3>{e.title}</h3><p>{e.body}</p></article>)}</div>{!(uses?.length||maintenance?.length||damage?.length)&&<div className="fleetEmpty"><p>Aún no existen eventos para este vehículo.</p></div>}</section>}
+ {view==="historial"&&<section><h2>Historial cronológico</h2>
+ {(uses??[]).map((x:any)=>{const assignmentPhotos=photosByAssignment.get(x.id)??[];const takePhotos=assignmentPhotos.filter((p:any)=>p.phase==="Toma").sort((a:any,b:any)=>photoOrder.indexOf(a.position)-photoOrder.indexOf(b.position));const returnPhotos=assignmentPhotos.filter((p:any)=>p.phase==="Devolución").sort((a:any,b:any)=>photoOrder.indexOf(a.position)-photoOrder.indexOf(b.position));return <article className="fleetUseRecord" key={x.id}><div className="fleetUseRecordHead"><div><small>{dateTime(x.taken_at)}</small><h3>Uso de vehículo</h3><p><b>{x.driver_name}</b> · {km(x.start_km)}{x.returned_at?" → "+km(x.end_km):" · En curso"}</p></div><span className="fleetStatus fleetStatusOk">{assignmentPhotos.length}/14 fotos</span></div>{takePhotos.length>0&&<div className="fleetPhotoPhase"><h4>Toma · {takePhotos.length}/7</h4><div className="fleetHistoryGallery">{takePhotos.map((photo:any)=><a key={photo.id} href={photo.file_url||"#"} target="_blank" rel="noreferrer" className="fleetHistoryPhoto">{photo.file_url?<img src={photo.file_url} alt={"Toma · "+photo.position}/>:<span>Imagen no disponible</span>}<strong>{photo.position}</strong></a>)}</div></div>}{returnPhotos.length>0&&<div className="fleetPhotoPhase"><h4>Devolución · {returnPhotos.length}/7</h4><div className="fleetHistoryGallery">{returnPhotos.map((photo:any)=><a key={photo.id} href={photo.file_url||"#"} target="_blank" rel="noreferrer" className="fleetHistoryPhoto">{photo.file_url?<img src={photo.file_url} alt={"Devolución · "+photo.position}/>:<span>Imagen no disponible</span>}<strong>{photo.position}</strong></a>)}</div></div>}</article>})}
+ <div className="fleetTimeline">{[...(maintenance??[]).map((x:any)=>({at:x.service_date,title:x.activity,body:(x.cost!=null?"$ "+Number(x.cost).toLocaleString("es-CL")+" · ":"")+km(x.odometer_km)})),...(damage??[]).map((x:any)=>({at:x.created_at,title:x.status,body:x.review_note||x.ai_summary||"Revisión visual"}))].sort((a,b)=>String(b.at).localeCompare(String(a.at))).map((e,i)=><article key={i}><small>{dateTime(e.at)}</small><h3>{e.title}</h3><p>{e.body}</p></article>)}</div>{!(uses?.length||maintenance?.length||damage?.length)&&<div className="fleetEmpty"><p>Aún no existen eventos para este vehículo.</p></div>}</section>}
  </main>;
 }
