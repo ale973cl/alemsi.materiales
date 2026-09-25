@@ -577,3 +577,14 @@
 - **Base de datos verificada antes de cambiar:** `fleet_documents` ya contiene `storage_path`, `source_file_name`, `extracted_data`, `confirmed_data`, `reader_status`, vigencias y versiones. El bucket privado `fleet-documents` ya existe. **No se realizó cambio de esquema Supabase.**
 - **Pendiente siguiente:** alertas automáticas por correo con idempotencia para documentos 20/15/10/5 días y aceite 750/500/250 km, propagación del peor semáforo al listado general de vehículos, y validación E2E en Preview/Android.
 - **Variables:** el lector existente requiere `GEMINI_API_KEY` y opcionalmente `GEMINI_RECEIPT_MODEL`; respaldo de imágenes usa `OPENROUTER_API_KEY`. Verificar su presencia en Preview antes de prueba real; no inventar claves.
+
+
+## Flota · corrección kilometraje ficha principal · 2026-09-25
+- **Rama:** `fix/flota-resumen-km-datos-confirmados`, creada desde `fix/flota-documentos-lector-expediente` SHA `1f7a8cf835fd219e3a25eff41ba9632016051cc6`.
+- **Punto de restauración:** SHA base `1f7a8cf835fd219e3a25eff41ba9632016051cc6`.
+- Se verificó la fuente real antes de modificar: `fleet_vehicles.current_km` conserva el kilometraje operacional y el Cambio de aceite confirmado guarda `confirmed_data.next_service_km`.
+- La ficha principal ahora obtiene el próximo cambio de aceite desde el documento `MANTENCION` vigente y confirmado; solo usa `fleet_vehicles.next_oil_change_km` como respaldo cuando no existe dato documental válido.
+- Caso real verificado SPZJ40: kilometraje actual 156.332 km; Cambio de aceite confirmado a 150.648 km; próximo servicio confirmado 160.648 km. La ficha debe mostrar 4.316 km restantes.
+- No se modificó esquema Supabase, registros existentes, captura 7/7, documentos ni Production/main.
+- **Pendiente de validación:** Preview, `npm run build` y `npx tsc --noEmit`.
+- **Variables Vercel:** ninguna nueva para esta corrección.
