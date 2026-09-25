@@ -634,3 +634,15 @@
 - No se modificó esquema Supabase, lector documental, reglas de negocio ni main/Production.
 - **Pendiente:** validar Preview, build y tsc.
 - **Variables Vercel:** ninguna nueva.
+
+
+## Flota · detalle documental inmediatamente bajo el registro · 2026-09-25
+- **Rama:** `fix/flota-detalle-documento-inline`, creada desde `fix/flota-presentacion-es-cl` SHA `4f42fcdecabaf60a94d703fb125c66320285a262`.
+- **Punto de restauración:** SHA base `4f42fcdecabaf60a94d703fb125c66320285a262`.
+- Cambio exclusivamente de navegación/presentación en Documentos: al pulsar Padrón, Permiso, SOAP, Revisión técnica, Seguro, Cambio de aceite u otro registro, su detalle se despliega inmediatamente debajo de la fila seleccionada.
+- Se elimina el comportamiento que renderizaba el detalle al final de toda la lista y obligaba a hacer scroll.
+- Pulsar nuevamente el nombre o “Cerrar detalle” contrae el expediente. “Abrir original” conserva su comportamiento.
+- La solución es genérica por `doc.id`: aplica a todos los vehículos existentes y nuevos, sin hardcodear patentes ni tipos de vehículo.
+- No se modificaron IDs, datos, esquema Supabase, lector documental, archivos almacenados, reglas de negocio ni main/Production.
+- **Pendiente:** validar Preview en escritorio/móvil, build y tsc.
+- **Variables Vercel:** ninguna nueva.
