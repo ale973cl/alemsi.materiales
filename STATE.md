@@ -612,3 +612,13 @@
 - No se modificó esquema Supabase, datos, reglas de kilometraje, fotos ni main/Production.
 - **Pendiente:** validar Preview, build y tsc.
 - **Variables Vercel:** ninguna nueva.
+
+
+## Flota · etiquetas documentales en español · 2026-09-25
+- **Rama:** `fix/flota-documentos-espanol`, creada desde `fix/flota-atenciones-documentales` SHA `4e1e9bf48af9fa79a89e2c9a23b7c81e6739b56a`.
+- **Punto de restauración:** SHA base `4e1e9bf48af9fa79a89e2c9a23b7c81e6739b56a`.
+- El detalle documental mantiene las claves técnicas internas para compatibilidad, pero nunca las expone como etiquetas al usuario.
+- Se traducen VIN/Chasis, Año, Marca, Color, Modelo, Propietario, Patente, Motor, Fecha de emisión, RUT propietario, Vigente desde, Vencimiento, Tipo de vehículo y campos de revisión, permiso, seguros y Cambio de aceite.
+- No se modifican datos existentes, lector, esquema Supabase ni main/Production.
+- **Pendiente:** validar Preview, build y tsc.
+- **Variables Vercel:** ninguna nueva.
