@@ -564,3 +564,16 @@
 - Commit de código: bf062ac7697c7cfe3cfde166f400656d952d2bb5.
 - Validación manual pendiente: entrar como Supervisora asignada, abrir p3, pulsar Iniciar ruta y comprobar ruta + 2 guías En tránsito después de recargar.
 - Variables Vercel: ninguna nueva.
+
+
+## Flota · Tanda 1.3 expediente documental y lector conectado · 2026-09-25
+- **Rama de tarea:** `fix/flota-documentos-lector-expediente`, creada desde `feature/flota-siluetas-modelos` en SHA de restauración `3abe09dc5d9103baa032c064dc82a88480f89187`. `main` y Production no se tocaron.
+- **Diagnóstico confirmado:** Flota tenía plantillas en `src/modules/flota/document-reader.ts`, pero no existía endpoint visual ni persistencia del archivo seleccionado. `saveFleetDocument` ignoraba `document_file`.
+- **Corrección implementada:** endpoint `/api/flota/leer-documento` reutiliza la estrategia Gemini → OpenRouter ya existente en Rendiciones; PDF se envía a Gemini y el respaldo OpenRouter se limita a imágenes.
+- **Archivo original:** se guarda en bucket privado existente `fleet-documents` (PDF/JPG/PNG/WEBP, máximo 10 MB), registrando `storage_path` y `source_file_name`. La UI genera URL firmada temporal para abrir el original.
+- **Lista documental:** Documentos registrados queda como lista compacta. El nombre abre el detalle individual; `Abrir original` abre el PDF/imagen del mismo registro. Las renovaciones mantienen versiones anteriores.
+- **Campos por tipo:** la interfaz usa `FLEET_DOCUMENT_TEMPLATES`; no muestra un formulario único de seguro para todos los documentos. La lectura solo propone datos y exige confirmación humana.
+- **Semáforo base:** documentos: amarillo desde 20 días y rojo desde 5 días/vencido. Cambio de aceite: amarillo desde 750 km y rojo desde 250 km o sobrepasado.
+- **Base de datos verificada antes de cambiar:** `fleet_documents` ya contiene `storage_path`, `source_file_name`, `extracted_data`, `confirmed_data`, `reader_status`, vigencias y versiones. El bucket privado `fleet-documents` ya existe. **No se realizó cambio de esquema Supabase.**
+- **Pendiente siguiente:** alertas automáticas por correo con idempotencia para documentos 20/15/10/5 días y aceite 750/500/250 km, propagación del peor semáforo al listado general de vehículos, y validación E2E en Preview/Android.
+- **Variables:** el lector existente requiere `GEMINI_API_KEY` y opcionalmente `GEMINI_RECEIPT_MODEL`; respaldo de imágenes usa `OPENROUTER_API_KEY`. Verificar su presencia en Preview antes de prueba real; no inventar claves.

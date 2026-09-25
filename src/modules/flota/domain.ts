@@ -26,7 +26,7 @@ export function documentAlert(expiresAt?:string|null,now=new Date()):FleetAlertL
  return"ok";
 }
 export function mileageAlert(currentKm:number,targetKm?:number|null):FleetAlertLevel{
- const left=remainingKm(currentKm,targetKm);if(left==null)return"ok";if(left<=500)return"critical";if(left<=750)return"warning";return"ok";
+ const left=remainingKm(currentKm,targetKm);if(left==null)return"ok";if(left<=250)return"critical";if(left<=750)return"warning";return"ok";
 }
 export function confirmedFuelEfficiency(startKm:number,endKm:number,liters:number){
  if(endKm<=startKm||liters<=0)return null;return (endKm-startKm)/liters;

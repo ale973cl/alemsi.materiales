@@ -87,28 +87,25 @@ export async function updateVehicle(formData:FormData){
 
 export async function saveFleetDocument(formData:FormData){
  const {supabase,user}=await requireFleetUser();
- const vehicleId=clean(formData.get("vehicle_id"),80);
- const kind=clean(formData.get("kind"),50).toUpperCase();
- const template=FLEET_DOCUMENT_TEMPLATES.find(t=>t.kind===kind);
- if(!vehicleId||!template)throw new Error("Selecciona un tipo de documento válido.");
- const {data:v}=await supabase.from("fleet_vehicles").select("id,plate,chassis_vin").eq("id",vehicleId).maybeSingle();
- if(!v)throw new Error("Vehículo no encontrado.");
- const validFrom=clean(formData.get("valid_from"),10)||null;
- const expiresAt=clean(formData.get("expires_at"),10)||null;
- const insurer=clean(formData.get("insurer"),100)||null;
- const policyNumber=clean(formData.get("policy_number"),100)||null;
- const documentPlate=clean(formData.get("document_plate"),10).toUpperCase().replace(/[^A-Z0-9]/g,"")||null;
- const documentVin=clean(formData.get("document_vin"),40).toUpperCase()||null;
- const assistancePhone=clean(formData.get("assistance_phone"),50)||null;
- const instructions=clean(formData.get("instructions"),1500)||null;
- const services=String(formData.get("services")??"").split(",").map(x=>x.trim()).filter(Boolean).slice(0,30);
+ const vehicleId=clean(formData.get("vehicle_id"),80),kind=clean(formData.get("kind"),50).toUpperCase();
+ const template=FLEET_DOCUMENT_TEMPLATES.find(t=>t.kind===kind);if(!vehicleId||!template)throw new Error("Selecciona un tipo de documento válido.");
+ const file=formData.get("document_file");if(!(file instanceof File)||file.size===0)throw new Error("Debes adjuntar el archivo original.");
+ const allowed=new Set(["application/pdf","image/jpeg","image/png","image/webp"]);if(!allowed.has(file.type)||file.size>10*1024*1024)throw new Error("El archivo debe ser PDF, JPG, PNG o WEBP y pesar máximo 10 MB.");
+ const {data:v}=await supabase.from("fleet_vehicles").select("id,plate,chassis_vin").eq("id",vehicleId).maybeSingle();if(!v)throw new Error("Vehículo no encontrado.");
+ let confirmed:Record<string,unknown>={};try{const raw=String(formData.get("confirmed_data_json")||"{}");const parsed=JSON.parse(raw);if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed))confirmed=parsed;}catch{throw new Error("Los datos confirmados del documento no son válidos.");}
+ const documentPlate=clean(formData.get("field_plate"),10).toUpperCase().replace(/[^A-Z0-9]/g,"")||String(confirmed.plate||"").toUpperCase().replace(/[^A-Z0-9]/g,"")||null;
+ const documentVin=clean(formData.get("field_vin"),40).toUpperCase()||String(confirmed.vin||"").toUpperCase()||null;
+ const value=(...keys:string[])=>{for(const key of keys){const v=confirmed[key];if(typeof v==="string"&&v.trim())return v.trim();}return null};
+ const validFrom=value("valid_from","issued_at","reviewed_at","service_date"),expiresAt=value("expires_at");
+ const insurer=value("insurer"),policyNumber=value("policy_number"),assistancePhone=value("assistance_phone"),instructions=value("instructions");
+ const services=String(confirmed.services||"").split(",").map(x=>x.trim()).filter(Boolean).slice(0,30);
  const requiresReview=Boolean((documentPlate&&documentPlate!==v.plate)||(documentVin&&v.chassis_vin&&documentVin!==String(v.chassis_vin).toUpperCase()));
- const {data:current}=await supabase.from("fleet_documents").select("id,version").eq("vehicle_id",vehicleId).eq("kind",kind).eq("is_current",true).maybeSingle();
- const nextVersion=(current?.version??0)+1;
- if(current){const {error:e}=await supabase.from("fleet_documents").update({is_current:false,updated_at:new Date().toISOString()}).eq("id",current.id);if(e)throw new Error("No fue posible cerrar la versión anterior.");}
- const confirmedData={plate:documentPlate,vin:documentVin,valid_from:validFrom,expires_at:expiresAt,insurer,policy_number:policyNumber,assistance_phone:assistancePhone,instructions,services};
- const {error}=await supabase.from("fleet_documents").insert({vehicle_id:vehicleId,kind,version:nextVersion,valid_from:validFrom,expires_at:expiresAt,insurer,policy_number:policyNumber,assistance_phone:assistancePhone,instructions,services,document_plate:documentPlate,document_vin:documentVin,confirmed_data:confirmedData,reader_status:requiresReview?"Revisar":"Confirmado",is_current:true,created_by:user.id});
- if(error)throw new Error("No fue posible guardar el documento.");
- revalidatePath("/flota/"+vehicleId);
- redirect("/flota/"+vehicleId+"?vista=documentos&notice=document-saved");
+ const {data:current}=await supabase.from("fleet_documents").select("id,version").eq("vehicle_id",vehicleId).eq("kind",kind).eq("is_current",true).maybeSingle();const nextVersion=(current?.version??0)+1;
+ const safeName=file.name.replace(/[^a-zA-Z0-9._-]+/g,"-").slice(-120)||"documento";const storagePath=vehicleId+"/"+kind.toLowerCase()+"/v"+nextVersion+"-"+crypto.randomUUID()+"-"+safeName;
+ const {error:uploadError}=await supabase.storage.from("fleet-documents").upload(storagePath,file,{contentType:file.type,upsert:false});if(uploadError)throw new Error("No fue posible guardar el archivo original.");
+ if(current){const {error:e}=await supabase.from("fleet_documents").update({is_current:false,updated_at:new Date().toISOString()}).eq("id",current.id);if(e){await supabase.storage.from("fleet-documents").remove([storagePath]);throw new Error("No fue posible cerrar la versión anterior.");}}
+ const normalizedConfirmed={...confirmed,plate:documentPlate,vin:documentVin,valid_from:validFrom,expires_at:expiresAt,insurer,policy_number:policyNumber,assistance_phone:assistancePhone,instructions,services};
+ const {error}=await supabase.from("fleet_documents").insert({vehicle_id:vehicleId,kind,version:nextVersion,valid_from:validFrom,expires_at:expiresAt,insurer,policy_number:policyNumber,assistance_phone:assistancePhone,instructions,services,storage_path:storagePath,source_file_name:file.name.slice(0,240),document_plate:documentPlate,document_vin:documentVin,confirmed_data:normalizedConfirmed,reader_status:requiresReview?"Revisar":"Confirmado",is_current:true,created_by:user.id});
+ if(error){await supabase.storage.from("fleet-documents").remove([storagePath]);if(current)await supabase.from("fleet_documents").update({is_current:true,updated_at:new Date().toISOString()}).eq("id",current.id);throw new Error("No fue posible guardar el documento.");}
+ revalidatePath("/flota");revalidatePath("/flota/"+vehicleId);redirect("/flota/"+vehicleId+"?vista=documentos&notice=document-saved");
 }

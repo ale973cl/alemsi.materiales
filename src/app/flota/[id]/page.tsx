@@ -5,6 +5,7 @@ import {documentAlert,mileageAlert,remainingKm} from "@/modules/flota/domain";
 import {updateVehicle,saveFleetDocument} from "../actions";
 import FleetInspectionCamera from "../FleetInspectionCamera";
 import {FLEET_DOCUMENT_TEMPLATES} from "@/modules/flota/document-reader";
+import FleetDocumentManager from "../FleetDocumentManager";
 import "../flota.css";
 
 type View="resumen"|"documentos"|"historial";
@@ -27,7 +28,9 @@ export default async function VehiclePage({params,searchParams}:{params:Promise<
   if(String(v.cover_photo_path).startsWith("/"))coverUrl=String(v.cover_photo_path);
   else{const {data:cover}=await supabase.storage.from("fleet-photos").createSignedUrl(String(v.cover_photo_path),3600);coverUrl=cover?.signedUrl??null;}
  }
- const currentUse=(uses??[]).find((x:any)=>!x.returned_at);const currentDocs=(docs??[]).filter((x:any)=>x.is_current);const openDamage=(damage??[]).filter((x:any)=>["Posible deterioro","Deterioro confirmado"].includes(x.status));
+ const currentUse=(uses??[]).find((x:any)=>!x.returned_at);const currentDocs=(docs??[]).filter((x:any)=>x.is_current);
+ const documentRows=await Promise.all((docs??[]).map(async(d:any)=>{let file_url:string|null=null;if(d.storage_path){const {data}=await supabase.storage.from("fleet-documents").createSignedUrl(String(d.storage_path),3600);file_url=data?.signedUrl??null;}return {...d,file_url};}));
+ const openDamage=(damage??[]).filter((x:any)=>["Posible deterioro","Deterioro confirmado"].includes(x.status));
  const oil=mileageAlert(Number(v.current_km),v.next_oil_change_km==null?null:Number(v.next_oil_change_km));const left=remainingKm(Number(v.current_km),v.next_oil_change_km==null?null:Number(v.next_oil_change_km));
  return <main className="fleetPage"><header className="fleetHero"><div><p className="fleetEyebrow">ALEMSI · FLOTA</p><h1>{v.plate} · {v.label}</h1><p>{v.brand||""} {v.model||""}{v.year?" · "+v.year:""}</p></div><div className="fleetHeroActions"><Link className="fleetBtn fleetBtnGhost" href="/flota">Volver a Flota</Link></div></header>
  <section className="fleetVehicleProfileHero" aria-label={"Fotografía de "+v.plate}>
@@ -42,18 +45,7 @@ export default async function VehiclePage({params,searchParams}:{params:Promise<
   <article className="fleetDetailCard"><h3>Kilometraje</h3><strong>{km(Number(v.current_km))}</strong><p>Próximo aceite: {km(v.next_oil_change_km)}</p><span className={"fleetStatus "+(oil==="critical"?"fleetStatusCritical":oil==="warning"?"fleetStatusWarning":"fleetStatusOk")}>{left==null?"Sin programación":left<=0?"Servicio requerido":km(left)+" restantes"}</span></article>
   <article className="fleetDetailCard"><h3>Atenciones</h3><strong>{openDamage.length}</strong><p>deterioro(s) abiertos</p><p>{currentDocs.filter((d:any)=>documentAlert(d.expires_at)!=="ok").length} documento(s) próximos a vencer o sin vigencia.</p></article>
  </section></>}
- {view==="documentos"&&<section><div className="fleetSectionHead"><h2>Expediente documental</h2><p>Acceso rápido, vigencias y renovaciones. El lector dirigido usa plantillas específicas y los datos siempre se confirman antes de operar.</p></div>
- <details className="fleetCreate" open={currentDocs.length===0}><summary>+ Agregar / renovar documento</summary><form action={saveFleetDocument} className="fleetCreateGrid"><input type="hidden" name="vehicle_id" value={v.id}/>
- <label>Tipo<select name="kind" required defaultValue=""><option value="" disabled>Seleccionar</option>{FLEET_DOCUMENT_TEMPLATES.map(t=><option key={t.kind} value={t.kind}>{t.kind.replaceAll("_"," ")}</option>)}</select></label>
- <label>Archivo para lectura<input name="document_file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"/></label>
- <div className="fleetReaderHint"><strong>LECTOR DIRIGIDO</strong><span>Preparado para identificar tipo, patente/VIN, fechas y campos prioritarios. La conexión al motor visual queda pendiente; por ahora confirma los datos leídos antes de guardar.</span></div>
- <label>Patente del documento<input name="document_plate" defaultValue={v.plate}/></label><label>VIN / Chasis<input name="document_vin" defaultValue={v.chassis_vin||""}/></label>
- <label>Vigente desde<input name="valid_from" type="date"/></label><label>Vence<input name="expires_at" type="date"/></label>
- <label>Aseguradora<input name="insurer"/></label><label>N° póliza<input name="policy_number"/></label><label>Teléfono asistencia<input name="assistance_phone"/></label>
- <label className="fleetWide">Servicios / coberturas<input name="services" placeholder="Grúa, auto de reemplazo, asistencia legal..."/></label>
- <label className="fleetWide">Instrucciones<textarea name="instructions" placeholder="Indicaciones rápidas para usar el seguro o asistencia"/></label>
- <button className="fleetBtn fleetBtnPrimary">Confirmar y guardar período</button></form></details>
- <h2>Documentos vigentes</h2>{currentDocs.length===0?<div className="fleetEmpty"><h3>Sin documentos registrados</h3><p>Agrega el primer documento. Las renovaciones conservarán las versiones anteriores.</p></div>:currentDocs.map((d:any)=><article className="fleetDocRow" key={d.id}><div><strong>{String(d.kind).replaceAll("_"," ")}</strong><small>Versión {d.version}{d.policy_number?" · "+d.policy_number:""}</small></div><span>{d.valid_from||"—"} → {d.expires_at||"Sin vencimiento"}</span><span className={"fleetStatus "+(documentAlert(d.expires_at)==="critical"?"fleetStatusCritical":documentAlert(d.expires_at)==="warning"?"fleetStatusWarning":"fleetStatusOk")}>{documentAlert(d.expires_at)==="ok"?"Vigente":"Requiere atención"}</span><div className="fleetDocServices">{(d.services??[]).slice(0,6).map((x:string)=><span key={x}>✓ {x}</span>)}</div></article>)}</section>}
+ {view==="documentos"&&<section><div className="fleetSectionHead"><h2>Expediente documental</h2><p>Lista de documentos del vehículo. Selecciona el nombre para revisar su detalle o abre directamente el archivo original.</p></div><FleetDocumentManager vehicle={{id:v.id,plate:v.plate,chassis_vin:v.chassis_vin||null}} templates={FLEET_DOCUMENT_TEMPLATES} documents={documentRows} saveAction={saveFleetDocument}/></section>}
  {view==="historial"&&<section><h2>Historial cronológico</h2><div className="fleetTimeline">{[...(uses??[]).map((x:any)=>({at:x.taken_at,title:"Uso de vehículo",body:x.driver_name+" · "+km(x.start_km)+(x.returned_at?" → "+km(x.end_km):" · En curso")})),...(maintenance??[]).map((x:any)=>({at:x.service_date,title:x.activity,body:(x.cost!=null?"$ "+Number(x.cost).toLocaleString("es-CL")+" · ":"")+km(x.odometer_km)})),...(damage??[]).map((x:any)=>({at:x.created_at,title:x.status,body:x.review_note||x.ai_summary||"Revisión visual"}))].sort((a,b)=>String(b.at).localeCompare(String(a.at))).map((e,i)=><article key={i}><small>{dateTime(e.at)}</small><h3>{e.title}</h3><p>{e.body}</p></article>)}</div>{!(uses?.length||maintenance?.length||damage?.length)&&<div className="fleetEmpty"><p>Aún no existen eventos para este vehículo.</p></div>}</section>}
  </main>;
 }
