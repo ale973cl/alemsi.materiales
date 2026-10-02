@@ -366,3 +366,14 @@
 - La regla es común para todos los perfiles que ya tengan acceso; no modifica permisos, carencia, máximos autorizados, Server Actions ni Supabase.
 - Rama de tarea: fix/levantamientos-vista-independiente, creada desde feature/rediseno-shell-navegacion. main/Production no se modifican.
 - Validación pendiente: Preview Vercel en escritorio y Android; esta sesión no dispone de terminal local para ejecutar npm run build ni npx tsc --noEmit.
+
+
+## Optimización global de login · 2026-10-02
+- Rama: `fix/login-latencia-global`, creada desde `audit/cierre-operacional-pre-merge`; `main` y Production no se modifican.
+- Evidencia previa: un `POST /login` en Preview registró 6,31 s de ejecución y 7,8 s de respuesta total.
+- Causa eliminada en esta tarea: el middleware ejecutaba `auth.getClaims()` contra Supabase incluso para rutas públicas como `/login`, antes de comprobar que la ruta era pública.
+- `/login`, `/auth` y `/conteo/` ahora salen inmediatamente del middleware sin consulta remota de sesión. Las rutas protegidas conservan exactamente la validación `getClaims()` y redirección a `/login`.
+- El flujo de autenticación, alias por perfil, contraseña, cookies, roles y permisos no cambia.
+- No hay cambios de esquema Supabase ni variables Vercel.
+- Validación pendiente: Preview, comparar duración de `POST /login` antes/después y ejecutar `npm run build` + `npx tsc --noEmit`.
+- Siguiente medición: separar latencia del POST de autenticación de la carga de `/`, que actualmente inicializa el dashboard y sus consultas operacionales.
