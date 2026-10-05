@@ -389,3 +389,16 @@
 - No hay cambios de Supabase, esquema, variables Vercel ni reglas de negocio.
 - **Validación requerida:** Preview READY, build/TypeScript y prueba Android/escritorio.
 - **Decisión posterior:** continuar con Stitch para Instalaciones/Toma solo si este piloto mejora UX sin duplicación ni retrabajo relevante.
+
+
+## Rediseño responsive Campañas · escritorio · 2026-10-05
+- **Rama:** `ui/campanas-responsive-stitch-escritorio`, creada desde el piloto móvil `3335c7e697ff645d30e3935c3fc390a0b474f954`; `main` y Production no se modifican.
+- **Objetivo:** validar una presentación de escritorio realmente mejorada antes de extender el patrón a Toma de Datos.
+- Se conserva íntegramente `CampaignsModule`, sus callbacks, Server Actions, permisos, estados y reglas de negocio.
+- Escritorio reorganiza las campañas para aprovechar el ancho: identidad/contexto, estado, métricas y acciones quedan jerarquizados sin el gran espacio muerto observado.
+- Nueva campaña conserva los mismos filtros Región → Ciudad → Cliente → Contrato → Estado y la selección real por instalación; solo cambia densidad, agrupación y uso del espacio.
+- Instalaciones abiertas conservan la matriz Cliente | Contrato | Instalación | Estado | Acción | Accesos.
+- El piloto móvil anterior se mantiene como base; no se crean rutas, tablas, dependencias ni lógica paralela.
+- Sin cambios de Supabase, esquema, autorización ni variables Vercel.
+- **Validación pendiente:** Preview escritorio 1366 px y Android; `npm run build` y `npx tsc --noEmit`.
+- **Siguiente paso:** si escritorio y móvil son aprobados, aplicar el mismo lenguaje visual a Instalaciones/Toma sin reconstruir su lógica.
