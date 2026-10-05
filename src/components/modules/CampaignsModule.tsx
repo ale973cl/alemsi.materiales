@@ -740,7 +740,7 @@ export default function CampaignsModule({
                   ),
                 }));
             return (
-              <article key={c.id} className="campaignCard">
+              <article key={c.id} className={`campaignCard ${campaignOpen ? "is-open" : ""}`}>
                 <div className="campaignCardHead">
                   <span>
                     <b>{info.name}</b>
@@ -748,6 +748,17 @@ export default function CampaignsModule({
                       {info.periodicity} · {info.clientCount ?? 1} clientes ·{" "}
                       {total} instalaciones
                     </small>
+                    {(c.contracts?.clients?.legal_name || c.contracts?.name) && (
+                      <small className="campaignContext">
+                        {c.contracts?.clients?.legal_name || "Cliente"}
+                        {c.contracts?.name && (
+                          <>
+                            <span aria-hidden="true">›</span>
+                            {c.contracts.name}
+                          </>
+                        )}
+                      </small>
+                    )}
                   </span>
                   <em
                     className={

@@ -377,3 +377,15 @@
 - No hay cambios de esquema Supabase ni variables Vercel.
 - Validación pendiente: Preview, comparar duración de `POST /login` antes/después y ejecutar `npm run build` + `npx tsc --noEmit`.
 - Siguiente medición: separar latencia del POST de autenticación de la carga de `/`, que actualmente inicializa el dashboard y sus consultas operacionales.
+
+
+## Piloto Stitch · Campañas móvil · 2026-10-05
+- **Rama:** `ui/campanas-mobile-stitch-pilot`, creada desde `fix/login-latencia-global` SHA `3ae46afbb8e246e8f9756cdd86bd1a83a02254ca`; `main` y Production no se modifican.
+- **Objetivo:** comprobar si Stitch aporta valor como referencia visual integrándolo sobre el módulo real de Campañas, sin crear rutas ni componentes paralelos.
+- **Referencia visual:** Stitch “Campañas — Listado Móvil”, ID `13f8b1a6253c482e8dd4ef770ddb9eb5`.
+- **Cambio:** en móvil, tarjetas compactas, contexto real Cliente → Contrato cuando está disponible, estado visible, acciones táctiles de 44 px y métricas desplegadas al abrir la campaña.
+- Se conserva `CampaignsModule`, callbacks, Server Actions, permisos, selección, cierre, justificación, eliminación y navegación a levantamientos.
+- Escritorio queda fuera del nuevo bloque CSS, limitado a `max-width: 760px`.
+- No hay cambios de Supabase, esquema, variables Vercel ni reglas de negocio.
+- **Validación requerida:** Preview READY, build/TypeScript y prueba Android/escritorio.
+- **Decisión posterior:** continuar con Stitch para Instalaciones/Toma solo si este piloto mejora UX sin duplicación ni retrabajo relevante.
