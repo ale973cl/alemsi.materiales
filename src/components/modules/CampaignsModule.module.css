@@ -1,0 +1,89 @@
+.module {
+  color: #173650;
+  font-family: system-ui, sans-serif;
+  min-width: 0;
+}
+
+.module :global(.catalogIntro) h2 { font-size: 20px; }
+.module :global(.catalogIntro) p { font-size: 14px; }
+.module :global(.campaignList) { gap: 0; border: 1px solid #c8dce8; border-radius: 14px; overflow: hidden; }
+.module :global(.campaignCard) { border: 0; border-top: 1px solid #c8dce8; border-radius: 0; padding: 14px; }
+.module :global(.campaignCard):first-child { border-top: 0; }
+
+.listHead,
+.cardHead {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.1fr) minmax(180px, 1.4fr) 80px minmax(190px, 1.1fr) minmax(150px, .9fr);
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+}
+
+.listHead { padding: 12px 14px; background: #f2f7f8; font-size: 12px; font-weight: 700; }
+.cardHead > * { min-width: 0; }
+.identity { display: grid; gap: 5px; overflow-wrap: anywhere; }
+.identity b { font-size: 15px; line-height: 1.4; }
+.identity small { color: #526778; font-size: 13px; }
+.context { display: grid; gap: 7px; margin: 0; font-size: 13px; }
+.context div { display: grid; gap: 2px; }
+.context dt { font-size: 12px; color: #526778; }
+.context dd { margin: 0; overflow-wrap: anywhere; line-height: 1.4; }
+.status { justify-self: start; font-style: normal; font-size: 12px; font-weight: 700; padding: 6px 9px; border-radius: 999px; background: #eef3f5; }
+.status:global(.status-open) { background: #e5f1fb; color: #185c8d; }
+.status:global(.status-closed) { background: #e4f5f1; color: #07594f; }
+
+/* Las reglas globales históricas usan !important. Estas excepciones quedan
+   limitadas a Campañas y conservan una única instancia de cada control. */
+.module .metrics { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 6px !important; margin: 0 !important; overflow: visible !important; }
+.module .metrics button { display: flex !important; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; min-height: 44px !important; padding: 6px 8px !important; border-radius: 10px !important; font-size: 12px !important; white-space: normal; background: #f2f6f7; color: #173650; }
+.module .metrics button:disabled { opacity: 1; color: #526778; background: #f2f6f7; }
+.module .metrics button b { font-size: 15px !important; line-height: 1.2; }
+.module .metrics button small { font-size: 12px !important; line-height: 1.2; color: inherit; }
+.module .metrics :global(.st-progress) { background: #e5f1fb; color: #185c8d; }
+.module .metrics :global(.st-done) { background: #e4f5f1; color: #07594f; }
+.module .metrics :global(.pending) { background: #fff3d9; color: #7a5410; }
+.module .actions { display: grid; gap: 7px; }
+.module .actions button { width: 100%; min-height: 44px !important; padding: 7px 10px !important; border: 1px solid #c8dce8; border-radius: 999px; font-size: 13px !important; white-space: normal; }
+.module .actions button:first-child { background: #173650; color: #fff; }
+.module button:focus-visible,
+.module input:focus-visible,
+.module select:focus-visible,
+.module summary:focus-visible { outline: 3px solid #173650; outline-offset: 3px; }
+.module :global(.empty) { padding: 28px 16px; text-align: center; font-size: 14px; }
+
+@media (max-width: 1199px) {
+  .listHead { display: none; }
+  .cardHead { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: start; }
+  .module .metrics { grid-column: 1 / 3; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  .module .actions { grid-column: 3; min-width: 150px; }
+}
+
+@media (max-width: 760px) {
+  .module :global(.campaignList) { gap: 10px; border: 0; overflow: visible; }
+  .module :global(.campaignCard) { border: 1px solid #c8dce8; border-radius: 14px; padding: 14px; }
+  .module :global(.campaignCard):first-child { border-top: 1px solid #c8dce8; }
+  .cardHead { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+  .identity { grid-column: 1; grid-row: 1; }
+  .status { grid-column: 2; grid-row: 1; }
+  .context { grid-column: 1 / -1; }
+  .context div { grid-template-columns: 75px minmax(0, 1fr); gap: 8px; }
+  .module .metrics { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .module .actions { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); min-width: 0; }
+  .module button,
+  .module input:not([type="checkbox"]):not([type="hidden"]),
+  .module select,
+  .module summary { min-height: 44px !important; font-size: 14px !important; }
+  .module input[type="checkbox"] { width: 24px; height: 24px; flex-shrink: 0; }
+  .module :global(.campaignInstallationPicker) { padding-left: 0; }
+  .module :global(.campaignInstallationPicker) label { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; min-height: 44px; }
+  .module :global(.campaignInstallationPicker) label > span { min-width: 0; }
+  .module :global(.campaignInstallationPicker) :global(.statePill) { grid-column: 2; border-radius: 10px; }
+  .module :global(.campaignFields),
+  .module :global(.campaignFilters) { grid-template-columns: minmax(0, 1fr); }
+  .module :global(.surveyDenseRow) { grid-template-columns: minmax(0, 1fr); }
+  .module :global(.surveyDenseRow) > span,
+  .module :global(.surveyDenseRow) > strong { grid-column: 1 / -1; }
+  .module :global(.surveyDenseRow) > span:nth-child(5),
+  .module :global(.surveyDenseRow) > span:nth-child(6) { grid-column: 1 / -1; }
+  .module :global(.surveyDenseRow) :global(.surveyPrimaryAction) { width: 100%; min-width: 0 !important; min-height: 44px !important; font-size: 14px !important; white-space: normal !important; }
+}

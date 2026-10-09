@@ -1,4 +1,35 @@
 # STATE — ALEMSI Materiales
+
+## Estado actual — Integración visual controlada de Campañas · 2026-10-09
+- **Rama:** `codex/campanas-stitch-visual`.
+- **Base autorizada:** `fix/login-latencia-global`.
+- **SHA base exacto:** `3ae46afbb8e246e8f9756cdd86bd1a83a02254ca`.
+- **Objetivo:** adaptar únicamente la presentación de Campañas desde el export Stitch aportado por el propietario.
+- **Último paso completado:** listado compacto de escritorio, tarjetas Android, contexto real de múltiples clientes/contratos, CSS acotado y controles táctiles de al menos 44 px en Campañas. Se mantienen handlers, selección, acciones y navegación existentes.
+- **Regla protegida:** cualquier campaña `Abierta` bloquea la instalación para otra campaña, independientemente del período.
+- **Documentación:** se incorpora `AGENTS.md` desde el commit documental local `f9cdabf08ef07192aaabb431181179bb23ce1ac0`, corrigiendo únicamente su regla contradictoria de ciclo. Se añade una decisión de reconciliación a `docs/DECISIONES.md`, sin borrar historial. No se incorpora código desde esa rama ni desde la rama de la adenda V2.
+- **Archivos de entrega:** `src/components/modules/CampaignsModule.tsx`, `src/components/modules/CampaignsModule.module.css`, `AGENTS.md`, `STATE.md`, `docs/DECISIONES.md`.
+- **Siguiente paso:** revisión del commit/diff por el propietario; cualquier despliegue manual requiere aprobación.
+
+### Validación de esta integración
+- `npm run build`: compilación correcta fuera del sandbox Windows; la ejecución aislada inicial falló al resolver aliases de archivos existentes. Sin cambios de aliases, configuración ni módulos ajenos. Advertencias previas de Autoprefixer en `globals.css`; sin intervención fuera del alcance.
+- `npx tsc --noEmit`: correcto, ejecutado después del build final.
+- QA offline con componentes React reales, CSS global existente y CSS acotado del módulo: 320, 360, 390, 412, 767, 1024, 1280 y 1440 px; listado, instalaciones y administración sin desbordamiento.
+- Correctos: múltiples clientes/contratos, valores no informados, filtros de métricas, selección masiva de disponibles, bloqueo visual de ocupadas, estado vacío, ampliación CSS al 200 %, navegación a levantamiento y retorno a instalaciones.
+- Android emulado con interfaz táctil: apertura desde Drawer y selección de Ver instalaciones; sin desbordamiento. No equivale a prueba en teléfono físico.
+- Siete roles: comprobada la visibilidad existente del acceso Campañas en la navegación. No se certifican sesiones reales ni RLS con esta prueba.
+- 26 bindings `action`/`onClick`/`onChange`/`onSubmit` comparados con la base: idénticos. Lógica previa al render conservada. Archivos de servidor, RPC, permisos, navegación general, dependencias y lockfile sin cambios.
+- QA usa datos sintéticos marcados exclusivamente en artefactos externos al repositorio; acciones de servidor sustituidas por bloqueos, sin conexiones externas ni errores de navegador. Ningún dato de Stitch incorporado al producto.
+
+### Límites y pendientes
+- Sin pruebas que escriban datos: no se llamó a Supabase ni se configuraron credenciales. Antes de una prueba funcional de escritura se debe verificar y autorizar el destino; no usar datos reales para pruebas destructivas.
+- Pendientes: Vercel Preview autorizado, sesiones reales/permisos de servidor, operaciones de creación/cierre/justificación/eliminación, enlaces seguros reales y Android físico.
+- Sin push, merge, despliegue manual ni modificaciones de main, Production, esquema o datos Supabase.
+
+## Historial conservado de la base funcional
+Los bloques siguientes pertenecen a tareas anteriores. Sus ramas, pendientes y validaciones no sustituyen el estado actual.
+
+# STATE — ALEMSI Materiales
 ## Estado actual
 - **Rama activa:** `audit/cierre-operacional-pre-merge`
 - **Base funcional verificada:** `fix/levantamientos-vista-independiente` en `ed7f4df4285257d68180849af7b5f1882d950ae1`.

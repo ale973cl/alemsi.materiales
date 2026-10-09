@@ -9,6 +9,7 @@ import {
 import { deleteCampaignSafe } from "@/app/delete-campaign-action";
 import type { ClientInstallationGroup } from "@/components/modules/ClientInstallationsModule";
 import SurveyLinkControl from "@/components/modules/SurveyLinkControl";
+import styles from "./CampaignsModule.module.css";
 type CampaignInstallation = {
   id?: string;
   installation_id?: string;
@@ -372,7 +373,7 @@ export default function CampaignsModule({
     }
   }
   return (
-    <section className="panel campaignModule">
+    <section className={`panel campaignModule ${styles.module}`}>
       <style
         dangerouslySetInnerHTML={{
           __html: `.campaignLegend{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}.campaignLegend span,.statePill{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800}.campaignLegend i{width:9px;height:9px;border-radius:50%;display:block}.st-available{background:#eef3f5;color:#516a78}.st-progress{background:#e5f1fb;color:#185c8d}.st-done{background:#e4f5f1;color:#07594f}.st-occupied{background:#fff3d9;color:#7a5410}.st-justified{background:#f0edf8;color:#5c4b83}.campaignFilters{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:10px;margin:14px 0}.campaignFilters label{display:grid;gap:5px;font-size:12px;font-weight:800;color:#173650}.campaignFilters select,.campaignFilters input{min-height:42px;border:1px solid #c8dce8;border-radius:12px;padding:0 12px;background:#fff;color:#173650}.campaignFilterActions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.campaignFilterActions button{border-radius:999px}.campaignSelectionSummary{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:8px 0 14px;color:#173650}.campaignSelectionSummary b{font-size:14px}.campaignSelectionSummary span{font-size:12px}.campaignInstallationPicker{display:grid;gap:7px;margin:8px 0 12px;padding-left:26px}.campaignInstallationPicker label{display:flex;gap:9px;align-items:center;padding:8px 10px;border:1px solid #dbe7ec;border-radius:12px;background:#fff}.campaignInstallationPicker label.occupied{background:#f7f9fa;color:#6d7d86}.campaignInstallationPicker label.occupied input{cursor:not-allowed}.campaignInstallationPicker small{display:block;color:#607887}.surveyInstallationCard.state-done{border-left:5px solid #2a9d78}.surveyInstallationCard.state-progress{border-left:5px solid #3b82b8}.surveyInstallationCard.state-pending{border-left:5px solid #aab8bf}.surveyInstallationCard.state-justified{border-left:5px solid #8b78b5}.campaignCardHead em.status-open{background:#e5f1fb;color:#185c8d}.campaignCardHead em.status-closed{background:#e4f5f1;color:#07594f}.campaignMetrics button{border:0;text-align:left;cursor:pointer;font:inherit}.campaignMetrics button:hover{outline:2px solid #6ccfc9}.campaignMetrics button.active{outline:2px solid #159a9c}.campaignMetrics button:disabled{cursor:default;opacity:.6}@media(max-width:1000px){.campaignFilters{grid-template-columns:repeat(2,minmax(150px,1fr))}}@media(max-width:650px){.campaignFilters{grid-template-columns:1fr}.campaignInstallationPicker{padding-left:8px}.campaignLegend{gap:5px}}`,
@@ -380,7 +381,7 @@ export default function CampaignsModule({
       />
       <div className="catalogIntro">
         <div>
-          <h2>Universo cerrado de levantamientos</h2>
+          <h2>Campañas por instalaciones</h2>
           <p>
             Filtra por región, ciudad, cliente, contrato o estado. La selección
             final siempre se guarda por instalación.
@@ -686,7 +687,7 @@ export default function CampaignsModule({
             ) : (
               <p>
                 Usa los filtros y selecciona las instalaciones que participarán
-                en este ciclo.
+                en esta campaña.
               </p>
             )}
           </div>
@@ -696,6 +697,15 @@ export default function CampaignsModule({
         </form>
       )}
       <div className="campaignList">
+        {campaigns.length > 0 && (
+          <div className={styles.listHead} aria-hidden="true">
+            <span>Campaña / periodicidad</span>
+            <span>Clientes y contratos</span>
+            <span>Estado</span>
+            <span>Instalaciones</span>
+            <span>Acciones</span>
+          </div>
+        )}
         {campaigns.length ? (
           campaigns.map((c) => {
             const info = campaignInfo(c.label),
@@ -739,24 +749,44 @@ export default function CampaignsModule({
                     (x) => regionName(x.installations?.region) === region,
                   ),
                 }));
+            // Una campaña puede reunir instalaciones de distintos contratos.
+            // El contrato principal de la campaña no representa todo su universo.
+            const contextRows = u.length
+              ? u.map((item) => item.installations?.contracts)
+              : [c.contracts];
+            const campaignClients = [...new Set(contextRows.map((contract) =>
+              clean(contract?.clients?.legal_name) || "No informado",
+            ))];
+            const campaignContracts = [...new Set(contextRows.map((contract) =>
+              clean(contract?.name) || "No informado",
+            ))];
             return (
-              <article key={c.id} className="campaignCard">
-                <div className="campaignCardHead">
-                  <span>
+              <article key={c.id} className="campaignCard" aria-label={`Campaña ${info.name}`}>
+                <div className={styles.cardHead}>
+                  <span className={styles.identity}>
                     <b>{info.name}</b>
                     <small>
-                      {info.periodicity} · {info.clientCount ?? 1} clientes ·{" "}
-                      {total} instalaciones
+                      {info.periodicity}
                     </small>
                   </span>
+                  <dl className={styles.context}>
+                    <div>
+                      <dt>Clientes</dt>
+                      <dd>{campaignClients.join(" · ")}</dd>
+                    </div>
+                    <div>
+                      <dt>Contratos</dt>
+                      <dd>{campaignContracts.join(" · ")}</dd>
+                    </div>
+                  </dl>
                   <em
-                    className={
+                    className={`${styles.status} ${
                       c.status === "Abierta" ? "status-open" : "status-closed"
-                    }
+                    }`}
                   >
                     {c.status}
                   </em>
-                  <div className="campaignMetrics">
+                  <div className={`campaignMetrics ${styles.metrics}`}>
                     <button
                       type="button"
                       className={
@@ -795,10 +825,11 @@ export default function CampaignsModule({
                       <small>Pendientes</small>
                     </button>
                   </div>
-                  <div className="campaignHeaderActions">
+                  <div className={`campaignHeaderActions ${styles.actions}`}>
                     <button
                       type="button"
                       className="campaignSurveyLink"
+                      aria-expanded={campaignOpen}
                       onClick={() => {
                         if (campaignOpen) setOpenCampaign(null);
                         else openFiltered(c.id, "all");
@@ -810,6 +841,7 @@ export default function CampaignsModule({
                       <button
                         type="button"
                         className="campaignSurveyLink"
+                        aria-expanded={adminOpen}
                         onClick={() =>
                           setAdminCampaign(adminOpen ? null : c.id)
                         }
