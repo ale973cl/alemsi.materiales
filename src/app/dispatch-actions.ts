@@ -21,7 +21,7 @@ function campaignInfo(label:string){try{return JSON.parse(label||"{}")}catch{ret
 function fillTemplate(template:string,values:Record<string,string>){return Object.entries(values).reduce((text,[key,value])=>text.replaceAll(`{${key}}`,value||"—"),template)}
 async function origin(){const h=await headers();const host=h.get("x-forwarded-host")||h.get("host");const protocol=h.get("x-forwarded-proto")||"https";return host?`${protocol}://${host}`:process.env.NEXT_PUBLIC_APP_URL||""}
 
-export async function createCampaignDispatch(input:{surveyId:string}){
+export async function createCampaignDispatch(input:{surveyId:string;preparedLines?:{material_id:string;quantity:number}[]}){
   const {supabase}=await ctx(["Admin Total","Admin","Bodega"]);
   const {data:survey,error}=await supabase.from("surveys").select("id,campaign_id,installation_id,status,campaigns(id,label,status),installations(id,name,address,commune,city,region,contracts(id,name,clients(id,legal_name))),survey_lines(material_id,shortage_qty)").eq("id",input.surveyId).single();
   if(error||!survey)throw new Error("Levantamiento no encontrado");
@@ -44,14 +44,25 @@ export async function createCampaignDispatch(input:{surveyId:string}){
   const already=new Map<string,number>();const marker=`CAMPAÑA:${survey.campaign_id}`;
   for(const d of dispatches||[]){if(String((d as any).installation_id)!==String(survey.installation_id)||!String((d as any).observations||"").includes(marker))continue;for(const l of (d as any).dispatch_lines||[]){const id=String(l.material_id);already.set(id,(already.get(id)||0)+coveredCampaignQuantity(String((d as any).status),l.required_qty,l.delivered_qty));}}
 
+  const manual=Array.isArray(input.preparedLines);
+  const chosen=new Map<string,number>();
+  if(manual){
+    for(const line of input.preparedLines||[]){
+      const id=String(line.material_id||"");
+      const qty=Number(line.quantity);
+      if(!id||chosen.has(id)||!Number.isFinite(qty)||qty<0)throw new Error("Cantidades preparadas inválidas o producto repetido");
+      chosen.set(id,qty);
+    }
+    if([...chosen.keys()].some(id=>!materialIds.includes(id)))throw new Error("La preparación contiene un producto no autorizado por el levantamiento");
+  }
   const alloc:{material_id:string;quantity:number}[]=[];let stillPending=0;
-  for(const l of lines){const id=String((l as any).material_id);const required=Math.max(Number((l as any).shortage_qty||0)-(already.get(id)||0),0);if(required<=0)continue;const available=Math.max((stock.get(id)||0)-(committed.get(id)||0),0);const quantity=Math.min(required,available);if(quantity>0){alloc.push({material_id:id,quantity});committed.set(id,(committed.get(id)||0)+quantity);}stillPending+=Math.max(required-quantity,0);}
+  for(const l of lines){const id=String((l as any).material_id);const required=Math.max(Number((l as any).shortage_qty||0)-(already.get(id)||0),0);if(required<=0)continue;const available=Math.max((stock.get(id)||0)-(committed.get(id)||0),0);const capacity=Math.min(required,available);const quantity=manual?Number(chosen.get(id)||0):capacity;if(quantity>capacity)throw new Error("La cantidad preparada excede la necesidad o el stock disponible");if(quantity>0){alloc.push({material_id:id,quantity});committed.set(id,(committed.get(id)||0)+quantity);}stillPending+=Math.max(required-quantity,0);}
   if(!alloc.length)throw new Error("No hay stock disponible para generar esta guía. La instalación queda pendiente de abastecimiento.");
 
   const info=campaignInfo(campaign?.label||"");
   const template=String(info.deliveryTemplate||`${info.name||"Entrega"} · {INSTALACION}`);
   const text=fillTemplate(template,{INSTALACION:installation?.name||"Instalación",PERIODO:info.deliveryPeriod||info.name||"",CLIENTE:client?.legal_name||"",CONTRATO:contract?.name||""});
-  const observations=`CAMPAÑA:${survey.campaign_id} · ${text}`;
+  const observations=`CAMPAÑA:${survey.campaign_id} · ${text}${manual?" · PREPARACIÓN FÍSICA CONFIRMADA":""}`;
   const {data:dispatchId,error:dispatchError}=await supabase.rpc("create_dispatch_v1",{p_installation_id:survey.installation_id,p_lines:alloc,p_observations:observations});
   if(dispatchError)throw new Error(dispatchError.message);
   revalidatePath("/");
