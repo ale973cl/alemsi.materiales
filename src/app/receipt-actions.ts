@@ -26,6 +26,32 @@ export async function registerPurchaseOrderReceipt(formData:FormData){
  if(shippingCondition==="Por pagar"&&freightNet<=0)throw new Error("Ingresa el valor neto del flete por pagar");
  const {data:po,error:poError}=await supabase.from("purchase_orders").select("id,supplier_id,status").eq("id",purchaseOrderId).single();if(poError||!po)throw new Error("OC no encontrada");
  if(isClosedPurchaseOrder(po.status)||isCancelledPurchaseOrder(po.status))throw new Error("Esta orden de compra está cerrada o anulada y no admite más recepciones");
+ if(!Array.isArray(lines)||lines.length>500)throw new Error("Detalle de recepción inválido");
+ const seen=new Set<string>();
+ for(const item of lines){
+   const key=String(item.purchase_order_line_id||"");
+   if(!key||seen.has(key)||!Number.isFinite(Number(item.received_qty))||Number(item.received_qty)<=0||!Number.isFinite(Number(item.actual_unit_net))||Number(item.actual_unit_net)<0)throw new Error("Líneas duplicadas o cantidades/precios inválidos");
+   seen.add(key);
+ }
+ // Validación en servidor: el cliente no puede exceder la OC ni recibir productos ajenos.
+ const {data:poLines,error:polError}=await supabase.from("purchase_order_lines").select("id,material_id,ordered_qty").eq("purchase_order_id",purchaseOrderId);
+ if(polError)throw new Error(polError.message);
+ const masterLines=new Map((poLines||[]).map((l:any)=>[String(l.id),l]));
+ const {data:previousReceipts,error:previousError}=await supabase.from("receipts").select("id,supplier_id,document_type,document_folio,receipt_lines(purchase_order_line_id,received_qty)").eq("purchase_order_id",purchaseOrderId);
+ if(previousError)throw new Error(previousError.message);
+ if((previousReceipts||[]).some((r:any)=>String(r.document_type||"")===documentType&&String(r.document_folio||"").trim().toLowerCase()===documentFolio.toLowerCase()))throw new Error("Este folio ya está vinculado a la OC");
+ const previous=new Map<string,number>();
+ for(const r of previousReceipts||[])for(const l of (r as any).receipt_lines||[]){const key=String(l.purchase_order_line_id||"");previous.set(key,(previous.get(key)||0)+Number(l.received_qty||0))}
+ for(const item of lines){
+   const record:any=masterLines.get(String(item.purchase_order_line_id));
+   if(!record||!record.material_id||String(record.material_id)!==String(item.material_id))throw new Error("La recepción contiene un material no vinculado a esta OC");
+   const remaining=Math.max(0,Number(record.ordered_qty||0)-(previous.get(String(record.id))||0));
+   if(Number(item.received_qty)>remaining)throw new Error("Se intentó recibir más cantidad que el saldo vigente de la OC");
+ }
+ const {data:duplicateDocument,error:duplicateError}=await supabase.from("receipts").select("id").eq("supplier_id",po.supplier_id).eq("document_type",documentType).eq("document_folio",documentFolio).limit(1);
+ if(duplicateError)throw new Error(duplicateError.message);
+ if((duplicateDocument||[]).length)throw new Error("Este folio ya fue registrado para el mismo proveedor");
+
  const {data:receipt,error}=await supabase.from("receipts").insert({purchase_order_id:purchaseOrderId,supplier_id:po.supplier_id,invoice_number:documentType==="Factura"?documentFolio:null,invoice_date:documentDate,invoice_net:documentNet,vat_amount:documentVat,status:"Pendiente cotejo",received_by:user.id,received_at:new Date().toISOString(),shipping_condition:shippingCondition,freight_net:shippingCondition==="Por pagar"?freightNet:0,document_type:documentType,document_folio:documentFolio,document_date:documentDate,document_net:documentNet,document_total:documentTotal,reconciliation_status:"Pendiente cotejo",inventory_posted:false}).select("id").single();
  if(error||!receipt)throw new Error(error?.message||"No se pudo registrar el documento");
  const lineRows=lines.filter((l:any)=>Number(l.received_qty)>0).map((l:any)=>({receipt_id:receipt.id,purchase_order_line_id:l.purchase_order_line_id,material_id:l.material_id,received_qty:Number(l.received_qty),actual_unit_net:Number(l.actual_unit_net||0),line_net:Number(l.received_qty)*Number(l.actual_unit_net||0),difference_note:null}));
