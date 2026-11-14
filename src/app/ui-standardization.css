@@ -210,3 +210,15 @@ textarea{min-height:88px}
   .materialProfileDedicated article{grid-template-columns:1fr!important}
   .profileMetric,.profileField,.materialProfileNotes{grid-column:1!important}
 }
+
+/* Etapa 1: portada compacta, navegación por vistas */
+.stageOneHome{margin-bottom:20px}
+.stageOneIntro{margin:0 0 14px;color:#526875;font-size:14px}
+.stageOneShortcuts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.stageOneShortcut{position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:8px;min-height:116px;padding:17px 42px 17px 17px;background:#fff;color:#143448;border:1px solid #dce7ea;border-radius:13px;box-shadow:0 2px 8px #0b294208;cursor:pointer}
+.stageOneShortcut:hover,.stageOneShortcut:focus-visible{border-color:#159a9c;background:#f4fbfa;box-shadow:0 4px 13px #0b294214;outline-offset:2px}
+.stageOneShortcut strong{font-size:16px}
+.stageOneShortcut span:not(.stageOneArrow){font-size:12px;line-height:1.5;color:#5b7080}
+.stageOneArrow{position:absolute;right:17px;top:16px;color:#087a73;font-size:21px}
+@media(max-width:700px){.stageOneShortcuts{grid-template-columns:1fr 1fr}.stageOneShortcut{min-height:102px;padding:13px 27px 13px 13px}.stageOneShortcut strong{font-size:14px}}
+@media(max-width:440px){.stageOneShortcuts{grid-template-columns:1fr}.stageOneShortcut{min-height:78px}}
