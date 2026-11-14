@@ -10,16 +10,17 @@ import {type UserAccessRow,type UserProfileRow} from "@/components/modules/Users
 import DispatchDeliveryModule from "@/components/modules/DispatchDeliveryModule";
 import CampaignsModule from "@/components/modules/CampaignsModule";
 import ConsolidatedSupplyModule from "@/components/modules/ConsolidatedSupplyModule";
+import CampaignPendingModule from "@/components/modules/CampaignPendingModule";
 import ConnectedReceiptModule from "@/components/modules/ConnectedReceiptModule";
 import PurchaseOrdersModule from "@/components/modules/PurchaseOrdersModule";
 import SurveyLinkControl from "@/components/modules/SurveyLinkControl";
 import InventoryModule from "@/components/modules/InventoryModule";
 type MasterMaterialRow=MaterialCatalogRow&{active?:boolean};type MasterClientGroup=ClientInstallationGroup&{active?:boolean};
 type Props={initialTab?:string;profile:any;summary:Record<string,number>;campaigns:any[];activeCampaigns:any[];consolidatedSurveys:any[];orders:any[];dispatches:any[];audit:any[];materialCatalog:MaterialCatalogRow[];materialCatalogSourceCount:number;materialCatalogError?:string|null;masterMaterialCatalog:MasterMaterialRow[];clientInstallations:ClientInstallationGroup[];masterClientInstallations:MasterClientGroup[];users:UserProfileRow[];userInstallationAccess:UserAccessRow[]};
-const titles:Record<string,string>={inicio:"Inicio",clientes:"Clientes y contratos",campañas:"Campañas",levantamientos:"Levantamientos",consolidado:"Consolidado",inventario:"Inventario",compras:"Órdenes de compra",recepcion:"Recepción de materiales",entregas:"Preparación y entregas"};
+const titles:Record<string,string>={inicio:"Inicio",clientes:"Clientes y contratos",campañas:"Campañas",levantamientos:"Levantamientos",consolidado:"Consolidado",preparacion:"Consolidado de preparación",inventario:"Inventario",compras:"Órdenes de compra",recepcion:"Recepción de materiales",entregas:"Preparación y entregas"};
 const mainNav=[["clientes","Clientes y contratos"],["campañas","Campañas"],["consolidado","Consolidado"],["inventario","Inventario y compras"],["entregas","Preparación y entregas"]] as const;
-const quickLinks:Record<string,[string,string][]>={campañas:[["campañas","Campañas"],["levantamientos","Levantamientos"]],inventario:[["inventario","Existencias"],["compras","Órdenes de compra"],["recepcion","Recepción"]]};
-const parentOf=(tab:string)=>tab==="levantamientos"?"campañas":tab==="compras"||tab==="recepcion"?"inventario":tab;
+const quickLinks:Record<string,[string,string][]>={campañas:[["campañas","Campañas"],["levantamientos","Levantamientos"]],entregas:[["preparacion","Consolidado de preparación"],["entregas","Guías y entregas"]],inventario:[["inventario","Existencias"],["compras","Órdenes de compra"],["recepcion","Recepción"]]};
+const parentOf=(tab:string)=>tab==="levantamientos"?"campañas":tab==="preparacion"?"entregas":tab==="compras"||tab==="recepcion"?"inventario":tab;
 export default function OperationalApp({initialTab,profile,summary,campaigns,activeCampaigns,consolidatedSurveys,orders,dispatches,materialCatalog,materialCatalogSourceCount,materialCatalogError,masterMaterialCatalog,clientInstallations,masterClientInstallations,users,userInstallationAccess}:Props){
  const allowed=Object.keys(titles);
  const [tab,setTab]=useState(initialTab&&allowed.includes(initialTab)?initialTab:"inicio");
@@ -44,6 +45,7 @@ export default function OperationalApp({initialTab,profile,summary,campaigns,act
    {tab==="inventario"&&<InventoryModule role={profile.role}/>}
    {tab==="compras"&&<PurchaseOrdersModule orders={orders} role={profile.role}/>}
    {tab==="recepcion"&&<ConnectedReceiptModule role={profile.role}/>}
+   {tab==="preparacion"&&<CampaignPendingModule surveys={consolidatedSurveys} dispatches={dispatches}/>}
    {tab==="entregas"&&<DispatchDeliveryModule dispatches={dispatches} clients={clientInstallations} materials={materialCatalog} role={profile.role} users={users} currentUser={{id:profile.id,full_name:profile.full_name}}/>}
   </main></div></div>
 }
