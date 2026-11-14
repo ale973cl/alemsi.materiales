@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:circuits": "node --experimental-strip-types --test tests/qa-material-circuits.mjs",
+    "prebuild": "npm run test:circuits"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
