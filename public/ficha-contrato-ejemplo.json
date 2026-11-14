@@ -1,0 +1,51 @@
+{
+  "version": "alemsi-simple-1",
+  "cliente": {
+    "razon_social": "",
+    "rut": "",
+    "telefono": "",
+    "correo": "",
+    "direccion": "",
+    "comuna": "",
+    "region": ""
+  },
+  "contrato": {
+    "nombre": "",
+    "codigo": "",
+    "referencia_facturacion": "",
+    "region": "",
+    "comunas": [],
+    "fecha_inicio": "",
+    "fecha_termino": "",
+    "periodicidad": "Cuatrimestral",
+    "presupuesto_neto_clp": null,
+    "alcance": "",
+    "requisitos": []
+  },
+  "instalaciones": [
+    {
+      "nombre": "",
+      "region": "",
+      "comuna": "",
+      "direccion": "",
+      "contacto": "",
+      "correo_entrega": "",
+      "telefono": "",
+      "materiales": [
+        {
+          "codigo": "",
+          "nombre": "",
+          "cantidad": 0,
+          "unidad": "",
+          "periodicidad": "",
+          "referencia": ""
+        }
+      ]
+    }
+  ],
+  "observaciones": [],
+  "datos_no_encontrados": [],
+  "fuentes": [
+    {"campo": "contrato.codigo", "documento": "", "pagina": "", "extracto_breve": ""}
+  ]
+}
