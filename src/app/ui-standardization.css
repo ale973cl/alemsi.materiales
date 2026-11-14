@@ -222,3 +222,35 @@ textarea{min-height:88px}
 .stageOneArrow{position:absolute;right:17px;top:16px;color:#087a73;font-size:21px}
 @media(max-width:700px){.stageOneShortcuts{grid-template-columns:1fr 1fr}.stageOneShortcut{min-height:102px;padding:13px 27px 13px 13px}.stageOneShortcut strong{font-size:14px}}
 @media(max-width:440px){.stageOneShortcuts{grid-template-columns:1fr}.stageOneShortcut{min-height:78px}}
+
+/* ALEMSI Simple: interfaz operativa de una sola persona */
+.simpleApp{background:#f3f6f8;min-height:100vh}
+.simpleTop{height:74px;padding:8px 24px}
+.simpleLogoButton{border:0;background:transparent;padding:0;display:flex;align-items:center;cursor:pointer}
+.simpleLogoButton img{max-height:62px;width:auto;object-fit:contain}
+.simpleTopRight{display:flex;align-items:center;gap:22px;color:#34556a;font-size:13px;font-weight:600}
+.simpleBody{grid-template-columns:236px minmax(0,1fr);min-height:calc(100vh - 74px)}
+.simpleSidebar{padding:22px 12px}
+.simpleSidebar .productTitle{padding:10px 12px 18px}
+.simpleSidebar .nav{display:flex;align-items:center;gap:14px;padding:15px 13px;font-size:14px}
+.simpleNavNumber{font-variant-numeric:tabular-nums;opacity:.56;font-size:11px}
+.simpleWorkspace{padding:26px 32px;max-width:1300px}
+.simplePageHead{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:20px}
+.simplePageHead h1{font-size:28px;margin:4px 0}
+.simpleBack{background:#fff;border:1px solid #cbdbe4;border-radius:9px;color:#18465b;padding:10px 16px;font-weight:700}
+.simpleLead{font-size:14px;color:#5a7280;margin:0 0 18px}
+.simpleHomeGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.simpleHomeTile{min-height:145px;background:#fff;border:1px solid #d5e2e8;border-radius:14px;text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:18px;padding:21px;box-shadow:0 3px 12px rgba(15,46,67,.04);color:#10384d}
+.simpleHomeTile:hover,.simpleHomeTile:focus-visible{background:#f2faf9;border-color:#14918a;outline-offset:2px}
+.simpleHomeTile strong{font-size:17px;line-height:1.3}
+.simpleTileNumber{font-size:12px;color:#0a7778;font-weight:800}
+.simpleTileArrow{align-self:flex-end;color:#087b79;font-size:24px;margin-top:auto}
+.simpleSummary{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.simpleSummary>span{background:#fff;border:1px solid #dce7ea;border-radius:10px;padding:12px 17px;color:#577080;font-size:13px}
+.simpleSummary b{margin-left:8px;color:#113c50;font-size:18px}
+.simpleSubnav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:19px;border-bottom:1px solid #dce5e8;padding-bottom:13px}
+.simpleSubnav button{border:1px solid #d1dee5;background:#fff;color:#274e61;border-radius:9px;padding:10px 16px;font-size:13px;font-weight:700}
+.simpleSubnav button.active{border-color:#116b74;background:#e6f5f3;color:#075d61}
+.simpleApp .workspace>.panel,.simpleApp .workspace>.mastersHub{max-width:100%}
+@media(max-width:950px){.simpleBody{grid-template-columns:1fr}.simpleSidebar{display:flex;gap:6px;overflow-x:auto;padding:10px;background:#0b2740}.simpleSidebar .productTitle{display:none}.simpleSidebar .nav{white-space:nowrap;flex-shrink:0;width:auto;margin:0;padding:11px}.simpleWorkspace{padding:18px}.simpleHomeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.simpleTop{height:64px}.simpleTopRight>span{display:none}.simplePageHead h1{font-size:23px}.simpleHomeGrid{grid-template-columns:1fr}.simpleHomeTile{min-height:88px;gap:8px;padding:14px}.simpleTileArrow{position:absolute;right:14px}.simpleHomeTile{position:relative}.simpleSubnav button{flex:1}.simpleWorkspace{padding:14px}}
