@@ -1,20 +1,24 @@
-# Instrucción para IA: extraer bases de contrato a ALEMSI Simple
+# IA para leer bases de licitación → ALEMSI Simple
 
-Lee íntegramente las bases administrativas, técnicas, anexos de materiales y aclaraciones que te adjunte.
+Carga las bases administrativas, técnicas y anexos. Devuelve **solo** un JSON conforme a `/ficha-contrato-ejemplo.json` (versión `alemsi-simple-2`).
 
-Tu única salida debe ser un JSON válido que siga EXACTAMENTE la estructura del archivo `ficha-contrato-ejemplo.json`, sin comentarios ni Markdown.
+**Separación indispensable:**
+1. **Cliente:** entidad jurídica contratante, RUT, razón social y contactos si constan.
+2. **Contrato:** código o identificación, región/cobertura, vigencia, periodicidad, referencia de facturación, cuota **neta de materiales únicamente** si se explicita, condiciones y obligaciones.
+3. **Instalaciones:** identifica cada recinto mencionado con nombre, región, comuna, dirección y superficie en m², SOLO si están declarados. Si las bases solo dicen que hay 20 recintos pero no los identifican, no inventes 20 filas.
+4. **Materiales del contrato:** captura el listado general de materiales, unidades, especificaciones y cantidades globales expresamente señaladas. **NO asignes materiales ni cantidades a instalaciones**, **NO dividas un total entre recintos** y **NO estimes consumos por superficie**.
+5. Si las bases incluyen un cuadro de cantidades por instalación, transcríbelo en observaciones con su referencia, sin imponer todavía esas asignaciones al sistema. La distribución se realiza luego en la ficha del contrato mediante intervención humana.
+6. **No inventes datos**: deja vacíos los campos desconocidos, usa `null` para cifras desconocidas y registra faltantes en `datos_no_encontrados`. No pongas `0` cuando no existe dato.
+7. No confundas monto de contratación de servicios con presupuesto específico para **materiales**. La cuota es alerta, no bloqueo.
+8. Documenta fuente documental/página para los principales valores, incluidas cantidades, RUT y superficies. Cuando exista contradicción, registra discrepancias en `observaciones`.
+9. Mantén literalmente siglas desconocidas (por ejemplo SCO); no inventes su significado.
+10. No crees clientes, contratos, materiales ni recintos fuera del documento. No incluyas datos personales no necesarios.
 
-Reglas:
-1. NO inventes RUT, razón social, direcciones, región, comuna, número de instalaciones, códigos, cantidades, periodicidades, precios o referencias.
-2. Distingue a la entidad contratante del proveedor adjudicado y de la unidad administradora. En `cliente` registra la entidad a la que se prestará el servicio y cuya identidad jurídica está confirmada. Si las bases no aclaran quién será el cliente contractual, deja el campo vacío y anótalo en `datos_no_encontrados`.
-3. Un contrato es independiente de otro aunque pertenezcan al mismo cliente/RUT. Transcribe el código o referencia formal; no uses la región como sustituto.
-4. Incluye TODAS las instalaciones expresamente identificadas en las bases. No generes instalaciones ficticias a partir de una cantidad total: si solo se informa “12 instalaciones”, anota la incertidumbre en `observaciones` y deja la lista únicamente con las identificables.
-5. Materiales: por instalación, identifica nombres, códigos, unidades, cantidades y periodicidad. Si la tabla de materiales es global al contrato y no permite asignar cantidades por instalación, NO distribuyas ni dupliques cantidades; coloca el dato en `observaciones` y señala que se requiere distribución manual.
-6. `presupuesto_neto_clp` representa únicamente cuota de materiales explícitamente identificada SIN IVA; nunca infieras ese importe a partir del monto global del contrato de servicios. Usa null si falta.
-7. Cada dato sensible al circuito (RUT, monto, cantidad, instalación) debe poder justificarse indicando documento/página o sección en `fuentes`; nunca copies pasajes extensos.
-8. Usa fecha ISO AAAA-MM-DD cuando esté explícita. Si no consta, deja una cadena vacía.
-9. Para “SCO”, insumos de higiene, entrega de elementos y otros términos, conserva exactamente el término que figura en las bases y añádelo a `contrato.requisitos`; no supongas qué significa una sigla.
-10. Cuando las bases son ambiguas o contradictorias, registra ambos hechos en `observaciones` y no elijas arbitrariamente uno.
-11. No incluyas contraseñas, RUT personales de trabajadores ni datos privados innecesarios.
+**Flujo operativo**:
+- La IA genera la ficha desde las bases.
+- El operador importa y revisa cliente, contrato, instalaciones y la lista general de materiales.
+- El sistema detecta RUT existente para anexar un contrato sin duplicar al cliente.
+- Los materiales quedan pendientes de distribución por instalación; la distribución se hace **después**, manualmente, considerando superficies, bases y necesidades.
+- Después se realiza la primera campaña y sus levantamientos opcionales.
 
-El JSON se carga en **Clientes → Importar ficha de bases (IA)** de ALEMSI Simple. La aplicación debe mostrar la vista previa y exigir aprobación humana antes de guardar. Los materiales solo pueden asignarse cuando corresponden exactamente a un material existente en el catálogo.
+El importador no debe convertir una lista de materiales contractuales en movimientos de inventario ni en compras automáticas.
