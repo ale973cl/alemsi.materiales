@@ -1,5 +1,6 @@
 "use client";
 import {useMemo,useState} from "react";
+import {coveredCampaignQuantity} from "@/lib/campaign-dispatch-balance";
 
 type Survey={id:string;campaign_id:string;installation_id:string;confirmed_at?:string|null;campaigns?:{label?:string|null};installations?:{name?:string|null;contracts?:{name?:string|null;clients?:{legal_name?:string|null}}};survey_lines?:{material_id:string;shortage_qty?:number|null;materials?:{name?:string|null;unit?:string|null}}[]};
 type Dispatch={id:string;installation_id?:string;observations?:string|null;status:string;created_at?:string;dispatch_lines?:{material_id:string;required_qty:number|string;delivered_qty?:number|string;pending_qty?:number|string}[]};
@@ -14,7 +15,7 @@ export default function CampaignPendingModule({surveys,dispatches}:{surveys:Surv
   const filtered=surveys.filter(s=>(!campaign||s.campaign_id===campaign)&&(!search||[s.installations?.name,s.installations?.contracts?.name,s.installations?.contracts?.clients?.legal_name].some(t=>String(t||"").toLocaleLowerCase("es").includes(search.toLocaleLowerCase("es")))));
   return filtered.flatMap(s=>(s.survey_lines||[]).filter(l=>n(l.shortage_qty)>0).map(l=>{
    const matching=dispatches.filter(d=>d.status!=="Anulado"&&d.installation_id===s.installation_id&&includesCampaign(d,s.campaign_id));
-   const prepared=matching.reduce((t,d)=>t+(d.dispatch_lines||[]).filter(x=>x.material_id===l.material_id).reduce((a,x)=>a+n(x.required_qty),0),0);
+   const prepared=matching.reduce((t,d)=>t+(d.dispatch_lines||[]).filter(x=>x.material_id===l.material_id).reduce((a,x)=>a+coveredCampaignQuantity(d.status,x.required_qty,x.delivered_qty),0),0);
    const delivered=matching.reduce((t,d)=>t+(d.dispatch_lines||[]).filter(x=>x.material_id===l.material_id).reduce((a,x)=>a+n(x.delivered_qty),0),0);
    const required=n(l.shortage_qty);
    return {key:s.id+":"+l.material_id,campaign:name(s.campaigns?.label),client:s.installations?.contracts?.clients?.legal_name||"—",contract:s.installations?.contracts?.name||"—",installation:s.installations?.name||"—",material:l.materials?.name||"Material",unit:l.materials?.unit||"",required,generated:prepared,delivered,pendingGuide:Math.max(0,required-prepared),pendingDelivery:Math.max(0,Math.min(required,prepared)-delivered),date:s.confirmed_at,hasGuide:matching.length>0};
@@ -34,7 +35,7 @@ export default function CampaignPendingModule({surveys,dispatches}:{surveys:Surv
    <span style={{padding:"10px 12px",background:"#f0f8f2",borderRadius:9}}><b>{rows.length}</b> líneas de requerimiento</span>
   </div>
   <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-   <thead><tr>{["Campaña / instalación","Material","Necesidad","Con guía","Entregado","Sin guía","Pendiente entrega","Fecha toma"].map(x=><th key={x} style={{padding:9,textAlign:"left",borderBottom:"1px solid #dae7ed"}}>{x}</th>)}</tr></thead>
+   <thead><tr>{["Campaña / instalación","Material","Necesidad","Cubierto/Reservado","Entregado","Sin cubrir","Pendiente entrega","Fecha toma"].map(x=><th key={x} style={{padding:9,textAlign:"left",borderBottom:"1px solid #dae7ed"}}>{x}</th>)}</tr></thead>
    <tbody>{rows.map(r=><tr key={r.key}>
     <td style={{padding:9,borderBottom:"1px solid #edf3f5"}}><b>{r.installation}</b><small style={{display:"block"}}>{r.campaign} · {r.client} · {r.contract}</small></td>
     <td style={{padding:9,borderBottom:"1px solid #edf3f5"}}>{r.material}{r.unit?" ("+r.unit+")":""}</td>
@@ -43,6 +44,6 @@ export default function CampaignPendingModule({surveys,dispatches}:{surveys:Surv
    </tr>)}</tbody>
   </table></div>
   {!rows.length&&<p>No existen requerimientos confirmados para este filtro.</p>}
-  <p style={{fontSize:12,color:"#586f7c",marginTop:14}}>Control de lectura para pruebas: “con guía” usa las cantidades de documentos no anulados vinculados a la campaña, no equivale a preparación física certificada. “Sin guía” indica necesidad todavía sin documento. Las correcciones posteriores al levantamiento o las entregas sin vínculo de campaña requieren revisión específica.</p>
+  <p style={{fontSize:12,color:"#586f7c",marginTop:14}}>Control de lectura para pruebas: “Cubierto/Reservado” incluye las cantidades de guías abiertas y solo lo efectivamente entregado en guías finalizadas; no certifica preparación física. El saldo sin cubrir queda disponible para una nueva preparación. Los ajustes de necesidad y entregas sin vínculo de campaña requieren revisión explícita.</p>
  </section>
 }
