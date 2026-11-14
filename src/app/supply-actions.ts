@@ -1,6 +1,7 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
+import {committedPurchaseQty} from "@/lib/purchase-order-balance";
 
 type Selection={material_id:string;qty:number;unit_net_price:number};
 type FreeLine={description:string;qty:number;unit:string;unit_net_price:number;supplier_code?:string};
@@ -51,10 +52,25 @@ export async function createPurchaseOrderFromConsolidated(formData:FormData){
   }
 
   const allRunIds=(runs||[]).map((item:any)=>item.id);if(!allRunIds.includes(run.id))allRunIds.push(run.id);
-  const {data:existingOrders}=await supabase.from("purchase_orders").select("id").in("supply_run_id",allRunIds);
+  const {data:existingOrders}=await supabase.from("purchase_orders").select("id,status").in("supply_run_id",allRunIds);
   const orderIds=(existingOrders||[]).map((item:any)=>item.id);
   const orderedByMaterial=new Map<string,number>();
-  if(orderIds.length){const {data:oldLines,error:oldLinesError}=await supabase.from("purchase_order_lines").select("material_id,ordered_qty").in("purchase_order_id",orderIds);if(oldLinesError)throw oldLinesError;for(const line of oldLines||[])if(line.material_id)orderedByMaterial.set(line.material_id,Number(orderedByMaterial.get(line.material_id)||0)+Number(line.ordered_qty||0))}
+  if(orderIds.length){
+    const [{data:oldLines,error:oldLinesError},{data:postedReceipts,error:receiptError}]=await Promise.all([
+      supabase.from("purchase_order_lines").select("id,purchase_order_id,material_id,ordered_qty").in("purchase_order_id",orderIds),
+      supabase.from("receipts").select("purchase_order_id,receipt_lines(purchase_order_line_id,received_qty)").in("purchase_order_id",orderIds).eq("inventory_posted",true)
+    ]);
+    if(oldLinesError)throw oldLinesError;if(receiptError)throw receiptError;
+    const posted=new Map<string,number>();
+    for(const receipt of postedReceipts||[])for(const line of (receipt as any).receipt_lines||[]){
+      const id=String(line.purchase_order_line_id||"");posted.set(id,(posted.get(id)||0)+Number(line.received_qty||0));
+    }
+    const status=new Map((existingOrders||[]).map((o:any)=>[String(o.id),String(o.status||"")]));
+    for(const line of oldLines||[])if(line.material_id){
+      const qty=committedPurchaseQty(status.get(String(line.purchase_order_id)),line.ordered_qty,posted.get(String(line.id)));
+      orderedByMaterial.set(line.material_id,Number(orderedByMaterial.get(line.material_id)||0)+qty);
+    }
+  }
 
   for(const item of chosen){const source=required.get(item.material_id);if(!source)throw new Error("Uno de los productos ya no tiene necesidad confirmada");const pending=Math.max(source.qty-Number(orderedByMaterial.get(item.material_id)||0),0);if(item.qty>pending)throw new Error(`La cantidad seleccionada supera el saldo pendiente (${pending})`)}
 
