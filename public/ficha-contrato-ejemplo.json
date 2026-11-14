@@ -1,5 +1,5 @@
 {
-  "version": "alemsi-simple-1",
+  "version": "alemsi-simple-2",
   "cliente": {
     "razon_social": "",
     "rut": "",
@@ -17,7 +17,7 @@
     "comunas": [],
     "fecha_inicio": "",
     "fecha_termino": "",
-    "periodicidad": "Cuatrimestral",
+    "periodicidad": "",
     "presupuesto_neto_clp": null,
     "alcance": "",
     "requisitos": []
@@ -28,24 +28,31 @@
       "region": "",
       "comuna": "",
       "direccion": "",
+      "superficie_m2": null,
       "contacto": "",
       "correo_entrega": "",
-      "telefono": "",
-      "materiales": [
-        {
-          "codigo": "",
-          "nombre": "",
-          "cantidad": 0,
-          "unidad": "",
-          "periodicidad": "",
-          "referencia": ""
-        }
-      ]
+      "telefono": ""
+    }
+  ],
+  "materiales_contrato": [
+    {
+      "codigo": "",
+      "nombre": "",
+      "cantidad_total": null,
+      "unidad": "",
+      "periodicidad": "",
+      "especificacion": "",
+      "pagina_fuente": ""
     }
   ],
   "observaciones": [],
   "datos_no_encontrados": [],
   "fuentes": [
-    {"campo": "contrato.codigo", "documento": "", "pagina": "", "extracto_breve": ""}
+    {
+      "campo": "contrato.codigo",
+      "documento": "",
+      "pagina": "",
+      "extracto_breve": ""
+    }
   ]
 }
