@@ -61,3 +61,37 @@ export async function closePurchaseOrderReceipt(purchaseOrderId:string){
  revalidatePath("/");
  return{ok:true,status,totalOrdered,totalReceived,outstanding};
 }
+
+export async function resolvePurchaseOrderMaterial(input:{purchaseOrderLineId:string;name:string;unit:string;family:string;presentation?:string;unitNet:number}){
+ const {supabase,user,profile}=await ctx(["Admin Total","Admin","Bodega"]);
+ const lineId=String(input.purchaseOrderLineId||"").trim();
+ const name=String(input.name||"").trim();
+ const unit=String(input.unit||"").trim()||"UN";
+ const family=String(input.family||"").trim()||"Otros";
+ const price=Number(input.unitNet||0);
+ if(!lineId||!name)throw new Error("Línea y nombre del producto obligatorios");
+ if(!Number.isFinite(price)||price<0)throw new Error("Precio neto inválido");
+ const {data:line,error:le}=await supabase.from("purchase_order_lines").select("id,material_id,purchase_order_id,description,supplier_code").eq("id",lineId).single();
+ if(le||!line)throw new Error("No existe la línea de OC");
+ if(line.material_id)throw new Error("La línea ya tiene un producto del maestro");
+ const {data:po,error:pe}=await supabase.from("purchase_orders").select("id,status").eq("id",line.purchase_order_id).single();
+ if(pe||!po||isClosedPurchaseOrder(po.status)||isCancelledPurchaseOrder(po.status))throw new Error("La orden está cerrada o no existe");
+ const normalized=(v:string)=>v.trim().normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es-CL");
+ const {data:existing,error:ee}=await supabase.from("materials").select("id,name,unit,active").eq("active",true);
+ if(ee)throw new Error(ee.message);
+ const duplicate=(existing||[]).find((m:any)=>normalized(String(m.name||""))===normalized(name)&&normalized(String(m.unit||""))===normalized(unit));
+ let materialId=String(duplicate?.id||"");let createdId="";
+ if(!materialId){
+  const {data, error}=await supabase.from("materials").insert({name,family,unit,presentation:String(input.presentation||"").trim()||null,supplier_code:line.supplier_code||null,current_net_price:price,active:true,price_source_note:"Alta durante recepción manual de OC"}).select("id").single();
+  if(error||!data)throw new Error(error?.message||"No se pudo crear el material");
+  materialId=data.id;createdId=data.id;
+ }
+ const {error:updateError}=await supabase.from("purchase_order_lines").update({material_id:materialId}).eq("id",lineId).is("material_id",null);
+ if(updateError){
+  if(createdId)await supabase.from("materials").delete().eq("id",createdId);
+  throw new Error(updateError.message);
+ }
+ await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Recepción",action:createdId?"Crear y vincular material de OC":"Vincular material existente a OC",entity_table:"purchase_order_lines",entity_id:lineId,new_data:{material_id:materialId,material_name:name,created:!!createdId}});
+ revalidatePath("/");
+ return{ok:true,materialId,created:!!createdId};
+}
