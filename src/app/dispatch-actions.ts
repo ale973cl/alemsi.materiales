@@ -3,6 +3,7 @@
 import {headers} from "next/headers";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
+import {coveredCampaignQuantity} from "@/lib/campaign-dispatch-balance";
 import {enqueueModuleEmail} from "@/lib/email-queue";
 
 const PRE_OUTPUT=["Borrador","Pendiente","En preparación","Listo para despacho"];
@@ -35,13 +36,13 @@ export async function createCampaignDispatch(input:{surveyId:string}){
 
   const [{data:movements},{data:dispatches}]=await Promise.all([
     supabase.from("inventory_movements").select("material_id,signed_quantity").in("material_id",materialIds),
-    supabase.from("dispatches").select("id,installation_id,status,observations,dispatch_lines(material_id,required_qty)").neq("status","Anulado"),
+    supabase.from("dispatches").select("id,installation_id,status,observations,dispatch_lines(material_id,required_qty,delivered_qty)").neq("status","Anulado"),
   ]);
   const stock=new Map<string,number>();for(const m of movements||[])stock.set(String((m as any).material_id),(stock.get(String((m as any).material_id))||0)+Number((m as any).signed_quantity||0));
   const committed=new Map<string,number>();
   for(const d of dispatches||[]){if(!PRE_OUTPUT.includes((d as any).status))continue;for(const l of (d as any).dispatch_lines||[]){const id=String(l.material_id);committed.set(id,(committed.get(id)||0)+Number(l.required_qty||0));}}
   const already=new Map<string,number>();const marker=`CAMPAÑA:${survey.campaign_id}`;
-  for(const d of dispatches||[]){if(String((d as any).installation_id)!==String(survey.installation_id)||!String((d as any).observations||"").includes(marker))continue;for(const l of (d as any).dispatch_lines||[]){const id=String(l.material_id);already.set(id,(already.get(id)||0)+Number(l.required_qty||0));}}
+  for(const d of dispatches||[]){if(String((d as any).installation_id)!==String(survey.installation_id)||!String((d as any).observations||"").includes(marker))continue;for(const l of (d as any).dispatch_lines||[]){const id=String(l.material_id);already.set(id,(already.get(id)||0)+coveredCampaignQuantity(String((d as any).status),l.required_qty,l.delivered_qty));}}
 
   const alloc:{material_id:string;quantity:number}[]=[];let stillPending=0;
   for(const l of lines){const id=String((l as any).material_id);const required=Math.max(Number((l as any).shortage_qty||0)-(already.get(id)||0),0);if(required<=0)continue;const available=Math.max((stock.get(id)||0)-(committed.get(id)||0),0);const quantity=Math.min(required,available);if(quantity>0){alloc.push({material_id:id,quantity});committed.set(id,(committed.get(id)||0)+quantity);}stillPending+=Math.max(required-quantity,0);}
