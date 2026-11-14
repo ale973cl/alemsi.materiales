@@ -17,7 +17,8 @@ const count = async (supabase:any, table:string, filter?:[string,string]) => {
   return value || 0;
 };
 
-export default async function Page() {
+export default async function Page({ searchParams }: { searchParams: Promise<{ vista?: string }> }) {
+  const { vista } = await searchParams;
   const supabase = await createClient();
   const { data:{ user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -47,5 +48,5 @@ export default async function Page() {
     ...materialCatalog.rows.map((row:any)=>({...row,active:true})),
     ...(inactiveMaterials.data||[]).map((row:any)=>({id:row.id,family:row.family,supplier:null,supplier_code:row.supplier_code,product:row.name,presentation:row.presentation,unit:row.unit,net_value:row.current_net_price,availability:0,duplicate_count:1,active:false})),
   ];
-  return <OperationalApp profile={profile} summary={{clients,installations,materials,openCampaigns,pendingSurveys,openPOs,partialReceipts,openDispatches,financePending,emailPending}} campaigns={campaigns.data||[]} activeCampaigns={activeCampaigns.data||[]} consolidatedSurveys={consolidatedSurveys.data||[]} orders={orders.data||[]} dispatches={dispatches.data||[]} audit={audit.data||[]} materialCatalog={materialCatalog.rows} materialCatalogSourceCount={materialCatalog.sourceCount} materialCatalogError={materialCatalog.error} masterMaterialCatalog={masterMaterialCatalog} clientInstallations={clientInstallations.data||[]} masterClientInstallations={masterClientInstallations.data||[]} users={users.data||[]} userInstallationAccess={userInstallationAccess.data||[]}/>;
+  return <OperationalApp initialTab={vista} profile={profile} summary={{clients,installations,materials,openCampaigns,pendingSurveys,openPOs,partialReceipts,openDispatches,financePending,emailPending}} campaigns={campaigns.data||[]} activeCampaigns={activeCampaigns.data||[]} consolidatedSurveys={consolidatedSurveys.data||[]} orders={orders.data||[]} dispatches={dispatches.data||[]} audit={audit.data||[]} materialCatalog={materialCatalog.rows} materialCatalogSourceCount={materialCatalog.sourceCount} materialCatalogError={materialCatalog.error} masterMaterialCatalog={masterMaterialCatalog} clientInstallations={clientInstallations.data||[]} masterClientInstallations={masterClientInstallations.data||[]} users={users.data||[]} userInstallationAccess={userInstallationAccess.data||[]}/>;
 }
