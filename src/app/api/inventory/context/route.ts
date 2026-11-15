@@ -13,7 +13,10 @@ export async function GET(){
   supabase.from("dispatches").select("id,guide_number,status,dispatch_lines(id,material_id,required_qty,delivered_qty,pending_qty)").in("status",["En preparación","Preparado","Listo para ruta","En tránsito","Entrega parcial"])
  ]);
  const error=materialError||movementError||dispatchError;if(error)return NextResponse.json({error:error.message},{status:500});
+ const {data:children,error:childrenError}=await supabase.from("dispatches").select("id,parent_dispatch_id,status").not("parent_dispatch_id","is",null);
+ if(childrenError)return NextResponse.json({error:childrenError.message},{status:500});
+ const superseded=new Set((children||[]).filter(child=>child.status!=="Anulado").map(child=>String(child.parent_dispatch_id)));
  const reserved:Record<string,number>={};
- for(const dispatch of dispatches||[])for(const line of dispatch.dispatch_lines||[]){if(!line.material_id)continue;const pending=Math.max(0,Number(line.pending_qty??(Number(line.required_qty||0)-Number(line.delivered_qty||0))));reserved[line.material_id]=(reserved[line.material_id]||0)+pending}
+ for(const dispatch of dispatches||[]){if(superseded.has(String(dispatch.id)))continue;for(const line of dispatch.dispatch_lines||[]){if(!line.material_id)continue;const pending=Math.max(0,Number(line.pending_qty??(Number(line.required_qty||0)-Number(line.delivered_qty||0))));reserved[line.material_id]=(reserved[line.material_id]||0)+pending}}
  return NextResponse.json({materials:materials||[],movements:movements||[],reserved});
 }
