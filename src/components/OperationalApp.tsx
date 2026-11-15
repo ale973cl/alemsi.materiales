@@ -46,7 +46,7 @@ export default function OperationalApp({initialTab,profile,summary,campaigns,act
    {tab==="compras"&&<PurchaseOrdersModule orders={orders} role={profile.role}/>}
    {tab==="recepcion"&&<ConnectedReceiptModule role={profile.role}/>}
    {tab==="preparacion"&&<CampaignPendingModule surveys={consolidatedSurveys} dispatches={dispatches}/>}
-   {tab==="entregas"&&<DispatchDeliveryModule dispatches={dispatches} clients={clientInstallations} materials={materialCatalog} role={profile.role} users={users} currentUser={{id:profile.id,full_name:profile.full_name}}/>}
+   {tab==="entregas"&&<DispatchDeliveryModule dispatches={dispatches} campaigns={campaigns} clients={clientInstallations} materials={materialCatalog} role={profile.role} users={users} currentUser={{id:profile.id,full_name:profile.full_name}}/>}
   </main></div></div>
 }
 function Empty(){return <div className="empty"><b>Sin registros disponibles</b><span>El módulo está conectado y respetará los permisos RLS del usuario.</span></div>}
