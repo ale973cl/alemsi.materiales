@@ -4,11 +4,11 @@ import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
 import {
   buildUnifiedPlan,
-  runUnifiedCommit,
-  type ExistingAssignment,
+  runUnifiedCommit
+
   type ExistingClient,
-  type ExistingImportData,
-  type ExistingMaterial,
+  type ExistingImportData
+
   type UnifiedCsvRow,
   type UnifiedImportExecutor,
 } from "@/lib/client-unified-import";
@@ -36,24 +36,20 @@ function validateRows(rows:UnifiedCsvRow[]){
 async function loadExisting(supabase:any):Promise<ExistingImportData>{
  const {data:clients,error}=await supabase.from("clients").select("id,legal_name,rut,central_email,central_phone,address,contracts(id,name,code,net_budget,installations(id,name,region,city,commune,address,delivery_contact_name,delivery_email))");
  if(error)throw new Error(`No se pudo leer la estructura existente: ${error.message}`);
- const {data:materials,error:materialError}=await supabase.from("materials").select("id,name,presentation,unit,supplier_code").eq("active",true);
- if(materialError)throw new Error(`No se pudo leer el maestro de materiales: ${materialError.message}`);
- const contractIds=[...new Set((clients||[]).flatMap((c:any)=>(c.contracts||[]).map((k:any)=>k.id)))].filter(Boolean) as string[];
- const assignments:ExistingAssignment[]=[];
- for(let i=0;i<contractIds.length;i+=150){
-  const chunk=contractIds.slice(i,i+150);
-  const {data,error:assignmentError}=await supabase.from("contract_materials").select("id,contract_id,material_id,installation_id,authorized,authorized_qty,notes").in("contract_id",chunk);
-  if(assignmentError)throw new Error(`No se pudieron leer los materiales contractuales: ${assignmentError.message}`);
-  assignments.push(...(data||[]));
- }
- return{clients:(clients||[]) as ExistingClient[],materials:(materials||[]) as ExistingMaterial[],assignments};
+ // La carga administrativa nunca consulta ni modifica materiales del contrato.
+ return{clients:(clients||[]) as ExistingClient[],materials:[],assignments:[]};
+}
+
+// Compatibilidad con CSV históricos de 21 columnas: se ignoran materiales y cantidades.
+function administrativeOnly(rows:UnifiedCsvRow[]):UnifiedCsvRow[]{
+ return rows.map(({material_code,material_name,material_presentation,quantity,unit,quantity_scope,...administrative})=>administrative);
 }
 
 export async function previewUnifiedClientCsv(rows:UnifiedCsvRow[]){
  const {supabase}=await importContext();
  validateRows(rows);
  const existing=await loadExisting(supabase);
- const plan=buildUnifiedPlan(rows,existing);
+ const plan=buildUnifiedPlan(administrativeOnly(rows),existing);
  return{ok:true,summary:plan.summary,details:plan.details};
 }
 
@@ -61,7 +57,7 @@ export async function confirmUnifiedClientCsv(rows:UnifiedCsvRow[],fileName?:str
  const {supabase,user,profile}=await importContext();
  validateRows(rows);
  const existing=await loadExisting(supabase);
- const plan=buildUnifiedPlan(rows,existing);
+ const plan=buildUnifiedPlan(administrativeOnly(rows),existing);
  if(!plan.summary.newTotal){
   return{ok:true,message:"No hay registros nuevos: todo lo válido ya existe y se conservó sin cambios.",summary:plan.summary,result:{clients:0,contracts:0,installations:0,assignments:0}};
  }
@@ -131,12 +127,12 @@ export async function confirmUnifiedClientCsv(rows:UnifiedCsvRow[],fileName?:str
   action:"Importación única CSV",
   entity_table:"clients",
   new_data:{file:String(fileName||"").slice(0,200),summary:plan.summary,result},
-  observation:"Cliente, contratos, instalaciones y materiales contractuales importados en una sola operación. Los conflictos y las cantidades ya configuradas no se modificaron.",
+  observation:"Importación exclusivamente administrativa. Se ignoran materiales y cantidades del CSV histórico; nunca se asignan materiales durante esta carga.",
  });
  const omitted=plan.summary.conflicts+plan.summary.duplicates;
  return{
   ok:true,
-  message:`Importación completada: ${result.clients} clientes, ${result.contracts} contratos, ${result.installations} instalaciones y ${result.assignments} asignaciones de material.${omitted?` Se omitieron ${plan.summary.conflicts} conflictos y ${plan.summary.duplicates} filas duplicadas.`:""}`,
+  message:`Importación completada: ${result.clients} clientes, ${result.contracts} contratos, ${result.installations} instalaciones.${omitted?` Se omitieron ${plan.summary.conflicts} conflictos y ${plan.summary.duplicates} filas duplicadas.`:""}`,
   summary:plan.summary,
   result,
  };
