@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "test:circuits": "node --experimental-strip-types --test tests/qa-material-circuits.mjs",
-    "prebuild": "npm run test:circuits"
+    "test:import": "node --experimental-strip-types --test tests/qa-unified-import.mjs",
+    "prebuild": "npm run test:circuits && npm run test:import"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

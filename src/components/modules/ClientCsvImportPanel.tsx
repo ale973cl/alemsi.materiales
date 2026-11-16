@@ -3,10 +3,11 @@
 import {useRef,useState} from "react";
 import {confirmClientsCsvRows,previewClientsCsvRows} from "@/app/client-import-actions";
 import InstallationCsvImportPanel from "@/components/modules/InstallationCsvImportPanel";
+import UnifiedClientImportPanel from "@/components/modules/UnifiedClientImportPanel";
 
 type Row={name?:string;email?:string;rut?:string;activity?:string;phone?:string;commune?:string;address?:string};
 type Preview={total:number;created:number;updated:number;unchanged:number;review:number;duplicates:number;details:Array<{index:number;name:string;rut:string;status:string;reason?:string;changes?:Record<string,string>}>};
-type ImportView="clients"|"installations"|null;
+type ImportView="unified"|"clients"|"installations"|null;
 
 const parseLine=(line:string,delimiter:string)=>{const out:string[]=[];let value="",quoted=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(quoted&&line[i+1]==='"'){value+='"';i++}else quoted=!quoted}else if(ch===delimiter&&!quoted){out.push(value.trim());value=""}else value+=ch}out.push(value.trim());return out};
 const norm=(v:string)=>String(v||"").trim().toLocaleLowerCase("es-CL").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
@@ -38,9 +39,11 @@ export default function ClientCsvImportPanel(){
    .csvImportLaunchers{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.csvImportLaunchers button{border:1px solid #0b2f4a;border-radius:10px;background:#fff;color:#0b2f4a;padding:10px 14px;font-weight:800}.csvImportLaunchers button.active{background:#0b2f4a;color:#fff}.csvImportPanelHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}.csvImportPanelHead h3{margin:0;color:#0b2f4a}.clientCsvImport{margin:12px 0;padding:14px;border:1px solid #c8dce8;border-radius:12px;background:#f8fbfd}.clientCsvTop{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.clientCsvTop input{max-width:320px}.clientCsvTop a{display:inline-flex;align-items:center;min-height:38px;padding:0 12px;border:1px solid #0b2f4a;border-radius:9px;background:#fff;color:#0b2f4a;font-weight:700;text-decoration:none}.clientCsvTop a:hover{background:#eef7f5}.clientCsvSummary{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.clientCsvSummary span{padding:7px 10px;border-radius:999px;background:#eef5f8;font-size:12px;font-weight:700;color:#173650}.clientCsvTable{max-height:280px;overflow:auto;border:1px solid #d7e4eb;border-radius:10px;background:#fff}.clientCsvTable table{width:100%;border-collapse:collapse;font-size:12px}.clientCsvTable th,.clientCsvTable td{padding:8px 10px;border-bottom:1px solid #edf2f5;text-align:left;vertical-align:top}.clientCsvTable th{position:sticky;top:0;background:#f4f8fa;z-index:1}.clientCsvActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.clientCsvImport .warning{color:#8a4b00;font-weight:700}.csvAiHelp{font-size:12px;line-height:1.45;color:#557084}
   `}}/>
   <div className="csvImportLaunchers">
+   <button type="button" className={view==="unified"?"active":""} onClick={()=>setView(view==="unified"?null:"unified")}>Importar cliente, contratos e instalaciones</button>
    <button type="button" className={view==="clients"?"active":""} onClick={()=>setView(view==="clients"?null:"clients")}>Cargar clientes CSV</button>
    <button type="button" className={view==="installations"?"active":""} onClick={()=>setView(view==="installations"?null:"installations")}>Cargar instalaciones CSV</button>
   </div>
+  {view==="unified"&&<UnifiedClientImportPanel/>}
   {view==="clients"&&<div className="clientCsvImport">
    <div className="csvImportPanelHead"><h3>Clientes CSV</h3><button type="button" className="clearFilters" onClick={close}>Cerrar</button></div>
    <div className="clientCsvTop"><input ref={inputRef} type="file" accept=".csv,text/csv" onChange={e=>{const f=e.target.files?.[0];if(f)void loadFile(f)}}/><span>{busy?"Procesando...":fileName||"Selecciona el CSV maestro de clientes"}</span><a href="/plantilla-clientes.csv" download>Descargar plantilla clientes CSV</a></div>
