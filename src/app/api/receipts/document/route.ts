@@ -10,7 +10,7 @@ async function context(){
  if(!user)return{error:NextResponse.json({error:"Sesión requerida"},{status:401})};
  const {data:profile}=await supabase.from("user_profiles").select("role,active").eq("id",user.id).single();
  if(!profile?.active||!["Admin Total","Admin","Gerencia","Finanzas","Bodega"].includes(profile.role))return{error:NextResponse.json({error:"Sin permiso para documentos"},{status:403})};
- return{supabase,role:profile.role};
+ return{supabase,role:profile.role,userId:user.id};
 }
 export async function POST(request:NextRequest){
  const ctx=await context();if(ctx.error)return ctx.error;
@@ -24,6 +24,7 @@ export async function POST(request:NextRequest){
  if(!receipt||receipt.inventory_posted)return NextResponse.json({error:"Recepción inexistente o ya cotejada"},{status:409});
  const {error}=await ctx.supabase!.storage.from(BUCKET).upload(`${id}/original`,Buffer.from(await file.arrayBuffer()),{contentType:file.type,upsert:false,cacheControl:"private"});
  if(error)return NextResponse.json({error:"No se pudo almacenar la factura. Verifica que el depósito privado receipt-documents esté configurado."},{status:503});
+ await ctx.supabase!.from("activity_log").insert({actor_id:ctx.userId,module:"Recepción",action:"Adjuntar factura original",entity_table:"receipts",entity_id:id,new_data:{content_type:file.type,size:file.size}});
  return NextResponse.json({ok:true,stored:true,inventory_updated:false});
 }
 export async function GET(request:NextRequest){
