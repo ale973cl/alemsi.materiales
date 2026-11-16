@@ -68,7 +68,7 @@ export default function DispatchDeliveryModule({dispatches,campaigns,clients,mat
  const archiveFiltered=archiveGuides.filter(g=>!filters.q||normalize([g.number,g.client,g.contract,g.installation].join(" ")).includes(normalize(filters.q)));
  const archiveSelectable=archiveFiltered.map(g=>g.id);
  const archiveAllSelected=archiveSelectable.length>0&&archiveSelectable.every(id=>archiveSelected.includes(id));
- const archiveParams=new URLSearchParams();if(archiveMonth)archiveParams.set("month",archiveMonth);if(filters.client)archiveParams.set("client_id",filters.client);if(filters.installation)archiveParams.set("installation_id",filters.installation);if(filters.campaign){archiveParams.set("campaign_id",filters.campaign);archiveParams.set("campaign_name",String(campaigns.find(c=>c.id===filters.campaign)?.label||"campana"))}if(archiveSelected.length)archiveParams.set("dispatch_ids",archiveSelected.join(","));
+ const archiveParams=new URLSearchParams();if(archiveMonth)archiveParams.set("month",archiveMonth);if(filters.client)archiveParams.set("client_id",filters.client);if(filters.installation)archiveParams.set("installation_id",filters.installation);if(filters.campaign){archiveParams.set("campaign_id",filters.campaign);archiveParams.set("campaign_name",String(campaigns.find(c=>c.id===filters.campaign)?.label||"campana"))}if(archiveSelected.length){for(const key of ["month","client_id","installation_id","campaign_id"])archiveParams.delete(key);archiveParams.set("dispatch_ids",archiveSelected.join(","));}
  const toggleSelected=(id:string)=>setSelected(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]);
  const stageCount=(name:string)=>name==="Guías pendientes"?suggestionRows.length+dispatches.filter(d=>stageForStatus(d.status)===name).length:["Preparar","En tránsito"].includes(name)?null:name==="Pendientes material"?dispatches.filter(remainsPending).length:dispatches.filter(d=>stageForStatus(d.status)===name).length;
  const showRows=["Guías pendientes","Designar ruta","Pendientes material"].includes(active);
@@ -90,13 +90,13 @@ export default function DispatchDeliveryModule({dispatches,campaigns,clients,mat
   <div style={{display:"flex",gap:10,alignItems:"end",flexWrap:"wrap"}}>
    <label style={{display:"grid",gap:5,fontWeight:700}}>Filtrar por mes (opcional)<input type="month" value={archiveMonth} onChange={e=>{setArchiveMonth(e.target.value);setArchiveSelected([])}}/></label>
    <button type="button" onClick={()=>{setArchiveMonth("");setArchiveSelected([])}}>Todos los meses</button>
-   <button type="button" disabled={!archiveSelectable.length} onClick={()=>setArchiveSelected(old=>archiveAllSelected?old.filter(id=>!archiveSelectable.includes(id)):[...new Set([...old,...archiveSelectable])])}>{archiveAllSelected?"Deseleccionar las visibles":"Seleccionar todas las visibles"}</button>
+   <button type="button" disabled={!archiveSelectable.length} onClick={()=>setArchiveSelected(old=>archiveAllSelected?old.filter(id=>!archiveSelectable.includes(id)):[...new Set([...old,...archiveSelectable])].slice(0,250))}>{archiveAllSelected?"Deseleccionar las visibles":"Seleccionar todas las visibles"}</button>
    <a className="btn" aria-disabled={!archiveSelected.length} onClick={e=>{if(!archiveSelected.length)e.preventDefault()}} href={archiveSelected.length?"/api/reports/deliveries-zip?"+archiveParams.toString():"#"} download>Descargar ZIP ({archiveSelected.length} guías)</a>
   </div>
-  <p style={{fontSize:12,margin:"10px 0"}}>{archiveLoading?"Consultando guías firmadas…":`${archiveFiltered.length} guías históricas encontradas`} {archiveError&&`· ${archiveError}`}</p>
+  <p style={{fontSize:12,margin:"10px 0"}}>Máximo 250 guías por descarga ZIP. {archiveLoading?"Consultando guías firmadas…":`${archiveFiltered.length} guías históricas encontradas`} {archiveError&&`· ${archiveError}`}</p>
   <div style={{maxHeight:430,overflow:"auto",border:"1px solid #e0e9ef",borderRadius:10}}>
    {archiveFiltered.map(g=><label key={g.id} style={{display:"grid",gridTemplateColumns:"30px minmax(150px,1fr) minmax(150px,1fr) minmax(110px,1fr) auto",gap:10,alignItems:"center",padding:10,borderBottom:"1px solid #e2edf2",fontSize:12}}>
-    <input type="checkbox" checked={archiveSelected.includes(g.id)} onChange={()=>setArchiveSelected(old=>old.includes(g.id)?old.filter(x=>x!==g.id):[...old,g.id])}/>
+    <input type="checkbox" checked={archiveSelected.includes(g.id)} onChange={()=>setArchiveSelected(old=>old.includes(g.id)?old.filter(x=>x!==g.id):old.length>=250?old:[...old,g.id])}/>
     <span><b>{g.number}</b><br/>{g.installation}</span><span>{g.client}<br/><small>{g.contract}</small></span><span>{g.delivered_at?new Date(g.delivered_at).toLocaleDateString("es-CL"):"Sin fecha"}</span>
     <a href={`/api/reports/deliveries-zip?dispatch_ids=${g.id}&format=pdf`} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()}>PDF</a>
    </label>)}
