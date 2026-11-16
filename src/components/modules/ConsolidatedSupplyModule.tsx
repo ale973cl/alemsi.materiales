@@ -8,12 +8,13 @@ type SurveyLine={id?:string;material_id:string;shortage_qty?:number|null;unit_ne
 type SurveyRow={id:string;campaign_id:string;installation_id:string;status:string;confirmed_at?:string|null;campaigns?:{id?:string;label?:string|null;status?:string|null}|null;installations?:{id?:string;name?:string|null;region?:string|null;contracts?:{id?:string;name?:string|null;clients?:{id?:string;legal_name?:string|null}|null}|null}|null;survey_lines?:SurveyLine[]};
 type Supplier={id:string;legal_name:string;rut?:string|null;address?:string|null;payment_terms?:string|null;conditions?:string|null};
 type SupplyOrder={id:string;order_number?:string|null;status:string;supply_runs?:{campaign_id?:string|null}|null;purchase_order_lines?:{material_id:string;ordered_qty:number|null;committed_qty?:number|null}[]};
-type FreeLine={description:string;qty:number;unit:string;unit_net_price:number};
+type FreeLine={line_type:"Material"|"Servicio";material_id:string;description:string;qty:number;unit:string;unit_net_price:number};
+type MasterMaterial={id:string;name:string;family?:string|null;presentation?:string|null;unit?:string|null;supplier_code?:string|null;current_net_price?:number|null};
 type Mode="manual"|"requirement"|null;
 
 const campaignName=(label?:string|null)=>{if(!label)return "Campaña";try{const value=JSON.parse(label);return typeof value?.name==="string"?value.name:label}catch{return label}};
 const money=(n:number)=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n||0);
-const emptyFreeLine=():FreeLine=>({description:"",qty:1,unit:"UN",unit_net_price:0});
+const emptyFreeLine=():FreeLine=>({line_type:"Material",material_id:"",description:"",qty:1,unit:"UN",unit_net_price:0});
 const familyName=(row:any)=>String(row.material?.family||"Sin familia").trim()||"Sin familia";
 
 export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}){
@@ -24,6 +25,7 @@ export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}
  const [selectedFamilies,setSelectedFamilies]=useState<string[]>([]);
  const [suppliers,setSuppliers]=useState<Supplier[]>([]);
  const [orders,setOrders]=useState<SupplyOrder[]>([]);
+ const [masterMaterials,setMasterMaterials]=useState<MasterMaterial[]>([]);
  const [supplierId,setSupplierId]=useState("");
  const [quantities,setQuantities]=useState<Record<string,number>>({});
  const [prices,setPrices]=useState<Record<string,number>>({});
@@ -37,7 +39,7 @@ export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}
  const [observations,setObservations]=useState("");
  const [freeSaving,setFreeSaving]=useState(false);
  const [freeMessage,setFreeMessage]=useState("");
- const loadSupplyContext=async()=>{try{const response=await fetch("/api/supply/context",{cache:"no-store"});const data=await response.json();if(response.ok){setSuppliers(data.suppliers||[]);setOrders(data.orders||[])}}catch{}};
+ const loadSupplyContext=async()=>{try{const response=await fetch("/api/supply/context",{cache:"no-store"});const data=await response.json();if(response.ok){setSuppliers(data.suppliers||[]);setOrders(data.orders||[]);setMasterMaterials(data.materials||[])}}catch{}};
  useEffect(()=>{void loadSupplyContext()},[]);
 
  const confirmedSurveys=useMemo(()=>surveys.filter(s=>s.status==="Confirmada"&&Boolean(s.confirmed_at)),[surveys]);
@@ -59,7 +61,7 @@ export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}
  const freeNet=freeLines.reduce((sum,line)=>sum+Number(line.qty||0)*Number(line.unit_net_price||0),0);
  const freeVat=Math.round(freeNet*.19);
  const updateFreeLine=(index:number,key:keyof FreeLine,value:string|number)=>setFreeLines(current=>current.map((line,i)=>i===index?{...line,[key]:value}:line));
- const createFreeOrder=async()=>{setFreeMessage("");if(!freeSupplierId){setFreeMessage("Selecciona un proveedor.");return}const valid=freeLines.filter(line=>line.description.trim()&&Number(line.qty)>0);if(!valid.length){setFreeMessage("Agrega al menos un concepto.");return}const formData=new FormData();formData.set("supplier_id",freeSupplierId);formData.set("lines",JSON.stringify(valid));formData.set("payment_terms",paymentTerms);formData.set("delivery_terms",deliveryTerms);formData.set("conditions",conditions);formData.set("observations",observations);formData.set("vat_rate","19");setFreeSaving(true);try{const result=await createFreePurchaseOrder(formData);setFreeMessage(`OC ${result.order_number} creada en borrador.`);setFreeLines([emptyFreeLine()]);setObservations("");await loadSupplyContext();router.refresh()}catch(error:any){setFreeMessage(error?.message||"No se pudo crear la OC manual")}finally{setFreeSaving(false)}};
+ const createFreeOrder=async()=>{setFreeMessage("");if(!freeSupplierId){setFreeMessage("Selecciona un proveedor.");return}const valid=freeLines.filter(line=>Number(line.qty)>0&&(line.line_type==="Servicio"?line.description.trim():Boolean(line.material_id)));if(!valid.length||valid.length!==freeLines.length){setFreeMessage("Selecciona cada producto del Maestro o describe los servicios.");return}const formData=new FormData();formData.set("supplier_id",freeSupplierId);formData.set("lines",JSON.stringify(valid));formData.set("payment_terms",paymentTerms);formData.set("delivery_terms",deliveryTerms);formData.set("conditions",conditions);formData.set("observations",observations);formData.set("vat_rate","19");setFreeSaving(true);try{const result=await createFreePurchaseOrder(formData);setFreeMessage(`OC ${result.order_number} creada en borrador.`);setFreeLines([emptyFreeLine()]);setObservations("");await loadSupplyContext();router.refresh()}catch(error:any){setFreeMessage(error?.message||"No se pudo crear la OC manual")}finally{setFreeSaving(false)}};
 
  return <section className="panel consolidatedModule ocFlowModule">
   <style dangerouslySetInnerHTML={{__html:`
@@ -75,9 +77,16 @@ export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}
   {mode==="manual"&&<div>
    <button type="button" className="linkBtn ocBack" onClick={()=>setMode(null)}>← Volver a opciones</button>
    <section className="panel">
-    <div className="catalogIntro"><div><h3>OC manual / administrativa</h3><p>No nace de campaña ni modifica carencias. Se genera con folio propio y queda en borrador para revisión.</p></div><span className="catalogCount">Borrador</span></div>
+    <div className="catalogIntro"><div><h3>OC manual / administrativa</h3><p>Los productos físicos se seleccionan exclusivamente desde el Maestro ALEMSI. Los servicios no inventariables pueden describirse aparte. No modifica carencias de campaña.</p></div><span className="catalogCount">Borrador</span></div>
     <div className="surveyCampaignFilters"><label>Proveedor<select value={freeSupplierId} onChange={e=>{const id=e.target.value;setFreeSupplierId(id);const supplier=suppliers.find(item=>item.id===id);setPaymentTerms(supplier?.payment_terms||"");setConditions(supplier?.conditions||"")}}><option value="">Seleccionar proveedor</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.legal_name}</option>)}</select></label><label>RUT<input value={selectedFreeSupplier?.rut||""} readOnly placeholder="RUT proveedor"/></label><label>Condición de pago<input value={paymentTerms} onChange={e=>setPaymentTerms(e.target.value)} placeholder="Ej. 30 días fecha factura"/></label><label>Plazo/condición de entrega<input value={deliveryTerms} onChange={e=>setDeliveryTerms(e.target.value)} placeholder="Ej. entrega inmediata"/></label></div>
-    <div className="table" style={{marginTop:12}}>{freeLines.map((line,index)=><div className="row" key={`free-${index}`}><label style={{flex:2}}>Descripción<input value={line.description} onChange={e=>updateFreeLine(index,"description",e.target.value)} placeholder="Producto, servicio, licencia..."/></label><label>Cantidad<input type="number" min="0.01" step="any" value={line.qty} onChange={e=>updateFreeLine(index,"qty",Number(e.target.value))}/></label><label>Unidad<input value={line.unit} onChange={e=>updateFreeLine(index,"unit",e.target.value)}/></label><label>Precio neto<input type="number" min="0" step="any" value={line.unit_net_price} onChange={e=>updateFreeLine(index,"unit_net_price",Number(e.target.value))}/></label><button type="button" onClick={()=>setFreeLines(current=>current.length===1?[emptyFreeLine()]:current.filter((_,i)=>i!==index))}>Quitar</button></div>)}</div>
+    <div className="table" style={{marginTop:12}}>{freeLines.map((line,index)=><div className="row" key={`free-${index}`} style={{flexWrap:"wrap",alignItems:"end"}}>
+ <label>Tipo<select value={line.line_type} onChange={e=>setFreeLines(current=>current.map((item,i)=>i===index?{...emptyFreeLine(),line_type:e.target.value as "Material"|"Servicio"}:item))}><option value="Material">Producto del Maestro</option><option value="Servicio">Servicio / concepto no inventariable</option></select></label>
+ {line.line_type==="Material"?<label style={{flex:2,minWidth:240}}>Producto ALEMSI<select value={line.material_id} onChange={e=>{const material=masterMaterials.find(m=>m.id===e.target.value);setFreeLines(current=>current.map((item,i)=>i===index?{...item,material_id:material?.id||"",description:material?.name||"",unit:material?.unit||"UN",unit_net_price:Number(material?.current_net_price||0)}:item))}}><option value="">Seleccionar producto existente</option>{masterMaterials.map(m=><option key={m.id} value={m.id}>{m.name}{m.presentation?` · ${m.presentation}`:""}</option>)}</select></label>:<label style={{flex:2,minWidth:240}}>Descripción del servicio<input value={line.description} onChange={e=>updateFreeLine(index,"description",e.target.value)} placeholder="Servicio, licencia, arriendo..."/></label>}
+ <label>Cantidad<input type="number" min="0.01" step="any" value={line.qty} onChange={e=>updateFreeLine(index,"qty",Number(e.target.value))}/></label>
+ <label>Unidad<input value={line.unit} readOnly={line.line_type==="Material"} onChange={e=>updateFreeLine(index,"unit",e.target.value)}/></label>
+ <label>Precio neto<input type="number" min="0" step="any" value={line.unit_net_price} onChange={e=>updateFreeLine(index,"unit_net_price",Number(e.target.value))}/></label>
+ <button type="button" onClick={()=>setFreeLines(current=>current.length===1?[emptyFreeLine()]:current.filter((_,i)=>i!==index))}>Quitar</button>
+ </div>)}</div>
     <button type="button" className="linkBtn" onClick={()=>setFreeLines(current=>[...current,emptyFreeLine()])}>+ Agregar concepto</button>
     <div className="surveyCampaignFilters" style={{marginTop:12}}><label>Condiciones de la OC<textarea rows={3} value={conditions} onChange={e=>setConditions(e.target.value)}/></label><label>Observaciones<textarea rows={3} value={observations} onChange={e=>setObservations(e.target.value)}/></label></div>
     <div className="campaignMetrics" style={{marginTop:12}}><span><b>{money(freeNet)}</b><small>Neto</small></span><span><b>{money(freeVat)}</b><small>IVA 19%</small></span><span><b>{money(freeNet+freeVat)}</b><small>Total</small></span></div>
