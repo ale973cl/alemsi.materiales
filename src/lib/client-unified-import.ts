@@ -248,6 +248,7 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
   const contractIndex = new Map<string, UnifiedContractOp>();
   const installationIndex = new Map<string, UnifiedInstallationOp>();
   const assignmentIndex = new Map<string, UnifiedAssignmentOp>();
+  let existingAssignments = 0;
 
   const clientsByRut = new Map<string, ExistingClient>();
   for (const client of existing.clients || []) {
@@ -558,6 +559,7 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
       continue;
     }
     const quantity = qtyResult.value;
+    const materialLabel = material.name + " · " + (scope === "instalacion" ? installationOp!.name : "contrato");
 
     const key = contractOp.key + "|mat:" + material.id + "|" + (scope === "instalacion" ? installationOp!.key : "contrato");
     const existingAssignment = contractOp.id
@@ -586,7 +588,8 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
           conflict = true;
         }
       }
-      detail(rowNumber, "Material", material.name, conflict ? "CONFLICTO" : "EXISTE", reason);
+      if (!conflict) existingAssignments++;
+      detail(rowNumber, "Material", materialLabel, conflict ? "CONFLICTO" : "EXISTE", reason);
       continue;
     }
 
@@ -604,9 +607,9 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
     if (previous) {
       if (previous.scope !== scope || previous.quantity !== quantity) {
         previous.invalid = true;
-        detail(rowNumber, "Material", material.name, "CONFLICTO", "El mismo material aparece repetido con cantidades o alcances distintos");
+        detail(rowNumber, "Material", materialLabel, "CONFLICTO", "El mismo material aparece repetido con cantidades o alcances distintos");
       } else {
-        detail(rowNumber, "Material", material.name, "DUPLICADO", "Fila repetida dentro del CSV; se procesará una sola vez");
+        detail(rowNumber, "Material", materialLabel, "DUPLICADO", "Fila repetida dentro del CSV; se procesará una sola vez");
       }
       continue;
     }
@@ -626,7 +629,7 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
     detail(
       rowNumber,
       "Material",
-      material.name,
+      materialLabel,
       "NUEVO",
       scope === "contrato" ? "Autorización contractual; cantidad no distribuida" : quantity != null ? `Máximo por instalación: ${quantity}${unit ? " " + unit : ""}` : "Autorizado sin cantidad máxima"
     );
@@ -664,7 +667,7 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
       installationsNew,
       installationsExisting: validInstallations.length - installationsNew,
       assignmentsNew,
-      assignmentsExisting: details.filter((d) => d.level === "Material" && d.status === "EXISTE").length,
+      assignmentsExisting: existingAssignments,
       conflicts,
       duplicates,
       newTotal: clientsNew + contractsNew + installationsNew + assignmentsNew,

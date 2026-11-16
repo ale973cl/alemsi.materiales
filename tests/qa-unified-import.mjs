@@ -91,6 +91,7 @@ test('reimportación idéntica no crea registros',()=>{
  assert.equal(second.summary.contractsNew,0);
  assert.equal(second.summary.installationsNew,0);
  assert.equal(second.summary.assignmentsNew,0);
+ assert.equal(second.summary.assignmentsExisting,2);
  assert.equal(second.summary.conflicts,0);
 });
 
