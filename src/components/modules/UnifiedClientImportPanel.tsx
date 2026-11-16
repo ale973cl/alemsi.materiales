@@ -8,51 +8,36 @@ type Detail={row:number;level:"Cliente"|"Contrato"|"Instalación"|"Material";ite
 type Summary={rows:number;clientsNew:number;clientsExisting:number;contractsNew:number;contractsExisting:number;installationsNew:number;installationsExisting:number;assignmentsNew:number;assignmentsExisting:number;conflicts:number;duplicates:number;newTotal:number};
 
 const TEMPLATE="/plantilla-cliente-contrato-instalacion.csv";
-const CSV_HEADERS="cliente_nombre;cliente_rut;cliente_correo;cliente_telefono;contrato_nombre;contrato_codigo;presupuesto_neto_clp;instalacion_nombre;region;comuna;direccion;contacto_entrega;correo_entrega;periodicidad_contrato;material_codigo;material_nombre;cantidad_asignada;unidad;ciudad;material_presentacion;alcance_cantidad";
+const CSV_HEADERS="cliente_nombre;cliente_rut;cliente_correo;cliente_telefono;contrato_nombre;contrato_codigo;presupuesto_neto_clp;instalacion_nombre;region;comuna;direccion;contacto_entrega;correo_entrega;periodicidad_contrato;ciudad";
 
-const PROMPT=`Actúa como extractor documental para ALEMSI. Trabaja exclusivamente con los documentos adjuntos (contrato, bases, anexos o listados). No uses conocimiento externo ni supongas datos.
+const PROMPT=`Eres extractor documental del sistema ALEMSI Materiales. Usa EXCLUSIVAMENTE los documentos adjuntos: contrato, bases administrativas, bases técnicas y anexos. No inventes información.
 
-OBJETIVO
-Genera un único archivo CSV que permita crear un cliente, todos sus contratos, todas sus instalaciones y los materiales autorizados por contrato, con cantidades máximas solo cuando estén expresamente documentadas.
+PROCESO 1 — CSV ADMINISTRATIVO PARA IMPORTACIÓN
+Extrae únicamente cliente, contrato e instalaciones. NO extraigas materiales, cantidades de materiales, equivalencias de productos, máximos autorizados ni listas de insumos para el CSV: se configuran después en ALEMSI a partir del Maestro de Materiales, por contrato y luego instalación por instalación.
 
-FORMATO OBLIGATORIO
-- Separador: punto y coma (;).
-- Codificación: UTF-8.
-- Sin índice, sin comentarios, sin líneas decorativas, sin JSON, sin tablas Markdown y sin bloques de código.
-- Una sola fila de cabecera con EXACTAMENTE estas columnas y en este orden:
+Entrega un archivo CSV UTF-8 con separador ; (punto y coma), exactamente con estas columnas y en este orden:
 ${CSV_HEADERS}
-- Respeta literalmente los nombres de columna. No los traduzcas, no los cambies de orden y no agregues columnas.
-- Deja vacía cualquier celda cuyo dato no aparezca de forma verificable en los documentos.
-- Usa una fila por combinación de instalación y material. Repite cliente y contrato en cada fila cuando corresponda.
-- Si el cliente o contrato no tiene instalaciones, emite al menos una fila con instalacion_nombre vacío.
-- No dupliques clientes, contratos, instalaciones ni materiales. Si el mismo material aparece varias veces para una misma instalación, consolídalo en una sola fila.
 
-REGLAS DE CONTENIDO
-1. cliente_nombre: razón social tal como aparece en el documento.
-2. cliente_rut: RUT chileno con dígito verificador (ejemplo: 76.543.210-2). Si no aparece, deja vacío.
-3. cliente_correo y cliente_telefono: solo datos de contacto central del cliente.
-4. contrato_nombre: nombre del contrato, licitación, convenio o perfil. No lo abrevies.
-5. contrato_codigo: código o identificador del contrato si el documento lo trae. Es la clave para distinguir contratos homónimos. Si no existe, déjalo vacío.
-6. presupuesto_neto_clp: monto neto autorizado, solo números. Si no está documentado, déjalo vacío.
-7. instalacion_nombre: nombre de cada dependencia, sucursal, unidad o instalación. Extrae TODAS las que aparezcan.
-8. region, comuna, ciudad, direccion: solo si están documentadas.
-9. contacto_entrega y correo_entrega: responsable de recepción en la instalación, solo si aparece.
-10. periodicidad_contrato: Mensual, Bimensual, Trimestral, Cuatrimestral o Semestral, solo si está documentada.
-11. material_codigo: código del material tal como aparece en el documento. Si no hay código, déjalo vacío.
-12. material_nombre: nombre completo del material o producto, sin inventar presentaciones.
-13. material_presentacion: presentación o formato (caja, bidón, pack, etc.) solo si está documentada.
-14. cantidad_asignada: cantidad máxima autorizada, solo si el documento la menciona expresamente. Si no está documentada, deja vacío. No calcules ni estimes cantidades.
-15. unidad: unidad de medida documentada (unidad, caja, litro, kilo, par, etc.).
-16. alcance_cantidad: escribe "instalacion" cuando la cantidad corresponda a esa instalación; escribe "contrato" cuando sea un total del contrato y no exista desglose por instalación; si no hay cantidad, déjalo vacío.
-17. NUNCA distribuyas ni repartas entre instalaciones una cantidad que solo esté informada a nivel de contrato. En ese caso usa alcance_cantidad=contrato y no inventes máximos por instalación.
-18. No inventes RUT, códigos, direcciones, contactos, materiales, cantidades ni relaciones.
-19. Si dos documentos se contradicen, elige el dato más específico y deja constancia de la contradicción en la sección de ambigüedades.
+REGLAS DEL CSV
+- Una fila por instalación de cada contrato; repite los datos de cliente y contrato en esas filas. Si no hay instalaciones documentadas, crea una fila con instalacion_nombre vacío.
+- Solo datos explícitos en las bases. Campos sin evidencia = celdas vacías; nunca inventar datos.
+- cliente_rut: solo si está documentado, conserva el dígito verificador.
+- contrato_codigo: código/ID oficial, si está documentado.
+- presupuesto_neto_clp: solo monto NETO verificable, sin símbolo de moneda, sin puntos de miles.
+- periodicidad_contrato: frecuencia del CONTRATO cuando esté especificada; no confundir frecuencia de aseo con periodicidad de abastecimiento.
+- Una sola fila por instalación, no repetirla por cada material.
+- Los nombres de columnas no llevan tildes. Para el CONTENIDO, conserva español correcto y acentos en UTF-8; nunca entregues texto corrupto como "RegiÃ³n" o "SubsecretarÃ­a".
+- Normaliza espacios, saltos de línea internos y caracteres Unicode; no modifiques nombres oficiales ni elimines tildes indiscriminadamente.
+- Entrecomilla un campo si contiene punto y coma, comillas o saltos de línea; duplica las comillas internas según CSV.
+- Sin tablas Markdown, delimitadores verticales |, encabezados decorativos, JSON ni bloques de código dentro del archivo.
+- No incluyas comentarios o informes debajo de las filas del CSV.
 
-ENTREGA
-- Entrega primero el CSV completo y válido.
-- Después de una línea en blanco, agrega una sección separada titulada AMBIGÜEDADES. No incluyas esa sección dentro del archivo CSV.
-- En AMBIGÜEDADES enumera: filas o campos dudosos, datos faltantes, contratos homónimos, materiales no identificados y cualquier cantidad que no haya podido asignarse con certeza.`;
+PROCESO 2 — INFORME CONTRACTUAL SEPARADO, NO IMPORTABLE
+Entrega un documento independiente titulado INFORME DE OBLIGACIONES DEL PROVEEDOR. Señala servicios exigidos, productos o materiales especificados en bases, cláusulas "o similar", cantidades expresamente documentadas, cobertura, dotación, turnos, frecuencias, seguridad, EPP, supervisión, entregables, plazos, multas y ambigüedades. Cita documento, cláusula y página cuando sea posible. No conviertas insumos exigidos en productos del Maestro ALEMSI y no afirmes equivalencias técnicas sin evidencia.
 
+ENTREGA FINAL
+1. Archivo CSV administrativo descargable (UTF-8; separador ;).
+2. Informe de obligaciones independiente (texto o documento). Si la plataforma no puede adjuntar archivos, presenta ambos resultados claramente separados para guardarlos por separado. El informe JAMÁS forma parte del CSV.`;
 const HEADER_ALIASES:Record<string,string[]> = {
  client_name:["cliente_nombre","cliente","nombre_cliente","razon_social","razon_social_cliente"],
  client_rut:["cliente_rut","rut","rut_cliente"],
@@ -210,7 +195,7 @@ export default function UnifiedClientImportPanel(){
    @media print{body *{visibility:hidden}.unifiedGuide,.unifiedGuide *{visibility:visible}.unifiedGuide{position:absolute;left:0;top:0;width:100%;border:0}}
   `}}/>
   <div className="unifiedHead">
-   <div><h3>Importar cliente, contratos e instalaciones</h3><p>Un solo CSV crea y relaciona cliente, contratos, instalaciones y materiales contractuales. Primero se muestra una vista previa; nada se guarda hasta confirmar.</p></div>
+   <div><h3>Importar cliente, contratos e instalaciones</h3><p>CSV administrativo para crear cliente, contratos e instalaciones. Los materiales se configuran después desde el Maestro ALEMSI. Primero revisa la vista previa; nada se guarda hasta confirmar.</p></div>
    <button type="button" onClick={()=>void copyPrompt()}>Copiar prompt para IA</button>
   </div>
   <div className="unifiedToolbar">
@@ -219,7 +204,7 @@ export default function UnifiedClientImportPanel(){
    <button type="button" onClick={()=>setShowPrompt(v=>!v)}>{showPrompt?"Ocultar prompt":"Ver prompt"}</button>
    <button type="button" onClick={()=>{setShowGuide(true);window.setTimeout(()=>guideRef.current?.scrollIntoView({behavior:"smooth"}),50);}}>Guía de uso</button>
   </div>
-  <p style={{fontSize:12,color:"#557084",margin:"0 0 8px"}}>Separador punto y coma (;), UTF-8. La plantilla acepta las columnas históricas y agrega <b>ciudad</b>, <b>material_presentacion</b> y <b>alcance_cantidad</b> al final. Una segunda carga idéntica no duplica registros.</p>
+  <p style={{fontSize:12,color:"#557084",margin:"0 0 8px"}}>Separador punto y coma (;), UTF-8. La plantilla contiene únicamente 15 columnas administrativas. También se aceptan CSV antiguos de 21 columnas, pero sus materiales y cantidades se ignoran. Una segunda carga idéntica no duplica registros.</p>
   {showPrompt&&<textarea className="unifiedPrompt" readOnly value={PROMPT} onFocus={e=>e.currentTarget.select()} aria-label="Prompt completo para IA"/>}
   {message&&<p className="note">{message}</p>}
   {summary&&<div className="unifiedChips">
@@ -227,8 +212,8 @@ export default function UnifiedClientImportPanel(){
    <span className="ok">+{summary.clientsNew} clientes</span>
    <span className="ok">+{summary.contractsNew} contratos</span>
    <span className="ok">+{summary.installationsNew} instalaciones</span>
-   <span className="ok">+{summary.assignmentsNew} materiales</span>
-   <span>{summary.clientsExisting+summary.contractsExisting+summary.installationsExisting+summary.assignmentsExisting} existentes</span>
+   
+   <span>{summary.clientsExisting+summary.contractsExisting+summary.installationsExisting} existentes</span>
    <span className={summary.conflicts?"bad":""}>{summary.conflicts} conflictos</span>
    <span className={summary.duplicates?"warn":""}>{summary.duplicates} duplicadas</span>
   </div>}
@@ -257,7 +242,7 @@ export default function UnifiedClientImportPanel(){
     <li><b>Copia el prompt.</b> Pulsa «Copiar prompt para IA». El texto completo queda en el portapapeles, sin recortes.</li>
     <li><b>Entrega contrato y prompt a la IA.</b> Adjunta el contrato, bases o anexos en Meta AI, Gemini o ChatGPT y pega el prompt. La IA debe extraer solo lo documentado.</li>
     <li><b>Guarda el CSV.</b> Guarda únicamente el bloque CSV en un archivo UTF-8 con separador «;». No incluyas la sección AMBIGÜEDADES dentro del archivo.</li>
-    <li><b>Carga el archivo en ALEMSI.</b> Pulsa «Seleccionar CSV único». El sistema valida RUT, columnas, relaciones y cantidades antes de mostrar la vista previa.</li>
+    <li><b>Carga el archivo en ALEMSI.</b> Pulsa «Seleccionar CSV único». El sistema valida RUT, columnas y relaciones antes de mostrar la vista previa.</li>
     <li><b>Interpreta la vista previa.</b> NUEVO se creará; EXISTE se conservará; CONFLICTO requiere revisión; DUPLICADO aparece repetido en el archivo y se procesa una sola vez.</li>
     <li><b>Revisa conflictos.</b> Los conflictos no se importan. Corrige el CSV, vuelve a cargarlo y compara. Las cantidades ya configuradas nunca se sobrescriben automáticamente.</li>
     <li><b>Confirma una sola vez.</b> Pulsa «Confirmar importación». Si una operación falla, el sistema revierte los registros creados en esa ejecución. Reimportar el mismo archivo no genera duplicados.</li>
