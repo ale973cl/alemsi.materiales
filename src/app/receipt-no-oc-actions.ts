@@ -62,3 +62,26 @@ export async function registerReceiptWithoutOrder(formData:FormData){
  revalidatePath("/");
  return{ok:true,id:receipt.id,inventory_updated:false};
 }
+
+export async function createSupplierForReceipt(legalName:string,rutRaw:string){
+ const supabase=await createClient();
+ const {data:{user}}=await supabase.auth.getUser();
+ if(!user)throw new Error("Sesión no válida");
+ const {data:profile}=await supabase.from("user_profiles").select("role,active,full_name,email").eq("id",user.id).single();
+ if(!profile?.active||!["Admin Total","Admin","Gerencia"].includes(profile.role))throw new Error("Solo Administración o Gerencia puede crear proveedores");
+ const name=legalName.trim(),rut=rutRaw.trim(),fold=(value:string)=>value.toUpperCase().replace(/[^0-9K]/g,"");
+ if(name.length<3||name.length>220||!rut)throw new Error("Ingresa razón social y RUT del proveedor");
+ const key=fold(rut),body=key.slice(0,-1),dv=key.slice(-1);
+ if(!/^\d{7,8}[0-9K]$/.test(key))throw new Error("RUT inválido");
+ let sum=0,m=2;for(let i=body.length-1;i>=0;i--){sum+=Number(body[i])*m;m=m===7?2:m+1}
+ const mod=11-(sum%11),expected=mod===11?"0":mod===10?"K":String(mod);
+ if(dv!==expected)throw new Error("Dígito verificador del RUT no coincide");
+ const {data:all,error:readError}=await supabase.from("suppliers").select("id,rut,legal_name").eq("active",true);
+ if(readError)throw new Error(readError.message);
+ if((all||[]).some(x=>fold(x.rut||"")===key))throw new Error("El RUT ya existe. Selecciona ese proveedor.");
+ const {data,error}=await supabase.from("suppliers").insert({legal_name:name,rut,active:true}).select("id,legal_name,rut").single();
+ if(error||!data)throw new Error(error?.message||"No se pudo crear el proveedor");
+ await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Proveedores",action:"Alta proveedor desde recepción",entity_table:"suppliers",entity_id:data.id,new_data:data});
+ revalidatePath("/");
+ return data;
+}
