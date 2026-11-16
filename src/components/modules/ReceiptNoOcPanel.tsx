@@ -1,22 +1,24 @@
 "use client";
-import {useMemo,useState} from "react";
+import {useEffect,useMemo,useState} from "react";
 import InvoiceReader,{type ExtractedInvoice} from "./InvoiceReader";
-import {registerReceiptWithoutOrder} from "@/app/receipt-no-oc-actions";
+import {createSupplierForReceipt,registerReceiptWithoutOrder} from "@/app/receipt-no-oc-actions";
 
 type Supplier={id:string;legal_name:string;rut?:string|null};
 type Material={id:string;name:string;presentation?:string|null;unit?:string|null};
 type Line={material_id:string;received_qty:number;actual_unit_net:number};
 const currency=(n:number)=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n||0);
 const normalizeRut=(s:string)=>s.toUpperCase().replace(/[^0-9K]/g,"");
-export default function ReceiptNoOcPanel({suppliers,materials,onDone}:{suppliers:Supplier[];materials:Material[];onDone:()=>Promise<void>}){
+export default function ReceiptNoOcPanel({suppliers,materials,onDone,role}:{suppliers:Supplier[];materials:Material[];onDone:()=>Promise<void>;role:string}){
+ const [localSuppliers,setLocalSuppliers]=useState<Supplier[]>(suppliers),[addingSupplier,setAddingSupplier]=useState(false),[supplierName,setSupplierName]=useState(""),[supplierRut,setSupplierRut]=useState(""),[supplierSaving,setSupplierSaving]=useState(false);
+ useEffect(()=>setLocalSuppliers(suppliers),[suppliers]);
  const [supplierId,setSupplierId]=useState(""),[type,setType]=useState("Factura"),[folio,setFolio]=useState(""),[date,setDate]=useState(""),[net,setNet]=useState(0),[vat,setVat]=useState(0),[total,setTotal]=useState(0);
  const [reason,setReason]=useState(""),[shipping,setShipping]=useState("Incluido"),[freight,setFreight]=useState(0),[notes,setNotes]=useState("");
  const [payment,setPayment]=useState("Sin confirmar"),[days,setDays]=useState(0),[due,setDue]=useState("");
  const [lines,setLines]=useState<Line[]>([{material_id:"",received_qty:1,actual_unit_net:0}]),[file,setFile]=useState<File|null>(null),[busy,setBusy]=useState(false),[status,setStatus]=useState("");
- const supplier=suppliers.find(s=>s.id===supplierId);
+ const supplier=localSuppliers.find(s=>s.id===supplierId);
  const linesNet=useMemo(()=>lines.reduce((sum,l)=>sum+Math.max(0,l.received_qty)*Math.max(0,l.actual_unit_net),0),[lines]);
  const onExtract=(v:ExtractedInvoice)=>{
-  if(v.supplier_rut){const match=suppliers.find(s=>normalizeRut(s.rut||"")===normalizeRut(v.supplier_rut||""));if(match)setSupplierId(match.id)}
+  if(v.supplier_rut){const match=localSuppliers.find(s=>normalizeRut(s.rut||"")===normalizeRut(v.supplier_rut||""));if(match)setSupplierId(match.id)}
   if(v.document_type&&["Factura","Boleta","Guía de despacho","Otro"].includes(v.document_type))setType(v.document_type);
   if(v.folio)setFolio(v.folio);
   if(v.date&&/^\d{4}-\d{2}-\d{2}$/.test(v.date))setDate(v.date);
@@ -50,8 +52,16 @@ export default function ReceiptNoOcPanel({suppliers,materials,onDone}:{suppliers
   <h3>Recepción sin orden de compra</h3>
   <p>Registra un documento recibido sin OC previa. La compra debe justificarse y quedará pendiente de cotejo. No marca pagos ni carga stock automáticamente.</p>
   <InvoiceReader onExtract={onExtract} onFile={setFile}/>
+  {["Admin Total","Admin","Gerencia"].includes(role)&&<div style={{margin:"10px 0"}}>
+   <button type="button" onClick={()=>setAddingSupplier(v=>!v)}>{addingSupplier?"Cancelar alta proveedor":"+ Registrar proveedor nuevo"}</button>
+   {addingSupplier&&<div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"end",padding:12,border:"1px solid #d7e5e9",borderRadius:10,marginTop:8}}>
+    <label>Razón social<input value={supplierName} onChange={e=>setSupplierName(e.target.value)}/></label>
+    <label>RUT<input value={supplierRut} onChange={e=>setSupplierRut(e.target.value)} placeholder="76.123.456-7"/></label>
+    <button type="button" disabled={supplierSaving} onClick={async()=>{setSupplierSaving(true);setStatus("");try{const created=await createSupplierForReceipt(supplierName,supplierRut);setLocalSuppliers(old=>[...old,created]);setSupplierId(created.id);setAddingSupplier(false);setStatus("Proveedor registrado y seleccionado.");}catch(e:any){setStatus(e?.message||"No se pudo registrar proveedor")}finally{setSupplierSaving(false)}}}>{supplierSaving?"Guardando…":"Guardar proveedor"}</button>
+   </div>}
+  </div>}
   <div className="receiptNoOcGrid">
-   <label>Proveedor<select value={supplierId} onChange={e=>setSupplierId(e.target.value)}><option value="">Seleccionar proveedor existente</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.legal_name}</option>)}</select></label>
+   <label>Proveedor<select value={supplierId} onChange={e=>setSupplierId(e.target.value)}><option value="">Seleccionar proveedor existente</option>{localSuppliers.map(s=><option key={s.id} value={s.id}>{s.legal_name}</option>)}</select></label>
    <label>RUT proveedor<input readOnly value={supplier?.rut||""} placeholder="Se carga desde el proveedor seleccionado"/></label>
    <label>Tipo documento<select value={type} onChange={e=>setType(e.target.value)}>{["Factura","Boleta","Guía de despacho","Otro"].map(x=><option key={x}>{x}</option>)}</select></label>
    <label>Folio<input value={folio} onChange={e=>setFolio(e.target.value)}/></label>
