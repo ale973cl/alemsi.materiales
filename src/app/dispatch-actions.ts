@@ -21,7 +21,7 @@ function campaignInfo(label:string){try{return JSON.parse(label||"{}")}catch{ret
 function fillTemplate(template:string,values:Record<string,string>){return Object.entries(values).reduce((text,[key,value])=>text.replaceAll(`{${key}}`,value||"—"),template)}
 async function origin(){const h=await headers();const host=h.get("x-forwarded-host")||h.get("host");const protocol=h.get("x-forwarded-proto")||"https";return host?`${protocol}://${host}`:process.env.NEXT_PUBLIC_APP_URL||""}
 
-export async function createCampaignDispatch(input:{surveyId:string;preparedLines?:{material_id:string;quantity:number}[];batch?:{id:string;createdAt:string;client:string;campaign:string;installations:string[]}}){
+export async function createCampaignDispatch(input:{surveyId:string;preparedLines?:{material_id:string;quantity:number}[];batch?:{id:string;createdAt:string;client:string;campaign:string;installations:string[];differenceNote?:string}}){
   const {supabase}=await ctx(["Admin Total","Admin","Bodega"]);
   const {data:survey,error}=await supabase.from("surveys").select("id,campaign_id,installation_id,status,campaigns(id,label,status),installations(id,name,address,commune,city,region,contracts(id,name,clients(id,legal_name))),survey_lines(material_id,shortage_qty)").eq("id",input.surveyId).single();
   if(error||!survey)throw new Error("Levantamiento no encontrado");
@@ -63,7 +63,8 @@ export async function createCampaignDispatch(input:{surveyId:string;preparedLine
   const template=String(info.deliveryTemplate||`${info.name||"Entrega"} · {INSTALACION}`);
   const text=fillTemplate(template,{INSTALACION:installation?.name||"Instalación",PERIODO:info.deliveryPeriod||info.name||"",CLIENTE:client?.legal_name||"",CONTRATO:contract?.name||""});
    const batch=input.batch?` · TANDA:${String(input.batch.id).slice(0,80)} · FECHA TANDA:${String(input.batch.createdAt).slice(0,32)} · CLIENTE TANDA:${String(input.batch.client).slice(0,160)} · CAMPAÑA TANDA:${String(input.batch.campaign).slice(0,160)} · INSTALACIONES TANDA:${input.batch.installations.map(x=>String(x).slice(0,80)).join(" | ").slice(0,700)}`:"";
-   const observations=`CAMPAÑA:${survey.campaign_id} · ${text}${manual?" · PREPARACIÓN FÍSICA CONFIRMADA":""}${batch}`;
+   const differences=input.batch?.differenceNote?` · DIFERENCIA PREPARACIÓN:${String(input.batch.differenceNote).slice(0,500)}`:"";
+   const observations=`CAMPAÑA:${survey.campaign_id} · ${text}${manual?" · PREPARACIÓN FÍSICA CONFIRMADA":""}${batch}${differences}`;
   const {data:dispatchId,error:dispatchError}=await supabase.rpc("create_dispatch_v1",{p_installation_id:survey.installation_id,p_lines:alloc,p_observations:observations});
   if(dispatchError)throw new Error(dispatchError.message);
   revalidatePath("/");
