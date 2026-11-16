@@ -94,8 +94,34 @@ export default function UnifiedClientImportPanel(){
  const [showPrompt,setShowPrompt]=useState(false);
  const [showGuide,setShowGuide]=useState(false);
  const [onlyConflicts,setOnlyConflicts]=useState(false);
+ const [editingRow,setEditingRow]=useState<number|null>(null);
+ const [draft,setDraft]=useState<Partial<UnifiedCsvRow>>({});
+ const editableFields:Array<[keyof UnifiedCsvRow,string]>=[
+  ["client_name","Cliente"],["client_rut","RUT"],["contract_name","Contrato"],["contract_code","Código contrato"],
+  ["installation_name","Instalación"],["region","Región"],["commune","Comuna"],["city","Ciudad"],
+  ["address","Dirección"],["delivery_contact","Contacto entrega"],["delivery_email","Correo entrega"]
+ ];
 
- const reset=()=>{setRows([]);setPreview(null);setSummary(null);setMessage("");setFileName("");setOnlyConflicts(false);if(inputRef.current)inputRef.current.value="";};
+ async function recheck(next:UnifiedCsvRow[],feedback:string){
+  setBusy(true);setMessage("");
+  try{
+   if(!next.length){setRows([]);setPreview(null);setSummary(null);setEditingRow(null);setMessage("No quedan filas para importar.");return;}
+   const result=await previewUnifiedClientCsv(next);
+   setRows(next);setPreview({summary:result.summary,details:result.details as Detail[]});setSummary(result.summary);
+   setEditingRow(null);setDraft({});setMessage(feedback);
+  }catch(error:any){setMessage(error?.message||"No se pudo validar la modificación");}
+  finally{setBusy(false);}
+ }
+ const editRow=(number:number)=>{
+  const current=rows.find(r=>r.row===number);
+  if(!current)return;
+  setEditingRow(number);setDraft({...current});
+ };
+ const saveEdited=()=>{if(editingRow!==null)void recheck(rows.map(r=>r.row===editingRow?{...r,...draft,row:r.row}:r),"Fila corregida. Vista previa recalculada; ningún cambio guardado todavía en Supabase.");};
+ const discardRow=(number:number)=>{if(window.confirm(`Descartar la fila ${number} de esta importación? No elimina registros existentes.`))void recheck(rows.filter(r=>r.row!==number),"Fila descartada únicamente de esta importación. Vista previa recalculada.");};
+
+
+ const reset=()=>{setRows([]);setPreview(null);setSummary(null);setMessage("");setFileName("");setOnlyConflicts(false);setEditingRow(null);setDraft({});if(inputRef.current)inputRef.current.value="";};
 
  const copyPrompt=async()=>{
   try{
@@ -110,7 +136,7 @@ export default function UnifiedClientImportPanel(){
  };
 
  async function loadFile(file:File){
-  setBusy(true);setMessage("");setPreview(null);setSummary(null);
+  setBusy(true);setMessage("");setPreview(null);setSummary(null);setEditingRow(null);setDraft({});
   try{
    if(file.size>4_000_000)throw new Error("El CSV supera el máximo de 4 MB");
    const content=(await file.text()).replace(/^\uFEFF/,"");
@@ -222,11 +248,19 @@ export default function UnifiedClientImportPanel(){
     <b>{fileName||"Vista previa"}</b>
     <label style={{display:"flex",gap:7,alignItems:"center",fontWeight:700}}><input type="checkbox" checked={onlyConflicts} onChange={e=>setOnlyConflicts(e.target.checked)}/>Ver solo conflictos y duplicadas</label>
    </div>
-   <div className="unifiedTable"><table><thead><tr><th>Fila</th><th>Nivel</th><th>Elemento</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>
-    {visible.map((d,index)=><tr key={`${d.row}-${d.level}-${d.item}-${d.status}-${index}`} className={d.status==="CONFLICTO"?"conflict":d.status==="DUPLICADO"?"duplicate":""}><td>{d.row}</td><td>{d.level}</td><td>{d.item}</td><td className={`tag ${d.status}`}>{d.status}</td><td>{d.reason||"—"}</td></tr>)}
+   {editingRow!==null&&<section className="unifiedGuide" aria-label="Editar fila del CSV">
+    <h4>Corregir fila {editingRow}</h4>
+    <p>Modifica los datos y vuelve a validar sin rehacer el CSV. Los registros de Supabase permanecen intactos.</p>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:8}}>
+     {editableFields.map(([key,label])=><label key={String(key)} style={{display:"grid",gap:3,fontSize:12}}>{label}<input value={String(draft[key]??"")} onChange={e=>setDraft(old=>({...old,[key]:e.target.value}))} disabled={busy}/></label>)}
+    </div>
+    <div className="unifiedActions"><button type="button" disabled={busy} onClick={saveEdited}>Guardar corrección y validar</button><button type="button" className="secondary" onClick={()=>{setEditingRow(null);setDraft({});}}>Cancelar edición</button></div>
+   </section>}
+   <div className="unifiedTable"><table><thead><tr><th>Fila</th><th>Nivel</th><th>Elemento</th><th>Resultado</th><th>Detalle</th><th>Resolver</th></tr></thead><tbody>
+    {visible.map((d,index)=><tr key={`${d.row}-${d.level}-${d.item}-${d.status}-${index}`} className={d.status==="CONFLICTO"?"conflict":d.status==="DUPLICADO"?"duplicate":""}><td>{d.row}</td><td>{d.level}</td><td>{d.item}</td><td className={`tag ${d.status}`}>{d.status}</td><td>{d.reason||"—"}</td><td>{(d.status==="CONFLICTO"||d.status==="DUPLICADO")&&<div style={{display:"flex",gap:5}}><button type="button" disabled={busy} onClick={()=>editRow(d.row)}>Editar</button><button type="button" disabled={busy} onClick={()=>discardRow(d.row)}>Descartar</button></div>}</td></tr>)}
    </tbody></table></div>
    {visible.length===0&&<p className="note">No hay conflictos ni duplicados en este archivo.</p>}
-   {summary&&(summary.conflicts>0||summary.duplicates>0)&&<p className="warning"><b>Los conflictos y duplicados no se importarán.</b> Corrige el CSV y vuelve a cargarlo si necesitas incorporarlos.</p>}
+   {summary&&(summary.conflicts>0||summary.duplicates>0)&&<p className="warning"><b>Resuelve los registros problemáticos aquí mismo:</b> Editar y revalidar o Descartar fila. Puedes confirmar los registros nuevos válidos sin modificar los existentes.</p>}
    <div className="unifiedActions">
     <button type="button" disabled={busy||!summary||summary.newTotal===0} onClick={()=>void confirm()}>{busy?"Confirmando…":summary&&summary.newTotal>0?`Confirmar importación (${summary.newTotal} nuevos)`:"Sin registros nuevos"}</button>
     <button type="button" className="secondary" disabled={busy} onClick={reset}>Cancelar</button>
@@ -244,10 +278,10 @@ export default function UnifiedClientImportPanel(){
     <li><b>Guarda el CSV.</b> Guarda únicamente el bloque CSV en un archivo UTF-8 con separador «;». No incluyas la sección AMBIGÜEDADES dentro del archivo.</li>
     <li><b>Carga el archivo en ALEMSI.</b> Pulsa «Seleccionar CSV único». El sistema valida RUT, columnas y relaciones antes de mostrar la vista previa.</li>
     <li><b>Interpreta la vista previa.</b> NUEVO se creará; EXISTE se conservará; CONFLICTO requiere revisión; DUPLICADO aparece repetido en el archivo y se procesa una sola vez.</li>
-    <li><b>Revisa conflictos.</b> Los conflictos no se importan. Corrige el CSV, vuelve a cargarlo y compara. Las cantidades ya configuradas nunca se sobrescriben automáticamente.</li>
+    <li><b>Revisa conflictos.</b> Usa Editar para corregir y revalidar, o Descartar para omitir solo la fila problemática; el resto sigue disponible. No se sobrescriben registros existentes.</li>
     <li><b>Confirma una sola vez.</b> Pulsa «Confirmar importación». Si una operación falla, el sistema revierte los registros creados en esa ejecución. Reimportar el mismo archivo no genera duplicados.</li>
    </ol>
-   <p className="noteLine"><b>Alcance de cantidades:</b> usa <b>alcance_cantidad=instalacion</b> solo cuando el documento indique un máximo para esa instalación. Usa <b>alcance_cantidad=contrato</b> para totales contractuales: se autoriza el material, pero la cantidad no se reparte entre instalaciones. Si no hay cantidad documentada, deja la celda vacía. Los materiales deben existir en el maestro; esta carga no inventa materiales.</p>
+   <p className="noteLine"><b>Materiales:</b> no se importan desde el CSV. Se seleccionan luego desde el Maestro de ALEMSI en la plantilla contractual y se configuran máximos autorizados por instalación. El informe de obligaciones contractuales es un documento separado.</p>
    <p style={{fontSize:12,color:"#557084"}}>El nombre del PDF lo sugiere el navegador según la configuración local de Chrome/Windows; ALEMSI define el título del documento y el contenido, no la carpeta de destino.</p>
   </div>}
  </div>;
