@@ -85,7 +85,7 @@ test('reimportación idéntica no crea registros',()=>{
  ];
  const first=buildUnifiedPlan(rows,{clients:[],materials,assignments:[]});
  const existing=materialize(first);
- const second=buildUnifiedPlan(rows,existing);
+ const second=buildUnifiedPlan([...rows,rows[0]],existing);
  assert.equal(second.summary.newTotal,0);
  assert.equal(second.summary.clientsNew,0);
  assert.equal(second.summary.contractsNew,0);

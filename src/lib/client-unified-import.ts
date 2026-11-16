@@ -248,6 +248,7 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
   const contractIndex = new Map<string, UnifiedContractOp>();
   const installationIndex = new Map<string, UnifiedInstallationOp>();
   const assignmentIndex = new Map<string, UnifiedAssignmentOp>();
+  const existingAssignmentIds = new Set<string>();
   let existingAssignments = 0;
 
   const clientsByRut = new Map<string, ExistingClient>();
@@ -588,7 +589,10 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
           conflict = true;
         }
       }
-      if (!conflict) existingAssignments++;
+      if (!conflict && !existingAssignmentIds.has(existingAssignment.id)) {
+        existingAssignmentIds.add(existingAssignment.id);
+        existingAssignments++;
+      }
       detail(rowNumber, "Material", materialLabel, conflict ? "CONFLICTO" : "EXISTE", reason);
       continue;
     }
