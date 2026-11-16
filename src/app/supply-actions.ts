@@ -4,7 +4,7 @@ import {createClient} from "@/lib/supabase/server";
 import {committedPurchaseQty} from "@/lib/purchase-order-balance";
 
 type Selection={material_id:string;qty:number;unit_net_price:number};
-type FreeLine={description:string;qty:number;unit:string;unit_net_price:number;supplier_code?:string};
+type FreeLine={line_type?:"Material"|"Servicio";material_id?:string|null;description:string;qty:number;unit:string;unit_net_price:number;supplier_code?:string};
 
 async function supplyContext(){
   const supabase=await createClient();
@@ -101,9 +101,28 @@ export async function createFreePurchaseOrder(formData:FormData){
   const supplierId=String(formData.get("supplier_id")||"").trim();
   if(!supplierId)throw new Error("Selecciona un proveedor");
   const rawLines=JSON.parse(String(formData.get("lines")||"[]")) as FreeLine[];
-  const lines=rawLines.map(line=>({description:String(line.description||"").trim(),qty:Number(line.qty||0),unit:String(line.unit||"").trim()||"UN",unit_net_price:Number(line.unit_net_price||0),supplier_code:String(line.supplier_code||"").trim()||null})).filter(line=>line.description&&line.qty>0);
-  if(!lines.length)throw new Error("Agrega al menos un concepto a la OC");
-  if(lines.some(line=>line.qty<=0||line.unit_net_price<0))throw new Error("Revisa cantidades y precios");
+  if(!Array.isArray(rawLines)||rawLines.length>200)throw new Error("La OC debe incluir entre 1 y 200 líneas");
+  const lines=rawLines.map(line=>({
+    line_type:line.line_type==="Servicio"?"Servicio":"Material",
+    material_id:String(line.material_id||"").trim()||null,
+    description:String(line.description||"").trim(),
+    qty:Number(line.qty||0),unit:String(line.unit||"").trim()||"UN",
+    unit_net_price:Number(line.unit_net_price||0),supplier_code:String(line.supplier_code||"").trim()||null
+  })).filter(line=>line.qty>0||line.description||line.material_id);
+  if(!lines.length)throw new Error("Agrega al menos un producto o servicio");
+  if(lines.some(line=>!Number.isFinite(line.qty)||line.qty<=0||!Number.isFinite(line.unit_net_price)||line.unit_net_price<0))throw new Error("Revisa cantidades y precios");
+  if(lines.some(line=>line.line_type==="Material"&&!line.material_id))throw new Error("Los productos físicos deben seleccionarse del Maestro ALEMSI. No se admiten productos inventados.");
+  if(lines.some(line=>line.line_type==="Servicio"&&!line.description))throw new Error("Describe cada servicio.");
+  const ids=[...new Set(lines.filter(line=>line.line_type==="Material").map(line=>line.material_id!))];
+  const {data:master,error:masterError}=ids.length?await supabase.from("materials").select("id,name,unit,supplier_code,active").in("id",ids).eq("active",true):{data:[],error:null};
+  if(masterError||(master||[]).length!==ids.length)throw new Error("Uno o más productos no existen o están inactivos en el Maestro.");
+  const materialById=new Map((master||[]).map(item=>[item.id,item]));
+  const finalized=lines.map(line=>{
+    if(line.line_type==="Servicio")return{...line,material_id:null};
+    const product=materialById.get(line.material_id!);
+    if(!product)throw new Error("Producto no encontrado");
+    return{...line,description:product.name,unit:product.unit||"UN",supplier_code:product.supplier_code||null,material_id:product.id};
+  });
   const {data:supplier,error:supplierError}=await supabase.from("suppliers").select("id,legal_name,rut,address,payment_terms,conditions,active").eq("id",supplierId).eq("active",true).single();
   if(supplierError||!supplier)throw new Error("Proveedor no disponible");
   const paymentTerms=String(formData.get("payment_terms")||supplier.payment_terms||"").trim()||null;
@@ -113,15 +132,15 @@ export async function createFreePurchaseOrder(formData:FormData){
   const conditions=String(formData.get("conditions")||supplier.conditions||"").trim()||null;
   const observations=String(formData.get("observations")||"").trim()||null;
   const vatRate=Math.max(0,Number(formData.get("vat_rate")||19));
-  const t=totals(lines.reduce((sum,line)=>sum+line.qty*line.unit_net_price,0),vatRate);
+  const t=totals(finalized.reduce((sum,line)=>sum+line.qty*line.unit_net_price,0),vatRate);
   const created=await supabase.from("purchase_orders").insert({supply_run_id:null,supplier_id:supplierId,order_type:"Libre",status:"Borrador",total_net:t.net,vat_rate:t.vatRate,vat_amount:t.vat,total_amount:t.total,currency:"CLP",payment_terms:paymentTerms,delivery_terms:deliveryTerms,billing_address:billingAddress,delivery_address:deliveryAddress,conditions,observations}).select("id").single();
   if(created.error||!created.data)throw created.error||new Error("No se pudo crear la OC libre");
   const orderId=created.data.id;
   const folio=folioFromId(orderId);
   const folioUpdate=await supabase.from("purchase_orders").update({order_number:folio}).eq("id",orderId);if(folioUpdate.error)throw folioUpdate.error;
-  const inserted=await supabase.from("purchase_order_lines").insert(lines.map(line=>({purchase_order_id:orderId,supply_line_id:null,material_id:null,line_type:"Servicio",description:line.description,unit:line.unit,supplier_code:line.supplier_code,ordered_qty:line.qty,unit_net_price:line.unit_net_price,line_net:line.qty*line.unit_net_price})));
+  const inserted=await supabase.from("purchase_order_lines").insert(finalized.map(line=>({purchase_order_id:orderId,supply_line_id:null,material_id:line.material_id,line_type:line.line_type,description:line.description,unit:line.unit,supplier_code:line.supplier_code,ordered_qty:line.qty,unit_net_price:line.unit_net_price,line_net:line.qty*line.unit_net_price})));
   if(inserted.error){await supabase.from("purchase_orders").delete().eq("id",orderId);throw inserted.error;}
-  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Órdenes de compra",action:"Crear OC libre",entity_table:"purchase_orders",entity_id:orderId,new_data:{order_number:folio,supplier_id:supplierId,supplier:supplier.legal_name,total_net:t.net,vat_amount:t.vat,total_amount:t.total,lines},observation:"OC administrativa creada sin campaña ni abastecimiento; no modifica consolidado, inventario ni necesidades por instalación."});
+  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Órdenes de compra",action:"Crear OC libre",entity_table:"purchase_orders",entity_id:orderId,new_data:{order_number:folio,supplier_id:supplierId,supplier:supplier.legal_name,total_net:t.net,vat_amount:t.vat,total_amount:t.total,lines:finalized},observation:"OC administrativa creada sin campaña ni abastecimiento; no modifica consolidado, inventario ni necesidades por instalación."});
   revalidatePath("/");
   return{ok:true,id:orderId,order_number:folio,total_net:t.net,total_amount:t.total};
 }
