@@ -49,7 +49,7 @@ export async function GET(request:Request){
  }
  const data=all;
 
- const rows=(data||[]).filter((d:any)=>{if(!clientId)return true;const c=relation(relation(d.installations)?.contracts)?.clients;return String(relation(c)?.id||"")===clientId;});
+ const rows=(data||[]).filter((d:any)=>{if(!clientId||selectedIds.length)return true;const c=relation(relation(d.installations)?.contracts)?.clients;return String(relation(c)?.id||"")===clientId;});
  if(!rows.length)return new Response("No hay guías firmadas para los filtros seleccionados",{status:404});if(format==="pdf"&&rows.length!==1)return new Response("Selecciona una sola guía para descargar PDF",{status:400});
  const campaignIds=[...new Set(rows.map((d:any)=>String(d.observations||"").match(/CAMPAÑA:([a-f0-9-]{36})/i)?.[1]).filter(Boolean))] as string[];
  const {data:campaignRecords}=campaignIds.length?await supabase.from("campaigns").select("id,label").in("id",campaignIds):{data:[] as any[]};
