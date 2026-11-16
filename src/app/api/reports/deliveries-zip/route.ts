@@ -14,6 +14,25 @@ export async function GET(request:Request){
  if(!/^\d{4}-\d{2}$/.test(month))return new Response("Periodo inválido",{status:400});
  const range=month?(()=>{const [year,mon]=month.split("-").map(Number);if(mon<1||mon>12)return null;const start=new Date(Date.UTC(year,mon-1,1,3)).toISOString(),next=new Date(Date.UTC(year,mon,1,3)).toISOString();return{start,next};})():null;
  if(month&&!range)return new Response("Periodo inválido",{status:400});
+ if(format==="list"){
+  const matches:any[]=[];
+  for(let page=0;page<25;page++){
+   let query=supabase.from("dispatches").select("id,internal_number,guide_number,delivered_at,observations,installation_id,installations(id,name,contracts(id,name,clients(id,legal_name)))")
+    .not("recipient_signature","is",null).order("delivered_at",{ascending:false}).range(page*1000,(page+1)*1000-1);
+   if(range)query=query.gte("delivered_at",range.start).lt("delivered_at",range.next);
+   if(installationId)query=query.eq("installation_id",installationId);
+   if(campaignId)query=query.ilike("observations",`%CAMPAÑA:${campaignId}%`);
+   const {data,error}=await query;
+   if(error)return Response.json({error:error.message},{status:500});
+   for(const d of data||[]){
+    const i=relation(d.installations),c=relation(i?.contracts),cl=relation(c?.clients);
+    if(clientId&&cl?.id!==clientId)continue;
+    matches.push({id:d.id,number:d.internal_number||d.guide_number||d.id,delivered_at:d.delivered_at,installation:i?.name||"Instalación",contract:c?.name||"Contrato",client:cl?.legal_name||"Cliente",campaign_id:String(d.observations||"").match(/CAMPAÑA:([a-f0-9-]{36})/i)?.[1]||null});
+   }
+   if((data||[]).length<1000)break;
+  }
+  return Response.json({guides:matches,total:matches.length},{headers:{"Cache-Control":"no-store"}});
+ }
  if(selectedIds.length>250)return new Response("Selecciona como máximo 250 guías por ZIP",{status:400});
  const all:any[]=[];
  for(let page=0;page<25;page++){
@@ -30,7 +49,7 @@ export async function GET(request:Request){
  }
  const data=all;
 
- const rows=(data||[]).filter((d:any)=>{if(!clientId)return true;const c=relation(relation(d.installations)?.contracts)?.clients;return String(relation(c)?.id||"")===clientId;});if(format==="list")return new Response(JSON.stringify({guides:rows.map((d:any)=>{const i=relation(d.installations),c=relation(i?.contracts),cl=relation(c?.clients);return{id:d.id,number:d.internal_number||d.guide_number||d.id,delivered_at:d.delivered_at,installation:i?.name||"Instalación",contract:c?.name||"Contrato",client:cl?.legal_name||"Cliente",campaign_id:String(d.observations||"").match(/CAMPAÑA:([a-f0-9-]{36})/i)?.[1]||null}}),total:rows.length}),{headers:{"Content-Type":"application/json","Cache-Control":"no-store"}});
+ const rows=(data||[]).filter((d:any)=>{if(!clientId)return true;const c=relation(relation(d.installations)?.contracts)?.clients;return String(relation(c)?.id||"")===clientId;});
  if(!rows.length)return new Response("No hay guías firmadas para los filtros seleccionados",{status:404});if(format==="pdf"&&rows.length!==1)return new Response("Selecciona una sola guía para descargar PDF",{status:400});
  const delivererIds=[...new Set(rows.map((d:any)=>d.delivered_by).filter(Boolean))],{data:profiles}=delivererIds.length?await supabase.from("user_profiles").select("id,full_name,email").in("id",delivererIds):{data:[] as any[]},names=new Map((profiles||[]).map((p:any)=>[p.id,p.full_name||p.email||p.id])),zip=new JSZip(),manifest=["guia;fecha;cliente;contrato;instalacion;receptor;correo;responsable_entrega"];let singlePdf:Buffer|undefined,singleName="";
  for(const d of rows as any[]){const i=relation(d.installations),c=relation(i?.contracts),cl=relation(c?.clients),name=`${safe(d.internal_number||d.guide_number)}-${safe(i?.name)}.pdf`,pdf=await generarGuiaPdf({guideNumber:d.guide_number||d.internal_number||d.id,internalNumber:d.internal_number,client:cl?.legal_name||"—",clientRut:cl?.rut,contract:c?.name||"—",installation:i?.name||"—",address:[i?.address,i?.commune,i?.city,i?.region].filter(Boolean).join(" · "),observations:d.observations,responsible:String(names.get(d.delivered_by)||"—"),recipientName:d.recipient_name,recipientRut:d.recipient_rut,recipientRole:d.recipient_role,recipientEmail:d.recipient_email,deliveredAt:d.delivered_at,signature:d.recipient_signature,lines:(d.dispatch_lines||[]).map((l:any)=>({code:l.materials?.supplier_code,product:l.materials?.name||"Material",family:l.materials?.family,presentation:l.materials?.presentation,unit:l.materials?.unit,quantity:Number(l.delivered_qty||l.required_qty||0)}))});if(format==="pdf"){singlePdf=pdf;singleName=name}else{zip.file(`${safe(campaignName||campaignId||"Campanas")}/${name}`,pdf);manifest.push([d.internal_number||d.guide_number||"",d.delivered_at?fmt(d.delivered_at):"",cl?.legal_name||"",c?.name||"",i?.name||"",d.recipient_name||"",d.recipient_email||"",names.get(d.delivered_by)||""].map(v=>`"${String(v).replaceAll('"','""')}"`).join(";"));}}
