@@ -146,6 +146,18 @@ test('cantidad ya configurada distinta queda en conflicto',()=>{
  assert.equal(plan.summary.assignmentsNew,0);
 });
 
+test('reimportación de una cantidad contractual informa EXISTE sin conflicto',()=>{
+ const rows=[row({installation_name:'Sede',material_code:'MAT-02',quantity:'240',unit:'Litro',quantity_scope:'contrato'})];
+ const first=buildUnifiedPlan(rows,{clients:[],materials,assignments:[]});
+ assert.equal(first.summary.assignmentsNew,1);
+ const second=buildUnifiedPlan(rows,materialize(first));
+ assert.equal(second.summary.assignmentsNew,0);
+ assert.equal(second.summary.conflicts,0);
+ const detail=second.details.find(d=>d.level==='Material'&&d.status==='EXISTE');
+ assert.ok(detail);
+ assert.match(detail.reason||'',/contractual ya existe/i);
+});
+
 test('la importación revierte todo si una operación falla',async()=>{
  const plan=buildUnifiedPlan([
   row({installation_name:'Oficina',material_code:'MAT-01',quantity:'10'}),

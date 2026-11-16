@@ -571,15 +571,21 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
 
     if (existingAssignment) {
       let reason = "La asignación ya existe y se conserva";
+      let conflict = false;
       if (!existingAssignment.authorized) {
         reason = "Existe una exclusión configurada para este material; no se reautoriza automáticamente";
+        conflict = true;
+      } else if (scope === "contrato") {
+        reason = quantity != null
+          ? `La autorización contractual ya existe; la cantidad documentada (${quantity}) no se distribuye ni se sobrescribe`
+          : "La autorización contractual ya existe y se conserva";
       } else if (quantity != null) {
         const configured = Number(existingAssignment.authorized_qty || 0);
         if (configured !== quantity) {
           reason = `Cantidad máxima ya configurada (${configured}); no se modifica automáticamente a ${quantity}`;
+          conflict = true;
         }
       }
-      const conflict = reason.includes("exclusión") || (quantity != null && Number(existingAssignment.authorized_qty || 0) !== quantity);
       detail(rowNumber, "Material", material.name, conflict ? "CONFLICTO" : "EXISTE", reason);
       continue;
     }
