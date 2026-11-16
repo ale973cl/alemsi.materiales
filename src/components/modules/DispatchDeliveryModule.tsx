@@ -151,10 +151,9 @@ function BatchPreparationModal({suggestions,busy,close,confirm}:{suggestions:Sug
    {!!overStock.length&&<p className="warning"><b>El total supera el stock disponible.</b> Ajusta las cantidades antes de continuar.</p>}
    {!sameClient&&<p className="warning">La selección reúne clientes diferentes. Prepara una tanda por cliente.</p>}
    {!sameCampaign&&<p className="warning">La selección reúne campañas diferentes. Prepara una tanda por campaña.</p>}
-   {preparationAnswer==="yes"&&differences.length>0&&<p className="warning">Hay diferencias de abastecimiento. Confirma “No, hubo diferencias” y registra el motivo, o vuelve a ajustar los valores.</p>}
    <div style={{display:"flex",justifyContent:"flex-end",gap:10,flexWrap:"wrap"}}>
     <button type="button" disabled={busy} onClick={close}>Volver a selección</button>
-    <button type="button" disabled={busy||!sameClient||!sameCampaign||!total||!!overStock.length||!preparationAnswer||(preparationAnswer==="yes"&&differences.length>0)||(preparationAnswer==="no"&&differenceNotes.trim().length<8)} onClick={()=>confirm(prepared,preparationAnswer==="no"?differenceNotes:"")}>{busy?"Generando guías…":"Confirmar preparación y generar guías"}</button>
+    <button type="button" disabled={busy||!sameClient||!sameCampaign||!total||!!overStock.length||!preparationAnswer||(preparationAnswer==="no"&&differenceNotes.trim().length<8)} onClick={()=>confirm(prepared,preparationAnswer==="no"?differenceNotes:"")}>{busy?"Generando guías…":"Confirmar preparación y generar guías"}</button>
    </div>
   </div>
  </div>;
