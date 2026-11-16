@@ -22,7 +22,7 @@ export async function POST(request:NextRequest){
  if(!allowedTypes.includes(file.type)||file.size===0||file.size>8*1024*1024)return NextResponse.json({error:"PDF o imagen de hasta 8 MB"},{status:400});
  const {data:receipt}=await ctx.supabase!.from("receipts").select("id,inventory_posted").eq("id",id).single();
  if(!receipt||receipt.inventory_posted)return NextResponse.json({error:"Recepción inexistente o ya cotejada"},{status:409});
- const {error}=await ctx.supabase!.storage.from(BUCKET).upload(`${id}/original`,Buffer.from(await file.arrayBuffer()),{contentType:file.type,upsert:false,cacheControl:"private"});
+ const {error}=await ctx.supabase!.storage.from(BUCKET).upload(`${id}/original`,Buffer.from(await file.arrayBuffer()),{contentType:file.type,upsert:false,cacheControl:"3600"});
  if(error)return NextResponse.json({error:"No se pudo almacenar la factura. Verifica que el depósito privado receipt-documents esté configurado."},{status:503});
  await ctx.supabase!.from("activity_log").insert({actor_id:ctx.userId,module:"Recepción",action:"Adjuntar factura original",entity_table:"receipts",entity_id:id,new_data:{content_type:file.type,size:file.size}});
  return NextResponse.json({ok:true,stored:true,inventory_updated:false});
