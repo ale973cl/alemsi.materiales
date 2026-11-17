@@ -343,3 +343,11 @@
  .dedicatedActions,.receiptDedicatedActions{display:grid;grid-template-columns:1fr 1fr}
  .contractInstallationRow{grid-template-columns:1fr}.contractInstallationRow>div{grid-column:1}.contractInstallationRow>div button{flex:1}
 }
+
+
+/* Historial de material: pantalla dedicada, sin <details> dentro de la fila. */
+.historyOpenButton{min-height:32px!important;padding:4px 7px!important;white-space:nowrap}
+.materialHistoryList{display:grid;gap:5px}
+.materialHistoryRow{display:grid;grid-template-columns:minmax(220px,1fr) 110px;gap:8px;align-items:center;padding:7px 9px;border:1px solid #dfe8eb;border-radius:8px;background:#fff}
+.materialHistoryRow>span{display:grid;gap:1px}.materialHistoryRow small{font-size:12px!important}.materialHistoryRow strong{text-align:right}
+@media(max-width:600px){.materialHistoryRow{grid-template-columns:1fr auto}}
