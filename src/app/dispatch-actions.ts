@@ -80,6 +80,21 @@ export async function registerDeliveryWithEmail(input:{dispatchId:string;recipie
   const {data:status,error}=await supabase.rpc("register_dispatch_delivery_v1",{p_dispatch_id:input.dispatchId,p_lines:input.lines,p_recipient_name:input.recipientName,p_recipient_rut:input.recipientRut,p_recipient_role:input.recipientRole||null,p_observations:input.observations||null,p_signature:input.signature||null});
   if(error)throw new Error(error.message);
 
+  // Una diferencia entre lo cargado y lo entregado no vuelve a stock disponible hasta resolver físicamente su destino.
+  if(String(status)==="Entrega parcial"){
+    const {data:pendingLines,error:pendingError}=await supabase.from("dispatch_lines").select("id,material_id,pending_qty").eq("dispatch_id",input.dispatchId).gt("pending_qty",0);
+    if(pendingError)throw new Error("La entrega fue registrada, pero no se pudo inmovilizar el saldo pendiente: "+pendingError.message);
+    for(const line of pendingLines||[]){
+      const {data:holds,error:holdError}=await supabase.from("inventory_movements").select("id").eq("dispatch_line_id",line.id).eq("movement_type","adjustment").ilike("observation","Saldo físico pendiente de validación%").limit(1);
+      if(holdError)throw holdError;
+      if(!(holds||[]).length){
+        const q=Number(line.pending_qty||0);
+        const {error:moveError}=await supabase.from("inventory_movements").insert({material_id:line.material_id,dispatch_line_id:line.id,movement_type:"adjustment",quantity:q,signed_quantity:-q,created_by:user.id,observation:"Saldo físico pendiente de validación de entrega "+input.dispatchId});
+        if(moveError)throw new Error("La entrega fue registrada, pero no se pudo bloquear el saldo pendiente: "+moveError.message);
+      }
+    }
+  }
+
   // Desde aquí, PDF/correo son respaldo secundario: nunca deben derribar una entrega ya registrada.
   let emailStatus="Pendiente";
   let emailError:string|null=null;
@@ -112,4 +127,44 @@ export async function createComplementaryDispatch(input:{parentDispatchId:string
   if(error)throw new Error(error.message);
   revalidatePath("/");
   return{ok:true,id:String(data)};
+}
+
+
+export async function regularizeDispatchPending(input:{dispatchId:string;resolution:"Retorno a bodega"|"Merma"|"Pérdida"|"Reasignación";reason:string;targetInstallationId?:string}){
+ const {supabase,user,profile}=await ctx(["Admin Total","Admin","Bodega"]);
+ const dispatchId=String(input.dispatchId||"").trim(),reason=String(input.reason||"").trim();
+ if(!dispatchId||!reason)throw new Error("Selecciona la guía e indica el motivo de la regularización");
+ const {data:d,error:de}=await supabase.from("dispatches").select("id,status,internal_number,guide_number,dispatch_lines(id,material_id,required_qty,delivered_qty,pending_qty)").eq("id",dispatchId).single();
+ if(de||!d)throw new Error("Guía no encontrada");
+ if(d.status!=="Entrega parcial")throw new Error("Solo se regularizan guías con entrega parcial");
+ const lines=((d as any).dispatch_lines||[]).filter((l:any)=>Number(l.pending_qty||0)>0);
+ if(!lines.length)throw new Error("La guía no tiene saldos pendientes");
+ const {data:existing,error:ee}=await supabase.from("activity_log").select("id").eq("module","Despachos").eq("action","Regularizó saldo no entregado").eq("entity_table","dispatches").eq("entity_id",dispatchId).limit(1);
+ if(ee)throw ee;if((existing||[]).length)throw new Error("Esta diferencia ya fue regularizada");
+ const resolution=input.resolution;
+ let newDispatchId:string|null=null;
+ const positiveMovements=lines.map((l:any)=>({material_id:l.material_id,dispatch_line_id:l.id,movement_type:"adjustment",quantity:Number(l.pending_qty),signed_quantity:Number(l.pending_qty),created_by:user.id,observation:(resolution==="Reasignación"?"Liberación para reasignar":"Retorno físico a bodega")+" desde "+String(d.internal_number||d.guide_number||dispatchId)}));
+ if(resolution==="Retorno a bodega"){
+   const {error}=await supabase.from("inventory_movements").insert(positiveMovements);if(error)throw error;
+ }else if(resolution==="Reasignación"){
+   const target=String(input.targetInstallationId||"").trim();if(!target)throw new Error("Selecciona la instalación de destino");
+   const {error:returnError}=await supabase.from("inventory_movements").insert(positiveMovements);if(returnError)throw returnError;
+   const payload=lines.map((l:any)=>({material_id:l.material_id,quantity:Number(l.pending_qty)}));
+   const {data:newId,error:createError}=await supabase.rpc("create_dispatch_v1",{p_installation_id:target,p_lines:payload,p_observations:"Reasignación de saldo desde "+String(d.internal_number||d.guide_number||dispatchId)+" · "+reason});
+   if(createError){
+     await supabase.from("inventory_movements").insert(lines.map((l:any)=>({material_id:l.material_id,dispatch_line_id:l.id,movement_type:"adjustment",quantity:Number(l.pending_qty),signed_quantity:-Number(l.pending_qty),created_by:user.id,observation:"Reversa de reasignación fallida "+dispatchId})));
+     throw new Error(createError.message);
+   }
+   newDispatchId=String(newId);
+   const {error:transitionError}=await supabase.rpc("transition_dispatch_v1",{p_dispatch_id:newDispatchId,p_status:"En preparación",p_reason:null});
+   if(transitionError)throw new Error("La nueva guía fue creada, pero requiere continuar su preparación: "+transitionError.message);
+ }else if(!["Merma","Pérdida"].includes(resolution))throw new Error("Resolución no válida");
+
+ const {error:lineUpdate}=await supabase.from("dispatch_lines").update({pending_qty:0}).eq("dispatch_id",dispatchId).gt("pending_qty",0);
+ if(lineUpdate)throw lineUpdate;
+ const {error:dispatchUpdate}=await supabase.from("dispatches").update({status:"Entrega parcial regularizada",updated_at:new Date().toISOString(),observations:String((d as any).observations||"")}).eq("id",dispatchId);
+ if(dispatchUpdate)throw dispatchUpdate;
+ await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Despachos",action:"Regularizó saldo no entregado",entity_table:"dispatches",entity_id:dispatchId,new_data:{resolution,reason,new_dispatch_id:newDispatchId,lines:lines.map((l:any)=>({line_id:l.id,material_id:l.material_id,qty:Number(l.pending_qty)}))},observation:reason});
+ revalidatePath("/");
+ return{ok:true,resolution,newDispatchId};
 }
