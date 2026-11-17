@@ -10,7 +10,6 @@ import type {ClientInstallationGroup} from "./ClientInstallationsModule";
 import DeliveryRegistrationModal from "./DeliveryRegistrationModal";
 import PreparationBeforeGuideModal from "./PreparationBeforeGuideModal";
 import DeliveryRoutesModule from "./DeliveryRoutesModule";
-import GuideNumberSettings from "./GuideNumberSettings";
 import {printPreparationConsolidated} from "@/lib/print-batch-consolidated";
 
 type DispatchLine={id:string;material_id:string;required_qty:number|string;delivered_qty:number|string;pending_qty:number|string;materials?:{id:string;family?:string;name:string;supplier_code?:string;presentation?:string;unit?:string}};
@@ -75,7 +74,7 @@ export default function DispatchDeliveryModule({dispatches,campaigns,clients,mat
  const rowStyle:React.CSSProperties={display:"grid",gridTemplateColumns:["Designar ruta","Entregadas"].includes(active)?"34px minmax(180px,1.5fr) minmax(170px,1.2fr) minmax(150px,1fr) 110px minmax(180px,auto)":"minmax(190px,1.5fr) minmax(170px,1.2fr) minmax(150px,1fr) 110px minmax(180px,auto)",gap:10,alignItems:"center",padding:"9px 10px",borderBottom:"1px solid #dce8ef",fontSize:13};
  return <section className="panel dispatchModule">
   <div className="catalogIntro"><div><h2>Despacho y guías</h2><p>Seleccionar instalación → verificar preparación → generar guía → ruta → entrega y firma → controlar pendientes.</p></div>{canOperate&&<button onClick={()=>setShowNew(true)}>+ Despacho extraordinario</button>}</div>
-  {role==="Admin Total"&&<GuideNumberSettings/>}
+
   {notice&&<div className="notice">{notice}</div>}
   <div className="dispatchBuckets" style={{marginTop:14}}>{stages.map(name=><button key={name} className={active===name?"active":""} onClick={()=>setActive(name)}><span>{name==="Guías pendientes"?"1. Preparar materiales":name==="Designar ruta"?"2. Guías y ruta":name==="Preparar"?"3. Rutas asignadas":name==="En tránsito"?"4. En entrega":name}</span>{stageCount(name)!==null&&<b>{stageCount(name)}</b>}</button>)}</div>
   <div style={{padding:"10px 12px",border:"1px solid #dce8ef",borderRadius:12,background:"#f8fbfc",margin:"10px 0 12px"}}><b>{active==="Guías pendientes"?"Preparación de materiales":active==="Designar ruta"?"Generación de guías y asignación de ruta":active}</b><br/><small>{active==="Guías pendientes"?"Selecciona las instalaciones, imprime el consolidado de bodega y confirma la preparación física antes de generar guías.":active==="Designar ruta"?"Selecciona las guías que viajarán juntas. Luego asigna quién prepara, quién entrega y organiza el recorrido.":active==="Preparar"?"Aquí aparecen solamente tus rutas asignadas para preparar o entregar, ordenadas por fecha.":active==="En tránsito"?"Aquí aparecen solamente tus rutas en curso. Cada ruta contiene sus instalaciones y acciones de entrega.":active==="Entregadas"?"Archivo de guías conformes y respaldos firmados.":"Entregas parciales o con diferencias que mantienen materiales pendientes."}</small></div>
