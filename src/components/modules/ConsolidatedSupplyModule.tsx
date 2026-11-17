@@ -74,8 +74,8 @@ export default function ConsolidatedSupplyModule({surveys,initialView="need"}:{s
   if(!chosen.length)return setMessage("Selecciona cantidades para cotizar o comprar.");
   if(chosen.some(x=>!x.supplier_id))return setMessage("Asigna un proveedor a cada producto seleccionado.");
   if(chosen.some(x=>x.qty>(needRows.find(r=>r.material_id===x.material_id)?.pending||0)))return setMessage("Hay cantidades superiores al saldo pendiente.");
-  const preview=chosen.map(x=>`${needRows.find(r=>r.material_id===x.material_id)?.name||x.material_id}: ${x.qty} → ${suppliers.find(s=>s.id===x.supplier_id)?.legal_name||"Proveedor"}`).join("\\n");
-  if(!window.confirm(`Se generarán ${new Set(chosen.map(x=>x.supplier_id)).size} documento(s) de tipo ${documentKind}, agrupados por proveedor.\\n\\n${preview}\\n\\n¿Confirmar generación?`))return;
+  const preview=chosen.map(x=>`${needRows.find(r=>r.material_id===x.material_id)?.name||x.material_id}: ${x.qty} → ${suppliers.find(s=>s.id===x.supplier_id)?.legal_name||"Proveedor"}`).join("\n");
+  if(!window.confirm(`Se generarán ${new Set(chosen.map(x=>x.supplier_id)).size} documento(s) de tipo ${documentKind}, agrupados por proveedor.\n\n${preview}\n\n¿Confirmar generación?`))return;
   const groups=new Map<string,typeof chosen>();
   for(const item of chosen){const list=groups.get(item.supplier_id)||[];list.push(item);groups.set(item.supplier_id,list)}
   setSaving(true);
