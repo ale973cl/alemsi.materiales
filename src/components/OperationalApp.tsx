@@ -12,22 +12,20 @@ import CampaignsModule from "@/components/modules/CampaignsModule";
 import ConsolidatedSupplyModule from "@/components/modules/ConsolidatedSupplyModule";
 import CampaignPendingModule from "@/components/modules/CampaignPendingModule";
 import ConnectedReceiptModule from "@/components/modules/ConnectedReceiptModule";
-import PurchaseOrdersModule from "@/components/modules/PurchaseOrdersModule";
 import SurveyLinkControl from "@/components/modules/SurveyLinkControl";
 import InventoryModule from "@/components/modules/InventoryModule";
 type MasterMaterialRow=MaterialCatalogRow&{active?:boolean};type MasterClientGroup=ClientInstallationGroup&{active?:boolean};
 type Props={initialTab?:string;profile:any;summary:Record<string,number>;campaigns:any[];activeCampaigns:any[];consolidatedSurveys:any[];orders:any[];dispatches:any[];audit:any[];materialCatalog:MaterialCatalogRow[];materialCatalogSourceCount:number;materialCatalogError?:string|null;masterMaterialCatalog:MasterMaterialRow[];clientInstallations:ClientInstallationGroup[];masterClientInstallations:MasterClientGroup[];users:UserProfileRow[];userInstallationAccess:UserAccessRow[]};
-const titles:Record<string,string>={inicio:"Inicio",clientes:"Maestros y administración",campañas:"Campañas",levantamientos:"Levantamientos",consolidado:"Consolidado",preparacion:"Consolidado de preparación",inventario:"Inventario",compras:"Órdenes de compra",recepcion:"Recepción de materiales",entregas:"Preparación y entregas"};
-const mainNav=[["campañas","Planificación"],["levantamientos","Levantamientos"],["consolidado","Abastecimiento"],["inventario","Bodega e inventario"],["preparacion","Preparación"],["entregas","Despachos y entregas"],["clientes","Maestros y administración"]] as const;
+const titles:Record<string,string>={inicio:"Inicio",clientes:"Administración",campañas:"Planificación",levantamientos:"Levantamientos",consolidado:"Abastecimiento y compras",preparacion:"Preparación",inventario:"Bodega e inventario",compras:"Documentos de compra",recepcion:"Recepción de mercadería",entregas:"Despachos y entregas"};
+const mainNav=[["campañas","Planificación"],["consolidado","Abastecimiento"],["inventario","Bodega"],["entregas","Entregas"],["clientes","Administración"]] as const;
 const quickLinks:Record<string,[string,string][]>={
- campañas:[["campañas","Campañas"],["levantamientos","Realizar levantamiento"]],
- levantamientos:[["campañas","Planificación"],["levantamientos","Levantamientos"],["consolidado","Ver necesidades"]],
- consolidado:[["consolidado","Necesidades y generar OC"],["compras","Órdenes de compra"],["recepcion","Facturas y recepción"],["preparacion","Preparar materiales"]],
- inventario:[["inventario","Existencias"],["recepcion","Facturas y entrada de mercadería"],["preparacion","Preparar despacho"]],
- preparacion:[["preparacion","Necesidades pendientes"],["entregas","Preparar tanda y guías"]],
- entregas:[["preparacion","Consolidado"],["entregas","Guías, rutas y entregas"]]
+ campañas:[["campañas","Campañas"],["levantamientos","Levantamientos"]],
+ consolidado:[["consolidado","Necesidades / comprar"],["compras","Cotizaciones y OC"],["recepcion","Recepción"]],
+ inventario:[["inventario","Existencias"],["preparacion","Preparación"]],
+ entregas:[["entregas","Guías y entregas"]],
+ clientes:[["clientes","Maestros y configuración"]]
 };
-const parentOf=(tab:string)=>tab==="compras"||tab==="recepcion"?"consolidado":tab;
+const parentOf=(tab:string)=>tab==="levantamientos"?"campañas":tab==="compras"||tab==="recepcion"?"consolidado":tab==="preparacion"?"inventario":tab;
 export default function OperationalApp({initialTab,profile,summary,campaigns,activeCampaigns,consolidatedSurveys,orders,dispatches,materialCatalog,materialCatalogSourceCount,materialCatalogError,masterMaterialCatalog,clientInstallations,masterClientInstallations,users,userInstallationAccess}:Props){
  const allowed=Object.keys(titles);
  const [tab,setTab]=useState(initialTab&&allowed.includes(initialTab)?initialTab:"inicio");
@@ -40,17 +38,17 @@ export default function OperationalApp({initialTab,profile,summary,campaigns,act
  const navTitle=titles[tab]||"Inicio";
  return <div className="portal simpleApp">
   <header className="portalTop simpleTop"><button type="button" className="simpleLogoButton" onClick={()=>navigate("inicio")} aria-label="Ir al inicio"><Image src="/alemsi-logo.png" width={170} height={67} alt="ALEMSI" priority/></button><div className="simpleTopRight"><span>Control de materiales</span><form action={signOut}><button className="linkBtn">Salir</button></form></div></header>
-  <div className="portalBody simpleBody"><aside className="simpleSidebar"><div className="productTitle">ALEMSI Simple<small>Gestión de materiales</small></div><button type="button" className={tab==="inicio"?"nav active":"nav"} onClick={()=>navigate("inicio")}>Inicio</button>{mainNav.map(([id,name],i)=><button type="button" key={id} className={parent===id?"nav active":"nav"} onClick={()=>navigate(id)}><span className="simpleNavNumber">0{i+1}</span>{name}</button>)}</aside>
+  <div className="portalBody simpleBody"><aside className="simpleSidebar"><div className="productTitle">ALEMSI<small>Operación de materiales</small></div><button type="button" className={tab==="inicio"?"nav active":"nav"} onClick={()=>navigate("inicio")}>Inicio</button>{mainNav.map(([id,name],i)=><button type="button" key={id} className={parent===id?"nav active":"nav"} onClick={()=>navigate(id)}><span className="simpleNavNumber">0{i+1}</span>{name}</button>)}</aside>
   <main className="workspace simpleWorkspace">
    <div className="simplePageHead"><div><p className="eyebrow">ALEMSI · OPERACIÓN</p><h1>{navTitle}</h1></div>{tab!=="inicio"&&<button type="button" className="simpleBack" onClick={()=>navigate("inicio")}>← Inicio</button>}</div>
    {currentLinks.length>0&&<nav className="simpleSubnav" aria-label="Vistas de trabajo">{currentLinks.map(([id,name])=><button key={id} type="button" className={tab===id?"active":""} onClick={()=>navigate(id)}>{name}</button>)}</nav>}
-   {tab==="inicio"&&<><p className="simpleLead">Selecciona la tarea que necesitas realizar.</p><section className="simpleHomeGrid">{mainNav.map(([id,name],i)=><button key={id} className="simpleHomeTile" type="button" onClick={()=>navigate(id)}><span className="simpleTileNumber">0{i+1}</span><strong>{name}</strong><span className="simpleTileArrow">→</span></button>)}</section><section className="simpleSummary"><span>Campañas abiertas <b>{summary.openCampaigns}</b></span><span>Levantamientos pendientes <b>{summary.pendingSurveys}</b></span><span>Entregas pendientes <b>{summary.openDispatches}</b></span></section></>}
+   {tab==="inicio"&&<><p className="simpleLead">Continúa por el proceso o entra directamente a una tarea.</p><section className="simpleHomeGrid">{mainNav.map(([id,name],i)=><button key={id} className="simpleHomeTile" type="button" onClick={()=>navigate(id)}><span className="simpleTileNumber">0{i+1}</span><strong>{name}</strong><span className="simpleTileArrow">→</span></button>)}</section><section className="simpleSummary"><span>Campañas abiertas <b>{summary.openCampaigns}</b></span><span>Levantamientos pendientes <b>{summary.pendingSurveys}</b></span><span>Entregas pendientes <b>{summary.openDispatches}</b></span></section></>}
    {tab==="clientes"&&<MastersModule role={profile.role} materials={masterMaterialCatalog} materialSourceCount={materialCatalogSourceCount} materialError={materialCatalogError} clients={masterClientInstallations} campaigns={campaigns} users={users} access={userInstallationAccess} currentUserId={profile.id}/>}
    {tab==="campañas"&&<CampaignsModule campaigns={campaigns} clients={clientInstallations} onOpenSurveys={(campaignId,installationId)=>{setSelectedCampaignId(campaignId);setSelectedSurveyInstallationId(installationId||"");navigate("levantamientos")}}/>}
    {tab==="levantamientos"&&<SurveyCampaignSelector campaigns={activeCampaigns} surveys={consolidatedSurveys} selectedCampaignId={selectedCampaignId} onSelect={id=>{setSelectedCampaignId(id);setSelectedSurveyInstallationId("")}} selectedInstallationId={selectedSurveyInstallationId} onSelectInstallation={setSelectedSurveyInstallationId}/>}
-   {tab==="consolidado"&&<ConsolidatedSupplyModule surveys={consolidatedSurveys}/>}
+   {tab==="consolidado"&&<ConsolidatedSupplyModule surveys={consolidatedSurveys} initialView="need"/>}
    {tab==="inventario"&&<InventoryModule role={profile.role}/>}
-   {tab==="compras"&&<PurchaseOrdersModule orders={orders} role={profile.role}/>}
+   {tab==="compras"&&<ConsolidatedSupplyModule surveys={consolidatedSurveys} initialView="documents"/>}
    {tab==="recepcion"&&<ConnectedReceiptModule role={profile.role}/>}
    {tab==="preparacion"&&<CampaignPendingModule surveys={consolidatedSurveys} dispatches={dispatches}/>}
    {tab==="entregas"&&<DispatchDeliveryModule dispatches={dispatches} campaigns={campaigns} clients={clientInstallations} materials={materialCatalog} role={profile.role} users={users} currentUser={{id:profile.id,full_name:profile.full_name}}/>}
