@@ -351,3 +351,32 @@
 .materialHistoryRow{display:grid;grid-template-columns:minmax(220px,1fr) 110px;gap:8px;align-items:center;padding:7px 9px;border:1px solid #dfe8eb;border-radius:8px;background:#fff}
 .materialHistoryRow>span{display:grid;gap:1px}.materialHistoryRow small{font-size:12px!important}.materialHistoryRow strong{text-align:right}
 @media(max-width:600px){.materialHistoryRow{grid-template-columns:1fr auto}}
+
+
+/* Recepción: listado compacto -> detalle/cotejo en pantalla dedicada. */
+.receiptHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.receiptHead h2{margin:0 0 4px!important}.receiptHead p{margin:0!important}
+.receiptModeActions{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}
+.receiptModeActions button{min-height:34px!important;padding:5px 8px!important}
+.receiptModeActions .active{background:#e5f5f2;color:#075d61;border-color:#6bb7ae}
+.receiptSelector{margin:9px 0;position:relative}
+.receiptSelector label{display:grid;gap:3px;font-weight:700}.receiptSelector input{width:100%;box-sizing:border-box}
+.receiptHelp{display:block;margin-top:5px;color:#627d98;font-size:12px!important}
+.receiptMatches{display:grid;gap:4px;margin-top:5px;padding:5px;border:1px solid #dfe6ea;border-radius:8px;background:#fff;max-height:250px;overflow:auto}
+.receiptMatches button{display:grid;grid-template-columns:130px minmax(200px,1.5fr) 150px 70px;gap:7px;text-align:left;align-items:center;background:#fff;color:#102a43;border:1px solid #e7ecef;min-height:42px!important;padding:6px 8px!important}
+.receiptMatches button:hover{background:#eef8f7;border-color:#159a9c}
+.receiptMatches small{color:#627d98}.receiptNoMatch{padding:8px;color:#627d98}
+.receiptHistory{margin-top:14px}.receiptHistoryHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px}
+.receiptHistoryHead h3{margin:0!important}.receiptHistoryHead input{min-width:300px}
+.receiptHistoryItem{border:1px solid #e2e9ec;border-radius:8px;background:#fff;margin-bottom:4px}
+.receiptHistoryRow{display:grid;grid-template-columns:minmax(190px,1.8fr) 130px 100px 130px minmax(220px,auto);gap:7px;align-items:center;padding:7px 8px}
+.receiptHistoryRow>span:first-child{display:grid;gap:1px}.receiptHistoryRow small{font-size:12px!important}.receiptHistoryRow strong{text-align:right;font-size:13px}
+.receiptActions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end}.receiptActions button,.receiptActions .btn{min-height:32px!important;padding:4px 7px!important;font-size:13px!important}
+@media(max-width:900px){
+ .receiptMatches button{grid-template-columns:110px 1fr 120px}.receiptMatches button strong{grid-column:1/-1}
+ .receiptHistoryRow{grid-template-columns:1fr 1fr}.receiptHistoryRow .receiptActions{grid-column:1/-1;justify-content:flex-start}.receiptHistoryRow strong{text-align:left}
+}
+@media(max-width:600px){
+ .receiptHead{display:grid}.receiptHistoryHead{display:grid}.receiptHistoryHead input{min-width:0;width:100%}
+ .receiptMatches button{grid-template-columns:1fr}.receiptHistoryRow{grid-template-columns:1fr}
+}
