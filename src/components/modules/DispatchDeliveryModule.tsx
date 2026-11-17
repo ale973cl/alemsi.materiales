@@ -115,54 +115,36 @@ export default function DispatchDeliveryModule({dispatches,campaigns,clients,mat
 
 function BatchPreparationModal({suggestions,busy,close,confirm}:{suggestions:Suggestion[];busy:boolean;close:()=>void;confirm:(lines:Record<string,{material_id:string;quantity:number}[]>,differenceNote:string)=>void}){
  const availability=useMemo(()=>{const map=new Map<string,number>();for(const s of suggestions)for(const l of s.lines)map.set(l.material_id,Math.max(map.get(l.material_id)||0,l.available));return map},[suggestions]);
- const [preparationAnswer,setPreparationAnswer]=useState<""|"yes"|"no">(""),[differenceNotes,setDifferenceNotes]=useState(""),[adjustments,setAdjustments]=useState<Record<string,number>>({});
- const proposed=useMemo(()=>{const remaining=new Map(availability),out:Record<string,{material_id:string;quantity:number}[]>={};for(const s of suggestions){out[s.survey_id]=[];for(const l of s.lines){const qty=Math.max(0,Math.min(l.pending,remaining.get(l.material_id)||0));remaining.set(l.material_id,Math.max(0,(remaining.get(l.material_id)||0)-qty));if(qty)out[s.survey_id].push({material_id:l.material_id,quantity:qty})}}return out},[suggestions,availability]);
- const catalog=useMemo(()=>{const m=new Map<string,{id:string;name:string;unit:string}>();for(const s of suggestions)for(const l of s.lines)if(!m.has(l.material_id))m.set(l.material_id,{id:l.material_id,name:l.name,unit:l.unit});return [...m.values()].sort((a,b)=>a.name.localeCompare(b.name,"es"));},[suggestions]);
- const qty=(s:Suggestion,id:string)=>{const l=s.lines.find(x=>x.material_id===id);if(!l)return 0;const original=proposed[s.survey_id]?.find(x=>x.material_id===id)?.quantity||0;const input=adjustments[s.survey_id+":"+id];return input===undefined?original:Math.max(0,Math.min(Number(input)||0,l.pending));};
- const prepared=useMemo(()=>{const out:Record<string,{material_id:string;quantity:number}[]>={};for(const s of suggestions)out[s.survey_id]=s.lines.map(l=>({material_id:l.material_id,quantity:qty(s,l.material_id)})).filter(l=>l.quantity>0);return out;},[suggestions,proposed,adjustments]);
- const total=Object.values(prepared).flat().reduce((sum,l)=>sum+l.quantity,0);
+ const [checked,setChecked]=useState<Record<string,boolean>>({}),[editing,setEditing]=useState(""),[adjustments,setAdjustments]=useState<Record<string,number>>({}),[reasons,setReasons]=useState<Record<string,string>>({});
+ const proposed=useMemo(()=>{const remaining=new Map(availability),out:Record<string,{material_id:string;quantity:number}[]>={};for(const s of suggestions){out[s.survey_id]=[];for(const l of s.lines){const q=Math.max(0,Math.min(l.pending,remaining.get(l.material_id)||0));remaining.set(l.material_id,Math.max(0,(remaining.get(l.material_id)||0)-q));if(q)out[s.survey_id].push({material_id:l.material_id,quantity:q})}}return out},[suggestions,availability]);
+ const baseline=(s:Suggestion,id:string)=>proposed[s.survey_id]?.find(x=>x.material_id===id)?.quantity||0;
+ const qty=(s:Suggestion,id:string)=>adjustments[s.survey_id+":"+id]??baseline(s,id);
+ const prepared:Record<string,{material_id:string;quantity:number}[]>={};
+ for(const s of suggestions)prepared[s.survey_id]=s.lines.map(l=>({material_id:l.material_id,quantity:qty(s,l.material_id)})).filter(l=>l.quantity>0);
+ const catalog=useMemo(()=>{const m=new Map<string,{id:string;name:string;unit:string}>();for(const s of suggestions)for(const l of s.lines)m.set(l.material_id,{id:l.material_id,name:l.name,unit:l.unit});return [...m.values()].sort((a,b)=>a.name.localeCompare(b.name,"es"));},[suggestions]);
  const totals=new Map<string,number>();for(const entries of Object.values(prepared))for(const l of entries)totals.set(l.material_id,(totals.get(l.material_id)||0)+l.quantity);
- const overStock=[...totals.entries()].filter(([id,sum])=>sum>(availability.get(id)||0)+0.000001);
- const differences=suggestions.flatMap(s=>s.lines.filter(l=>qty(s,l.material_id)<l.pending).map(l=>({installation:s.installation_name,material:l.name,shortage:l.pending-qty(s,l.material_id)})));
+ const total=[...totals.values()].reduce((a,b)=>a+b,0);
+ const overStock=[...totals.entries()].some(([id,sum])=>sum>(availability.get(id)||0)+0.000001);
+ const allChecked=suggestions.every(s=>checked[s.survey_id]);
  const sameCampaign=new Set(suggestions.map(s=>s.campaign_id)).size===1,sameClient=new Set(suggestions.map(s=>s.client_id)).size===1;
- return <div className="modalBg" role="dialog" aria-modal="true" aria-label="Preparar tanda">
-  <div className="modal" style={{maxWidth:1200,width:"96vw",maxHeight:"92vh",overflow:"auto"}}>
-   <div className="modalHead"><div><h2>Consolidado de preparación de tanda</h2><p>{suggestions.length} instalaciones seleccionadas · {suggestions[0]?.campaign_name||"Campaña"} · revisa la carga antes de emitir las guías</p></div><button type="button" disabled={busy} onClick={close}>Cerrar</button></div>
-   {(!sameCampaign||!sameClient)&&<p className="warning"><b>La tanda debe pertenecer a un solo cliente y campaña.</b> Corrige la selección.</p>}
-   <p style={{fontSize:12}}>Materiales en filas; instalaciones en columnas. Los valores corresponden a la necesidad disponible para preparar. Puedes disminuir una cantidad si detectas una diferencia física; el sistema validará el stock antes de guardar.</p>
-   <div style={{overflow:"auto",maxHeight:"58vh",border:"1px solid #c8dce8",borderRadius:10}}>
-    <table style={{borderCollapse:"separate",borderSpacing:0,minWidth:Math.max(740,270+suggestions.length*160),width:"100%",fontSize:12}}>
-     <thead><tr><th style={{position:"sticky",top:0,left:0,zIndex:4,background:"#e9f4f3",padding:10,textAlign:"left",minWidth:250}}>Material</th>{suggestions.map(s=><th key={s.survey_id} style={{position:"sticky",top:0,zIndex:3,background:"#e9f4f3",minWidth:145,padding:9,textAlign:"center"}}>{s.installation_name}</th>)}<th style={{position:"sticky",top:0,zIndex:3,background:"#dff1ed",padding:9,minWidth:95}}>Total tanda</th></tr></thead>
-     <tbody>{catalog.map(m=><tr key={m.id}><td style={{position:"sticky",left:0,zIndex:2,padding:10,borderBottom:"1px solid #e3edf2",background:"#fff"}}><b>{m.name}</b><small style={{display:"block"}}>{m.unit}</small><small style={{display:"block"}}>Disponible: {availability.get(m.id)||0}</small></td>{suggestions.map(s=>{const l=s.lines.find(x=>x.material_id===m.id);const value=qty(s,m.id);return <td key={s.survey_id} style={{textAlign:"center",padding:8,borderBottom:"1px solid #e3edf2"}}>{l?<label style={{display:"grid",gap:3,justifyItems:"center"}}><input aria-label={`${m.name} para ${s.installation_name}`} type="number" step="any" min="0" max={l.pending} value={value} onChange={e=>{const value=Number(e.target.value);setAdjustments(current=>({...current,[s.survey_id+":"+m.id]:Math.max(0,Math.min(Number.isFinite(value)?value:0,l.pending))}))}} style={{maxWidth:84,textAlign:"center",padding:6}}/><small>Necesidad {l.pending}</small></label>:<span>—</span>}</td>})}<td style={{fontWeight:800,textAlign:"center",background:"#f2fbf8",borderBottom:"1px solid #e3edf2"}}>{totals.get(m.id)||"—"}</td></tr>)}</tbody>
-    </table>
-   </div>
-   <p style={{padding:10,background:"#f1f7f8",borderRadius:9}}><b>Total a preparar: {total} unidades</b> · {suggestions.length} instalaciones · {catalog.length} productos.</p>
-   <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",margin:"12px 0"}}>
-    <button type="button" disabled={busy} onClick={()=>{const ok=printPreparationConsolidated(suggestions,prepared);if(!ok)alert("Habilita las ventanas emergentes para imprimir el consolidado.");}}>Imprimir consolidado para bodega</button>
-    <small>Utiliza este documento para retirar físicamente los materiales antes de generar las guías.</small>
-   </div>
-   <fieldset style={{border:"1px solid #bcd6db",borderRadius:10,padding:12,margin:"12px 0"}}>
-    <legend style={{fontWeight:700}}>¿La tanda quedó preparada correctamente?</legend>
-    <label style={{display:"inline-flex",alignItems:"center",gap:7,marginRight:22}}><input type="radio" name="preparedAnswer" checked={preparationAnswer==="yes"} onChange={()=>setPreparationAnswer("yes")}/> Sí, sin diferencias</label>
-    <label style={{display:"inline-flex",alignItems:"center",gap:7}}><input type="radio" name="preparedAnswer" checked={preparationAnswer==="no"} onChange={()=>setPreparationAnswer("no")}/> No, hubo diferencias</label>
-    {preparationAnswer==="no"&&<label style={{display:"grid",gap:6,marginTop:12}}>Explica la diferencia física<textarea value={differenceNotes} onChange={e=>setDifferenceNotes(e.target.value)} placeholder="Material faltante, cantidad corregida y motivo" rows={2}/></label>}
-   </fieldset>
-   {!!differences.length&&<p className="warning"><b>{differences.length} diferencias entre necesidad y preparación.</b> Puedes continuar con preparación parcial dejando pendiente lo no preparado, siempre que indiques el motivo y corrijas las cantidades físicas en la matriz.</p>}
-   {!!overStock.length&&<p className="warning"><b>El total supera el stock disponible.</b> Ajusta las cantidades antes de continuar.</p>}
-   {!sameClient&&<p className="warning">La selección reúne clientes diferentes. Prepara una tanda por cliente.</p>}
-   {!sameCampaign&&<p className="warning">La selección reúne campañas diferentes. Prepara una tanda por campaña.</p>}
-   <div style={{display:"flex",justifyContent:"flex-end",gap:10,flexWrap:"wrap"}}>
-    <button type="button" disabled={busy} onClick={close}>Volver a selección</button>
-    <button type="button" disabled={busy||!sameClient||!sameCampaign||!total||!!overStock.length||!preparationAnswer||(preparationAnswer==="no"&&differenceNotes.trim().length<8)} onClick={()=>confirm(prepared,preparationAnswer==="no"?differenceNotes:"")}>{busy?"Generando guías…":"Confirmar preparación y generar guías"}</button>
-   </div>
-  </div>
- </div>;
-}
-
- function ComplementaryDispatchModal({dispatch,close,done}:{dispatch:Dispatch;close:()=>void;done:(id:string)=>void}){
- const [pending,start]=useTransition();const lines=dispatch.dispatch_lines.filter(line=>n(line.pending_qty)>0);
- const confirm=()=>start(async()=>{try{const result=await createComplementaryDispatch({parentDispatchId:dispatch.id});done(result.id)}catch(e:any){alert(e.message)}});
- return <div className="modalBg"><div className="modal"><div className="modalHead"><div><h2>Completar entrega</h2><p>Saldo pendiente de {guideName(dispatch)}</p></div><button type="button" onClick={close}>Cerrar</button></div><div className="deliveryFixedSummary"><b>La guía original no se modificará</b><p>Al confirmar se generará la guía complementaria. La entrega seguirá pendiente: después deberá prepararse, salir a ruta y registrarse con los datos del receptor y su firma.</p></div><div className="deliveryLines deliveryLinesReadOnly">{lines.map(line=><div className="deliveryReadOnlyLine" key={line.id}><span><b>{line.materials?.name||"Material"}</b><small>{line.materials?.unit||""} · Pendiente</small></span><strong>{n(line.pending_qty)} {line.materials?.unit||""}</strong></div>)}</div><button type="button" className="deliveryConfirm" disabled={pending||!lines.length} onClick={confirm}>{pending?"Generando…":"Generar guía complementaria"}</button></div></div>;
+ const audit=suggestions.flatMap(s=>s.lines.filter(l=>qty(s,l.material_id)!==baseline(s,l.material_id)).map(l=>s.installation_name+" / "+l.name+": "+baseline(s,l.material_id)+" → "+qty(s,l.material_id)+(reasons[s.survey_id+":"+l.material_id]?" ("+reasons[s.survey_id+":"+l.material_id]+")":""))).join("; ");
+ return <div className="modalBg" role="dialog" aria-modal="true" aria-label="Preparar tanda"><div className="modal" style={{maxWidth:1200,width:"96vw",maxHeight:"92vh",overflow:"auto"}}>
+ <div className="modalHead"><div><h2>Preparar materiales</h2><p>{suggestions.length} instalaciones · {suggestions.filter(s=>checked[s.survey_id]).length} confirmadas</p></div><button type="button" disabled={busy} onClick={close}>Cerrar</button></div>
+ {(!sameCampaign||!sameClient)&&<p className="warning">Por ahora prepara una tanda por cliente y campaña.</p>}
+ <button type="button" disabled={busy} onClick={()=>{if(!printPreparationConsolidated(suggestions,proposed))alert("Habilita las ventanas emergentes para imprimir.");}}>Imprimir consolidado para bodega</button>
+ <p>Prepara los materiales con el consolidado. Confirma cada instalación o abre su pedido para corregir cantidades.</p>
+ <div style={{overflow:"auto",maxHeight:"42vh",border:"1px solid #c8dce8",borderRadius:10}}><table style={{borderCollapse:"collapse",width:"100%",minWidth:600,fontSize:12}}><thead><tr><th>Material</th>{suggestions.map(s=><th key={s.survey_id}>{s.installation_name}</th>)}<th>Total preparado</th></tr></thead><tbody>{catalog.map(m=><tr key={m.id}><td style={{padding:8,borderBottom:"1px solid #dde8ec"}}>{m.name} · {m.unit}</td>{suggestions.map(s=><td key={s.survey_id} style={{textAlign:"center",borderBottom:"1px solid #dde8ec"}}>{qty(s,m.id)||"—"}</td>)}<td style={{textAlign:"center",fontWeight:700}}>{totals.get(m.id)||0}</td></tr>)}</tbody></table></div>
+ <h3 style={{marginTop:18}}>Confirmar instalaciones</h3>
+ {suggestions.map(s=><section key={s.survey_id} style={{border:"1px solid #c8dce8",padding:12,borderRadius:10,marginBottom:8}}>
+ <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}><div><b>{s.installation_name}</b><small style={{display:"block"}}>{checked[s.survey_id]?"Confirmada":"Pendiente de preparación"}</small></div>
+ <button type="button" disabled={busy} onClick={()=>{setChecked(c=>({...c,[s.survey_id]:true}));setEditing("");}}> {checked[s.survey_id]?"Confirmada ✓":"Preparación correcta"}</button>
+ <button type="button" disabled={busy} onClick={()=>{setEditing(editing===s.survey_id?"":s.survey_id);setChecked(c=>({...c,[s.survey_id]:false}));}}> {editing===s.survey_id?"Cerrar pedido":"Registrar diferencia"}</button></div>
+ {editing===s.survey_id&&<div style={{marginTop:12}}>{s.lines.map(l=><div key={l.material_id} style={{display:"grid",gridTemplateColumns:"minmax(130px,2fr) 1fr 1fr",gap:8,alignItems:"center",padding:8,borderBottom:"1px solid #dde8ec"}}><span><b>{l.name}</b><small style={{display:"block"}}>Necesidad: {l.pending} · A preparar: {baseline(s,l.material_id)}</small></span><label>Preparado<input type="number" min="0" max={baseline(s,l.material_id)} step="any" disabled={busy} value={qty(s,l.material_id)} onChange={e=>{setAdjustments(a=>({...a,[s.survey_id+":"+l.material_id]:Math.max(0,Math.min(baseline(s,l.material_id),Number(e.target.value)||0))}));setChecked(c=>({...c,[s.survey_id]:false}));}}/></label><span>Faltan: {Math.max(0,l.pending-qty(s,l.material_id))}</span>{qty(s,l.material_id)!==baseline(s,l.material_id)&&<label style={{gridColumn:"1 / -1"}}>Motivo (opcional)<input value={reasons[s.survey_id+":"+l.material_id]||""} onChange={e=>setReasons(r=>({...r,[s.survey_id+":"+l.material_id]:e.target.value}))}/></label>}</div>)}
+ <button type="button" disabled={busy} onClick={()=>{setChecked(c=>({...c,[s.survey_id]:true}));setEditing("");}}>Confirmar cantidades reales</button></div>}
+ </section>)}
+ {overStock&&<p className="warning">Las cantidades superan las existencias disponibles.</p>}
+ <div style={{display:"flex",justifyContent:"flex-end",gap:8,flexWrap:"wrap"}}><button type="button" disabled={busy} onClick={close}>Volver</button><button type="button" disabled={busy||!allChecked||!sameCampaign||!sameClient||!total||overStock} onClick={()=>confirm(prepared,audit)}>{busy?"Generando guías…":"Confirmar tanda y generar guías"}</button></div>
+ </div></div>;
 }
 
 function RoutePreparationModal({dispatches,users,currentUser,canAssign,close,done}:{dispatches:Dispatch[];users:RouteUser[];currentUser:{id:string;full_name?:string|null};canAssign:boolean;close:()=>void;done:(name:string)=>void}){
