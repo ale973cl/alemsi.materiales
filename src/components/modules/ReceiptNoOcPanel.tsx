@@ -1,10 +1,11 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
 import InvoiceReader,{type ExtractedInvoice} from "./InvoiceReader";
+import {invoiceUnitNet,matchInvoiceLine} from "@/lib/invoice-reconciliation";
 import {createSupplierForReceipt,registerReceiptWithoutOrder} from "@/app/receipt-no-oc-actions";
 
 type Supplier={id:string;legal_name:string;rut?:string|null};
-type Material={id:string;name:string;presentation?:string|null;unit?:string|null};
+type Material={id:string;name:string;presentation?:string|null;unit?:string|null;supplier_code?:string|null};
 type Line={material_id:string;received_qty:number;actual_unit_net:number};
 const currency=(n:number)=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n||0);
 const normalizeRut=(s:string)=>s.toUpperCase().replace(/[^0-9K]/g,"");
@@ -27,7 +28,18 @@ export default function ReceiptNoOcPanel({suppliers,materials,onDone,role}:{supp
   if(v.total!=null)setTotal(Number(v.total));
   if(v.payment_condition){const p=v.payment_condition.toLocaleLowerCase("es-CL");if(p.includes("contado"))setPayment("Contado");else if(p.includes("crédito")||p.includes("credito"))setPayment("Crédito");}
   if(Number.isInteger(v.payment_days)&&Number(v.payment_days)>=0)setDays(Number(v.payment_days));
-  setStatus("Datos propuestos por Gemini. Selecciona los productos correspondientes del Maestro y verifica todas las cifras antes de registrar.");
+  if(v.lines?.length){
+    const used=new Set<string>();
+    const generated=v.lines.map(line=>{
+      const found=matchInvoiceLine(line,materials.filter(m=>!used.has(m.id)));
+      if(found.item)used.add(found.item.id);
+      return{material_id:found.item?.id||"",received_qty:Number(line.quantity||0)||1,actual_unit_net:invoiceUnitNet(line)};
+    });
+    setLines(generated);
+    const matched=generated.filter(line=>line.material_id).length;
+    const unmatched=generated.length-matched;
+    setStatus(`Factura leída: ${matched} línea(s) vinculada(s) al Maestro. ${unmatched?unmatched+" requieren selección manual. ":""}Neto unitario calculado desde neto de línea ÷ cantidad cuando correspondía.`);
+  }else setStatus("Factura leída. Revisa los datos antes de registrar.");
  };
  const patch=(index:number,value:Partial<Line>)=>setLines(old=>old.map((l,i)=>i===index?{...l,...value}:l));
  const submit=async()=>{
@@ -76,7 +88,7 @@ export default function ReceiptNoOcPanel({suppliers,materials,onDone,role}:{supp
    {shipping==="Por pagar"&&<label>Flete neto<input type="number" min="0" value={freight} onChange={e=>setFreight(Number(e.target.value))}/></label>}
   </div>
   <h4>Productos efectivamente recibidos</h4>
-  <p style={{fontSize:12}}>La IA no asigna productos del Maestro. Selecciona cada producto y confirma cantidad y precio neto.</p>
+  <p style={{fontSize:12}}>El sistema vincula automáticamente solo coincidencias seguras por código o nombre. Revisa las líneas no identificadas y cualquier diferencia.</p>
   {lines.map((line,index)=><div key={index} className="receiptNoOcLine">
    <label>Material<select value={line.material_id} onChange={e=>patch(index,{material_id:e.target.value})}><option value="">Seleccionar material</option>{materials.map(m=><option key={m.id} value={m.id}>{m.name} · {m.presentation||m.unit||""}</option>)}</select></label>
    <label>Cantidad<input type="number" min="0" step="any" value={line.received_qty} onChange={e=>patch(index,{received_qty:Number(e.target.value)})}/></label>
