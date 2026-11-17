@@ -1,7 +1,31 @@
 # STATE — ALEMSI Materiales
 <!-- Este archivo se actualiza en el MISMO commit que el cambio. Si el código avanzó y este archivo no, el commit está incompleto. -->
 
-## Estado actual
+## Estado actual — 2026-11-17
+
+- Repositorio solicitado: `ale973cl/alemsi.materiales`.
+- Rama local: `feat/alemsi-motor-integral`; base `e51916f9658d71bbd3d0663871b83b5c62fcc201`.
+- Respaldo Git local: `backup/alemsi-motor-integral-20261117` al SHA de partida.
+- Auditoría dirigida y contrato modular: `docs/ESTRUCTURA_TECNICA_V2.md`.
+- Implementado localmente: motor puro `central-calendar.ts`, adaptador `fleet-calendar.ts`,
+  nueve pruebas de calendario y comando `test:calendar` incorporado a `prebuild`.
+  No hay integración a pantalla/API/DB ni alertas persistidas.
+- Verificado: 30 pruebas de circuitos y 15 de importación existentes; 9 nuevas de calendario;
+  `npx tsc --noEmit` y `npm run build` terminaron con código 0. Build con avisos
+  previos de CSS y detección de raíz superior por múltiples lockfiles, sin cambio de configuración.
+- Supabase: solo lectura de esquema, columnas, índices, políticas, triggers y dos conteos
+  agregados de duplicados (ambos cero); no se escribieron datos ni se aplicaron migraciones.
+- Bloqueo conectado: Preview y Production comparten `vxqxbjkttymgvyskzheu` por la misma
+  variable de URL. Sin override de rama observado. Pendiente decisión del usuario sobre
+  base aislada; `ajwmnxqqgrwudhjzoxzz` no tiene tablas públicas y no se modificó.
+- Pendientes: documento único transaccional, recepción atómica/idempotente, cuentas por
+  pagar y abonos, acreditación de rendiciones, calendario conectado, flota/grúa/siniestros,
+  gastos e informes integrados. Las tablas remotas de extensiones no están reproducidas
+  por migraciones de este clon. Ver matriz y criterios de aceptación en el documento técnico.
+- No se desplegó este incremento ni se modificó Production. No se certifican circuitos
+  completos, concurrencia, rollback real, permisos conectados ni interfaz móvil.
+
+## Estado histórico anterior (no representa esta rama)
 - **Rama activa:** `fix/login-correo-o-perfil`
 - **Último commit:** `HEAD` — `fix: unificar acceso dinámico por correo o perfil`.
 - **Preview desplegado:** pendiente de Vercel.
