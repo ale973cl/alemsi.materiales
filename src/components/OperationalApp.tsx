@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { signOut } from "@/app/actions";
 import { saveSurveyWithTrace } from "@/app/survey-actions";
 import MastersModule from "@/components/modules/MastersModule";
@@ -27,13 +28,15 @@ const quickLinks:Record<string,[string,string][]>={
 };
 const parentOf=(tab:string)=>tab==="levantamientos"?"campañas":tab==="compras"||tab==="recepcion"?"consolidado":tab==="preparacion"?"inventario":tab;
 export default function OperationalApp({initialTab,profile,summary,campaigns,activeCampaigns,consolidatedSurveys,orders,dispatches,materialCatalog,materialCatalogSourceCount,materialCatalogError,masterMaterialCatalog,clientInstallations,masterClientInstallations,users,userInstallationAccess}:Props){
+ const router=useRouter();
+ const [isNavigating,startTransition]=useTransition();
  const allowed=Object.keys(titles);
  const [tab,setTab]=useState(initialTab&&allowed.includes(initialTab)?initialTab:"inicio");
  const [selectedCampaignId,setSelectedCampaignId]=useState("");
  const [selectedSurveyInstallationId,setSelectedSurveyInstallationId]=useState("");
- useEffect(()=>{const sync=()=>{const params=new URLSearchParams(window.location.search),target=params.get("vista")||"inicio";setTab(allowed.includes(target)?target:"inicio");setSelectedCampaignId(params.get("campana")||"");setSelectedSurveyInstallationId(params.get("instalacion")||"")};sync();window.addEventListener("popstate",sync);return()=>window.removeEventListener("popstate",sync)},[]);
- const navigate=(next:string)=>{if(!allowed.includes(next))return;setTab(next);if(next!=="levantamientos"){setSelectedSurveyInstallationId("");if(next!=="campañas")setSelectedCampaignId("")}window.history.pushState({view:next},"",next==="inicio"?"/":`/?vista=${encodeURIComponent(next)}`);window.scrollTo({top:0,behavior:"instant"})};
- const openSurveyScreen=(campaignId:string,installationId="")=>{setSelectedCampaignId(campaignId);setSelectedSurveyInstallationId(installationId);setTab("levantamientos");const q=new URLSearchParams({vista:"levantamientos",campana:campaignId});if(installationId)q.set("instalacion",installationId);window.history.pushState({view:"levantamientos",campaignId,installationId},"",`/?${q.toString()}`);window.scrollTo({top:0,behavior:"instant"})};
+ useEffect(()=>{const params=new URLSearchParams(window.location.search),target=initialTab&&allowed.includes(initialTab)?initialTab:(params.get("vista")||"inicio");setTab(allowed.includes(target)?target:"inicio");setSelectedCampaignId(params.get("campana")||"");setSelectedSurveyInstallationId(params.get("instalacion")||"")},[initialTab]);
+ const navigate=(next:string)=>{if(!allowed.includes(next)||next===tab)return;const url=next==="inicio"?"/":`/?vista=${encodeURIComponent(next)}`;startTransition(()=>router.push(url,{scroll:true}))};
+ const openSurveyScreen=(campaignId:string,installationId="")=>{const q=new URLSearchParams({vista:"levantamientos"});if(campaignId)q.set("campana",campaignId);if(installationId)q.set("instalacion",installationId);startTransition(()=>router.push(`/?${q.toString()}`,{scroll:true}))};
  const parent=parentOf(tab);
  const currentLinks=quickLinks[parent]||[];
  const navTitle=titles[tab]||"Inicio";
@@ -41,6 +44,7 @@ export default function OperationalApp({initialTab,profile,summary,campaigns,act
   <header className="portalTop simpleTop"><button type="button" className="simpleLogoButton" onClick={()=>navigate("inicio")} aria-label="Ir al inicio"><Image src="/alemsi-logo.png" width={170} height={67} alt="ALEMSI" priority/></button><div className="simpleTopRight"><span>Control de materiales</span><form action={signOut}><button className="linkBtn">Salir</button></form></div></header>
   <div className="portalBody simpleBody"><aside className="simpleSidebar"><div className="productTitle">ALEMSI<small>Operación de materiales</small></div><button type="button" className={tab==="inicio"?"nav active":"nav"} onClick={()=>navigate("inicio")}>Inicio</button>{mainNav.map(([id,name],i)=><button type="button" key={id} className={parent===id?"nav active":"nav"} onClick={()=>navigate(id)}><span className="simpleNavNumber">0{i+1}</span>{name}</button>)}</aside>
   <main className="workspace simpleWorkspace">
+   {isNavigating&&<div className="navigationProgress" role="status" aria-live="polite"><span className="navigationProgressDot"/>Cargando vista…</div>}
    <div className="simplePageHead"><div><p className="eyebrow">ALEMSI · OPERACIÓN</p><h1>{navTitle}</h1></div>{tab!=="inicio"&&<button type="button" className="simpleBack" onClick={()=>navigate("inicio")}>← Inicio</button>}</div>
    {currentLinks.length>0&&<nav className="simpleSubnav" aria-label="Vistas de trabajo">{currentLinks.map(([id,name])=><button key={id} type="button" className={tab===id?"active":""} onClick={()=>navigate(id)}>{name}</button>)}</nav>}
    {tab==="inicio"&&<><p className="simpleLead">Continúa por el proceso o entra directamente a una tarea.</p><section className="simpleHomeGrid">{mainNav.map(([id,name],i)=><button key={id} className="simpleHomeTile" type="button" onClick={()=>navigate(id)}><span className="simpleTileNumber">0{i+1}</span><strong>{name}</strong><span className="simpleTileArrow">→</span></button>)}</section><section className="simpleSummary"><span>Campañas abiertas <b>{summary.openCampaigns}</b></span><span>Levantamientos pendientes <b>{summary.pendingSurveys}</b></span><span>Entregas pendientes <b>{summary.openDispatches}</b></span></section></>}
