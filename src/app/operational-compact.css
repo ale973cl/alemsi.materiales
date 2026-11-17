@@ -202,3 +202,34 @@
  .campaignInstallationLine{grid-template-columns:1fr}.campaignInstallationLineActions{grid-column:1}.campaignInstallationLineActions>*{flex:1 1 auto}
  .campaignAdminLine{grid-template-columns:1fr}
 }
+
+
+/* Levantamientos: lista compacta -> pantalla dedicada por instalación. */
+.surveyCampaignQuickList{display:grid;gap:5px}
+.surveyCampaignQuickList>button{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px!important;padding:7px 9px!important;background:#fff;border:1px solid #dce7ea;color:#173f51;text-align:left}
+.surveyCampaignQuickList>button span{display:grid;gap:1px}.surveyCampaignQuickList>button b{font-size:16px}.surveyCampaignQuickList>button small{font-size:13px!important}
+.surveySinglePage{display:grid;gap:9px}
+.surveySingleHead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.surveySingleHead>div{display:grid;gap:3px}.surveySingleHead h2{margin:0!important;font-size:22px!important}.surveySingleHead p{margin:0!important}
+.surveyRemoteAccess{padding:8px 9px;border:1px solid #dbe8eb;border-radius:8px;background:#f8fbfc}
+.surveyRemoteAccess h3{font-size:16px!important;margin:0 0 2px!important}.surveyRemoteAccess>p{margin:0 0 6px!important;font-size:13px!important}
+.surveyInstallationCompactList{display:grid;gap:4px}
+.surveyInstallationCompactRow{display:grid;grid-template-columns:minmax(220px,1.8fr) minmax(170px,1.2fr) 110px auto;gap:8px;align-items:center;padding:7px 9px;border:1px solid #dfe9ec;border-radius:8px;background:#fff}
+.surveyInstallationCompactRow>span:first-child{display:grid;gap:1px}.surveyInstallationCompactRow b{font-size:16px}.surveyInstallationCompactRow small{font-size:13px!important}
+.surveyInstallationCompactRow>button{min-height:34px!important;padding:5px 8px!important}
+.surveyEditorStandalone{border:1px solid #dbe8eb;border-radius:8px;padding:9px;background:#fff}
+.surveyEditorTitle{margin-bottom:7px}.surveyEditorTitle h3{margin:0!important;font-size:18px!important}.surveyEditorTitle p{margin:2px 0!important;font-size:13px!important}
+.surveyEditorStandalone .surveyMaterialList{display:grid;gap:4px}
+.surveyEditorStandalone .surveyMaterialList article{display:grid;grid-template-columns:minmax(220px,1.8fr) minmax(150px,.8fr);gap:8px;align-items:center;padding:7px 9px;border:1px solid #e2eaed;border-radius:7px}
+.surveyEditorStandalone .surveyMaterialList article>span{display:grid;gap:1px}.surveyEditorStandalone .surveyMaterialList input{min-height:34px!important;padding:4px 6px!important}
+.surveyEditorActions{display:flex;justify-content:flex-end;gap:6px;margin-top:8px}
+.surveySavedNext{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:9px;border:1px solid #b9dcd6;border-radius:8px;background:#effaf7}
+.surveySavedNext>span{display:grid;flex:1 1 280px}.surveySavedNext small{font-size:12px!important}.surveySavedNext button{min-height:36px!important;padding:5px 9px!important}
+@media(max-width:850px){
+ .surveyInstallationCompactRow{grid-template-columns:1fr 1fr}.surveyInstallationCompactRow>button{grid-column:1/-1;width:max-content}
+}
+@media(max-width:600px){
+ .surveySingleHead{display:grid}.surveyInstallationCompactRow{grid-template-columns:1fr}.surveyInstallationCompactRow>button{grid-column:1;width:100%}
+ .surveyEditorStandalone .surveyMaterialList article{grid-template-columns:1fr}.surveyEditorActions{display:grid;grid-template-columns:1fr 1fr}
+ .surveySavedNext{display:grid}.surveySavedNext>span{display:grid}.surveySavedNext button{width:100%}
+}
