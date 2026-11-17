@@ -101,6 +101,7 @@ export async function loadContractMaterialMatrix(contractId:string){
     specifics.get(row.material_id)!.set(row.installation_id,row);
   }
   const effectiveByMaterial:Record<string,string[]>={};
+  const quantitiesByMaterial:Record<string,Record<string,string>>={};
   const includedIds=new Set<string>();
   for(const material of catalogMaterials){
     const g:any=general.get(material.id),spec=specifics.get(material.id),selected:string[]=[];
@@ -108,11 +109,12 @@ export async function loadContractMaterialMatrix(contractId:string){
       const s=spec?.get(installation.id);
       const active=s?Boolean(s.authorized):Boolean(g?.authorized);
       if(active)selected.push(installation.id);
+      (quantitiesByMaterial[material.id]??={})[installation.id]=active?String((s||g)?.authorized_qty??0):"";
     }
     if(selected.length){includedIds.add(material.id);effectiveByMaterial[material.id]=selected;}
   }
   const materials=catalogMaterials.filter((x:any)=>includedIds.has(x.id));
-  return{contract,installations:i.data||[],materials,catalogMaterials,effectiveByMaterial};
+  return{contract,installations:i.data||[],materials,catalogMaterials,effectiveByMaterial,quantitiesByMaterial};
 }
 
 type SaveMatrixRowInput={contract_id:string;material_id:string;installation_ids:string[]};
@@ -247,3 +249,29 @@ export async function clearInstallationMaterialException(contractId:string,insta
 
 export async function loadInstallationMaterialProfile(contractId:string,installationId:string){return loadMaterialProfile(contractId,installationId);}
 export async function saveInstallationMaterialConfig(input:Omit<SaveInput,"installation_id">&{installation_id:string}){return saveMaterialProfileConfig(input);}
+
+export async function saveContractMatrixQuantities(input:{contract_id:string;material_id:string;changes:{installation_id:string;quantity:number|null}[];reason:string}){
+ const {supabase,user,profile}=await allowedContext();
+ if(!input.changes.length||!input.reason.trim())throw new Error("Indica el motivo del ajuste");
+ const matrix=await loadContractMaterialMatrix(input.contract_id);
+ if(!matrix.catalogMaterials.some(m=>m.id===input.material_id))throw new Error("Material no autorizado");
+ const valid=new Set(matrix.installations.map(i=>i.id)),seen=new Set<string>();
+ for(const c of input.changes){if(!valid.has(c.installation_id)||seen.has(c.installation_id)||c.quantity!==null&&(!Number.isFinite(c.quantity)||c.quantity<0))throw new Error("Cantidad o instalación inválida");seen.add(c.installation_id);}
+ const {data:rows,error}=await supabase.from("contract_materials").select("*").eq("contract_id",input.contract_id).eq("material_id",input.material_id);
+ if(error)throw error;
+ for(const c of input.changes){
+  const existing=(rows||[]).find(r=>r.installation_id===c.installation_id);
+  const inherited=(rows||[]).find(r=>!r.installation_id);
+  const base=existing||inherited;
+  const assigned=c.quantity!==null;
+  const {error:saveError}=await supabase.rpc("save_client_profile_material_config",{
+   p_contract_id:input.contract_id,p_installation_id:c.installation_id,p_material_id:input.material_id,p_assigned:assigned,p_authorized_qty:c.quantity??0,
+   p_period_type:base?.period_type??null,p_period_value:base?.period_value??null,p_quantity_limit:base?.period_type?c.quantity??0:base?.quantity_limit??null,p_net_amount_limit:base?.net_amount_limit??null,p_coverage_status:assigned?"included":"not_included",p_notes:base?.notes??null
+  });
+  if(saveError)throw new Error(saveError.message);
+  const {error:auditError}=await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Perfil de materiales",action:"Ajustar máximo desde matriz",entity_table:"contract_materials",old_data:{installation_id:c.installation_id,material_id:input.material_id,authorized_qty:base?.authorized_qty??null},new_data:{installation_id:c.installation_id,material_id:input.material_id,authorized_qty:c.quantity,authorized:assigned},observation:input.reason.trim()});
+  if(auditError)throw new Error("Cantidad guardada; error en auditoría: "+auditError.message);
+ }
+ revalidatePath("/");
+ return{ok:true};
+}
