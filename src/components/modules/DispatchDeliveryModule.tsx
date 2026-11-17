@@ -11,6 +11,7 @@ import DeliveryRegistrationModal from "./DeliveryRegistrationModal";
 import PreparationBeforeGuideModal from "./PreparationBeforeGuideModal";
 import DeliveryRoutesModule from "./DeliveryRoutesModule";
 import {printPreparationConsolidated} from "@/lib/print-batch-consolidated";
+import {formatInternalGuideNumber} from "@/lib/guide-number";
 
 type DispatchLine={id:string;material_id:string;required_qty:number|string;delivered_qty:number|string;pending_qty:number|string;materials?:{id:string;family?:string;name:string;supplier_code?:string;presentation?:string;unit?:string}};
 type Dispatch={id:string;guide_number?:string;internal_number?:string;status:string;observations?:string;parent_dispatch_id?:string|null;recipient_name?:string;recipient_email?:string;recipient_phone?:string;recipient_rut?:string;recipient_role?:string;recipient_signature?:string;created_at:string;delivered_at?:string;installations?:any;dispatch_lines:DispatchLine[];complementary_dispatches?:{id:string;status:string;internal_number?:string;guide_number?:string}[]};
@@ -22,7 +23,7 @@ const normalize=(v:unknown)=>String(v||"").toLocaleLowerCase("es-CL");
 const location=(d:Dispatch)=>d.installations||{};
 const contract=(d:Dispatch)=>location(d).contracts||{};
 const client=(d:Dispatch)=>contract(d).clients||{};
-const guideName=(d:Dispatch)=>d.internal_number||d.guide_number||"Guía interna";
+const guideName=(d:Dispatch)=>formatInternalGuideNumber(d.internal_number||d.guide_number);
 const stageForStatus=(status:string)=>["Borrador","Pendiente"].includes(status)?"Guías pendientes":["En preparación","Listo para despacho"].includes(status)?"Designar ruta":status==="En tránsito"?"En tránsito":["Entregado conforme","Entrega con observaciones","Entrega parcial regularizada"].includes(status)?"Entregadas":["Entrega parcial","Rechazado/No entregado"].includes(status)?"Pendientes material":"Otros";
 
 export default function DispatchDeliveryModule({dispatches,campaigns,clients,materials,role,users,currentUser}:{dispatches:Dispatch[];campaigns:any[];clients:ClientInstallationGroup[];materials:MaterialCatalogRow[];role:string;users:RouteUser[];currentUser:{id:string;full_name?:string|null}}){
