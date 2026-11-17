@@ -108,3 +108,28 @@ export async function resolvePurchaseOrderMaterial(input:{purchaseOrderLineId:st
  revalidatePath("/");
  return{ok:true,materialId,created:false};
 }
+
+
+export async function createAndResolvePurchaseOrderMaterial(input:{purchaseOrderLineId:string;name:string;family?:string;presentation?:string;unit?:string;supplierCode?:string}){
+ const {supabase,user,profile}=await ctx(["Admin Total","Admin","Bodega"]);
+ const lineId=String(input.purchaseOrderLineId||"").trim(),name=String(input.name||"").trim();
+ if(!lineId||!name)throw new Error("Indica la línea y el nombre del producto");
+ const {data:line,error:le}=await supabase.from("purchase_order_lines").select("id,purchase_order_id,material_id,line_type,description,unit,supplier_code,unit_net_price").eq("id",lineId).single();
+ if(le||!line)throw new Error("Línea de compra no encontrada");
+ if(line.material_id)throw new Error("Esta línea ya está vinculada a un producto");
+ if(line.line_type==="Servicio")throw new Error("Un servicio no ingresa al inventario");
+ const {data:po,error:pe}=await supabase.from("purchase_orders").select("id,status,order_number").eq("id",line.purchase_order_id).single();
+ if(pe||!po||isClosedPurchaseOrder(po.status)||isCancelledPurchaseOrder(po.status))throw new Error("La orden de compra ya no admite catalogación");
+ const supplierCode=String(input.supplierCode||line.supplier_code||"").trim()||null;
+ const {data:catalog,error:ce}=await supabase.from("materials").select("id,name,presentation,unit,supplier_code,active");
+ if(ce)throw ce;
+ const norm=(v:unknown)=>String(v??"").trim().toLocaleLowerCase("es-CL").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ");
+ const duplicate=(catalog||[]).find((m:any)=>supplierCode&&m.supplier_code&&norm(m.supplier_code)===norm(supplierCode)||(norm(m.name)===norm(name)&&norm(m.presentation)===norm(input.presentation||"")&&norm(m.unit)===norm(input.unit||line.unit||"UN")));
+ if(duplicate)throw new Error("Ya existe un producto equivalente en el Maestro. Vincúlalo como producto existente para evitar duplicados.");
+ const payload={family:String(input.family||"Por clasificar").trim()||"Por clasificar",name,presentation:String(input.presentation||"").trim()||null,unit:String(input.unit||line.unit||"UN").trim()||"UN",supplier_code:supplierCode,current_net_price:Number(line.unit_net_price||0),material_type:"Producto",active:true,price_review_required:true,price_source_note:"Creado desde "+String(po.order_number||"documento de compra")+"; validar valor con factura"};
+ const {data:material,error:me}=await supabase.from("materials").insert(payload).select("id,name").single();if(me||!material)throw me||new Error("No se pudo crear el producto");
+ const {error:ue}=await supabase.from("purchase_order_lines").update({material_id:material.id,line_type:"Material",description:material.name,unit:payload.unit,supplier_code:supplierCode}).eq("id",lineId).is("material_id",null);
+ if(ue){await supabase.from("materials").update({active:false}).eq("id",material.id);throw ue}
+ await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Recepción",action:"Crear producto desde compra y vincular",entity_table:"materials",entity_id:material.id,new_data:{...payload,purchase_order_line_id:lineId}});
+ revalidatePath("/");return{ok:true,materialId:material.id,name:material.name};
+}
