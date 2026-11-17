@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "@/app/actions";
@@ -41,7 +42,7 @@ export default function OperationalApp({initialTab,profile,summary,campaigns,act
  const currentLinks=quickLinks[parent]||[];
  const navTitle=titles[tab]||"Inicio";
  return <div className="portal simpleApp">
-  <header className="portalTop simpleTop"><button type="button" className="simpleLogoButton" onClick={()=>navigate("inicio")} aria-label="Ir al inicio"><Image src="/alemsi-logo.png" width={170} height={67} alt="ALEMSI" priority/></button><div className="simpleTopRight"><span>Control de materiales</span><form action={signOut}><button className="linkBtn">Salir</button></form></div></header>
+  <header className="portalTop simpleTop"><button type="button" className="simpleLogoButton" onClick={()=>navigate("inicio")} aria-label="Ir al inicio"><Image src="/alemsi-logo.png" width={170} height={67} alt="ALEMSI" priority/></button><div className="simpleTopRight"><Link href="/terreno">Despacho en Terreno</Link><span>Control de materiales</span><form action={signOut}><button className="linkBtn">Salir</button></form></div></header>
   <div className="portalBody simpleBody"><aside className="simpleSidebar"><div className="productTitle">ALEMSI<small>Operación de materiales</small></div><button type="button" className={tab==="inicio"?"nav active":"nav"} onClick={()=>navigate("inicio")}>Inicio</button>{mainNav.map(([id,name],i)=><button type="button" key={id} className={parent===id?"nav active":"nav"} onClick={()=>navigate(id)}><span className="simpleNavNumber">0{i+1}</span>{name}</button>)}</aside>
   <main className="workspace simpleWorkspace">
    {isNavigating&&<div className="navigationProgress" role="status" aria-live="polite"><span className="navigationProgressDot"/>Cargando vista…</div>}
