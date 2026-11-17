@@ -8,7 +8,7 @@ export async function GET(){
   if(!user)return NextResponse.json({error:"No autorizado"},{status:401});
   const [{data:suppliers,error:supplierError},{data:orders,error:ordersError},{data:materials,error:materialError}]=await Promise.all([
     supabase.from("suppliers").select("id,legal_name,rut,address,purchase_order_email,payment_terms,conditions").eq("active",true).order("legal_name"),
-    supabase.from("purchase_orders").select("id,order_number,status,total_net,total_amount,order_type,supply_run_id,supply_runs(campaign_id),purchase_order_lines(id,material_id,ordered_qty,unit_net_price,line_net)").order("created_at",{ascending:false}),
+    supabase.from("purchase_orders").select("id,order_number,status,total_net,total_amount,order_type,supply_run_id,supplier_id,payment_terms,delivery_terms,conditions,observations,created_at,supply_runs(campaign_id),purchase_order_lines(id,material_id,line_type,description,unit,supplier_code,ordered_qty,unit_net_price,line_net)").order("created_at",{ascending:false}),
     supabase.from("materials").select("id,name,family,presentation,unit,supplier_code,current_net_price").eq("active",true).order("name")
   ]);
   if(supplierError)return NextResponse.json({error:supplierError.message},{status:500});
