@@ -19,7 +19,7 @@ export async function POST(request:NextRequest){
  const base64=Buffer.from(await file.arrayBuffer()).toString("base64");
  const instruction=`Extrae los datos visibles de esta factura chilena. No estimes ni inventes. Devuelve SOLO JSON válido con:
  { "supplier_name":string|null,"supplier_rut":string|null,"document_type":string|null,"folio":string|null,"date":string|null,"net":number|null,"vat":number|null,"total":number|null,"payment_condition":string|null,"payment_days":number|null,"lines":[{"description":string,"supplier_code":string|null,"quantity":number|null,"unit":string|null,"unit_net":number|null,"line_net":number|null}],"warnings":string[] }
-Formato de fecha YYYY-MM-DD si es legible; montos CLP sin separadores. En warnings explica textos o cifras ilegibles, datos ausentes y discrepancias de suma. Las líneas no son productos del maestro ALEMSI; NO hagas equivalencia automática.`;
+Formato de fecha YYYY-MM-DD si es legible; montos CLP sin separadores. line_net debe ser el NETO TOTAL de esa línea, sin IVA. unit_net solo si aparece explícito; si no aparece, déjalo null porque el sistema calculará line_net / quantity. En warnings explica textos o cifras ilegibles, datos ausentes y discrepancias de suma. Las líneas no son productos del maestro ALEMSI; NO hagas equivalencia automática.`;
  try{
   const abort=AbortSignal.timeout(45000);
   const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",{
