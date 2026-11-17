@@ -24,7 +24,7 @@ export default function ConsolidatedSupplyModule({surveys,initialView="need"}:{s
  const [suppliers,setSuppliers]=useState<Supplier[]>([]),[orders,setOrders]=useState<Order[]>([]),[materials,setMaterials]=useState<Material[]>([]);
  const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[message,setMessage]=useState("");
  const [campaignId,setCampaignId]=useState(""),[supplierId,setSupplierId]=useState(""),[documentKind,setDocumentKind]=useState<"Cotización"|"Orden de compra">("Orden de compra");
- const [selectedQty,setSelectedQty]=useState<Record<string,number>>({}),[selectedPrice,setSelectedPrice]=useState<Record<string,number>>({});
+ const [selectedQty,setSelectedQty]=useState<Record<string,number>>({}),[selectedPrice,setSelectedPrice]=useState<Record<string,number>>({}),[supplierByMaterial,setSupplierByMaterial]=useState<Record<string,string>>({});
  const [freeLines,setFreeLines]=useState<FreeLine[]>([emptyLine()]),[paymentTerms,setPaymentTerms]=useState(""),[deliveryTerms,setDeliveryTerms]=useState(""),[conditions,setConditions]=useState(""),[observations,setObservations]=useState("");
  const [quoteEdits,setQuoteEdits]=useState<Record<string,{qty:number;price:number;code:string}>>({});
  const [selectedDocumentId,setSelectedDocumentId]=useState("");
@@ -68,17 +68,24 @@ export default function ConsolidatedSupplyModule({surveys,initialView="need"}:{s
  };
  const createFromNeed=async()=>{
   setMessage("");setNext(null);
-  if(!campaignId||!supplierId)return setMessage("Selecciona campaña y proveedor.");
-  const selections=needRows.map(r=>({material_id:r.material_id,qty:Number(selectedQty[r.material_id]||0),unit_net_price:Number((selectedPrice[r.material_id]??r.price)||0)})).filter(x=>x.qty>0);
-  if(!selections.length)return setMessage("Selecciona cantidades para cotizar o comprar.");
-  const fd=new FormData();fd.set("campaign_id",campaignId);fd.set("supplier_id",supplierId);fd.set("document_kind",documentKind);fd.set("selections",JSON.stringify(selections));
+  if(!campaignId)return setMessage("Selecciona una campaña.");
+  const chosen=needRows.map(r=>({material_id:r.material_id,qty:Number(selectedQty[r.material_id]||0),unit_net_price:Number((selectedPrice[r.material_id]??r.price)||0),supplier_id:String(supplierByMaterial[r.material_id]||"")})).filter(x=>x.qty>0);
+  if(!chosen.length)return setMessage("Selecciona cantidades para cotizar o comprar.");
+  if(chosen.some(x=>!x.supplier_id))return setMessage("Asigna un proveedor a cada producto seleccionado.");
+  const groups=new Map<string,typeof chosen>();
+  for(const item of chosen){const list=groups.get(item.supplier_id)||[];list.push(item);groups.set(item.supplier_id,list)}
   setSaving(true);
   try{
-   const r=await createPurchaseOrderFromConsolidated(fd);
-   setMessage(documentKind==="Cotización"?"Solicitud de cotización creada. La necesidad sigue disponible hasta convertirla en OC.":"Orden de compra creada desde la necesidad consolidada.");
-   setNext({kind:documentKind==="Cotización"?"quote":"order",id:r.id,number:r.order_number});
-   setSelectedQty({});await load();router.refresh();
-  }catch(e:any){setMessage(e?.message||"No se pudo crear el documento")}finally{setSaving(false)}
+   const created:{id:string;order_number:string}[]=[];
+   for(const [supplier,items] of groups){
+    const fd=new FormData();fd.set("campaign_id",campaignId);fd.set("supplier_id",supplier);fd.set("document_kind",documentKind);fd.set("selections",JSON.stringify(items.map(({supplier_id,...line})=>line)));
+    const r=await createPurchaseOrderFromConsolidated(fd);created.push({id:r.id,order_number:r.order_number});
+   }
+   const label=created.map(x=>x.order_number).join(", ");
+   setMessage(documentKind==="Cotización"?created.length+" solicitud(es) de cotización creadas por proveedor: "+label:created.length+" orden(es) de compra creadas por proveedor: "+label);
+   if(created.length===1)setNext({kind:documentKind==="Cotización"?"quote":"order",id:created[0].id,number:created[0].order_number});
+   setSelectedQty({});setSupplierByMaterial({});await load();router.refresh();
+  }catch(e:any){setMessage(e?.message||"No se pudieron crear los documentos")}finally{setSaving(false)}
  };
 
  const updateFree=(index:number,patch:Partial<FreeLine>)=>setFreeLines(rows=>rows.map((r,i)=>i===index?{...r,...patch}:r));
@@ -142,12 +149,12 @@ export default function ConsolidatedSupplyModule({surveys,initialView="need"}:{s
   {view==="need"&&<div className="procureSection">
    <div className="compactFields">
     <label>Campaña<select value={campaignId} onChange={e=>{setCampaignId(e.target.value);setSelectedQty({});setSelectedPrice({})}}><option value="">Seleccionar</option>{campaignOptions.map(c=><option key={c.id} value={c.id}>{c.name}{c.client?" · "+c.client:""}</option>)}</select></label>
-    <label>Proveedor<select value={supplierId} onChange={e=>chooseSupplier(e.target.value)}><option value="">Seleccionar</option>{suppliers.map(s=><option value={s.id} key={s.id}>{s.legal_name}</option>)}</select></label>
+    <label>Asignar proveedor rápido<select value="" onChange={e=>{const id=e.target.value;if(!id)return;setSupplierByMaterial(current=>{const next={...current};for(const row of needRows)if(Number(selectedQty[row.material_id]||0)>0)next[row.material_id]=id;return next})}}><option value="">A seleccionados…</option>{suppliers.map(s=><option value={s.id} key={s.id}>{s.legal_name}</option>)}</select></label>
     <label>Documento<select value={documentKind} onChange={e=>setDocumentKind(e.target.value as any)}><option>Cotización</option><option>Orden de compra</option></select></label>
     <button type="button" disabled={!needRows.some(r=>r.pending>0)} onClick={usePending}>Usar todos los pendientes</button>
    </div>
-   {!campaignId?<div className="empty compactEmpty"><b>Selecciona una campaña</b><span>Mostraremos solamente las necesidades confirmadas y aún no cubiertas.</span></div>:<div className="compactTable"><div className="compactRow compactHeader"><span>Producto</span><span>Necesidad</span><span>Cubierto</span><span>Pendiente</span><span>Cantidad</span><span>Valor neto</span></div>{needRows.map(r=><div className="compactRow" key={r.material_id}><span><b>{r.name}</b><small>{[r.family,r.presentation,r.unit].filter(Boolean).join(" · ")}</small></span><span>{r.required}</span><span>{r.committed}</span><span><b>{r.pending}</b></span><span><input aria-label={"Cantidad "+r.name} type="number" min="0" max={r.pending} step="any" value={selectedQty[r.material_id]??0} onChange={e=>setSelectedQty(x=>({...x,[r.material_id]:Math.max(0,Math.min(r.pending,Number(e.target.value)||0))}))}/></span><span><input aria-label={"Precio "+r.name} type="number" min="0" step="any" value={selectedPrice[r.material_id]??r.price} onChange={e=>setSelectedPrice(x=>({...x,[r.material_id]:Math.max(0,Number(e.target.value)||0)}))}/></span></div>)}</div>}
-   <div className="stickyAction"><span>{selectedSupplier?.legal_name||"Sin proveedor"} · {documentKind}</span><button type="button" disabled={saving||!campaignId||!supplierId} onClick={createFromNeed}>{saving?"Guardando…":documentKind==="Cotización"?"Solicitar cotización":"Generar orden de compra"}</button></div>
+   {!campaignId?<div className="empty compactEmpty"><b>Selecciona una campaña</b><span>Mostraremos solamente las necesidades confirmadas y aún no cubiertas.</span></div>:<div className="compactTable"><div className="compactRow compactHeader"><span>Producto</span><span>Necesidad</span><span>Cubierto</span><span>Pendiente</span><span>Cantidad</span><span>Proveedor</span><span>Valor neto</span></div>{needRows.map(r=><div className="compactRow" key={r.material_id}><span><b>{r.name}</b><small>{[r.family,r.presentation,r.unit].filter(Boolean).join(" · ")}</small></span><span>{r.required}</span><span>{r.committed}</span><span><b>{r.pending}</b></span><span><input aria-label={"Cantidad "+r.name} type="number" min="0" max={r.pending} step="any" value={selectedQty[r.material_id]??0} onChange={e=>setSelectedQty(x=>({...x,[r.material_id]:Math.max(0,Math.min(r.pending,Number(e.target.value)||0))}))}/></span><span><select aria-label={"Proveedor "+r.name} value={supplierByMaterial[r.material_id]||""} onChange={e=>setSupplierByMaterial(x=>({...x,[r.material_id]:e.target.value}))}><option value="">Proveedor…</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.legal_name}</option>)}</select></span><span><input aria-label={"Precio "+r.name} type="number" min="0" step="any" value={selectedPrice[r.material_id]??r.price} onChange={e=>setSelectedPrice(x=>({...x,[r.material_id]:Math.max(0,Number(e.target.value)||0)}))}/></span></div>)}</div>}
+   <div className="stickyAction"><span>{new Set(needRows.filter(r=>Number(selectedQty[r.material_id]||0)>0).map(r=>supplierByMaterial[r.material_id]).filter(Boolean)).size} proveedor(es) · {documentKind}</span><button type="button" disabled={saving||!campaignId} onClick={createFromNeed}>{saving?"Guardando…":documentKind==="Cotización"?"Solicitar cotización":"Generar orden de compra"}</button></div>
   </div>}
 
   {view==="new"&&<div className="procureSection">
