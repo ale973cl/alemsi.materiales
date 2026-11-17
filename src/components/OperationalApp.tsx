@@ -34,9 +34,9 @@ export default function OperationalApp({initialTab,profile,summary,campaigns,act
  const [tab,setTab]=useState(initialTab&&allowed.includes(initialTab)?initialTab:"inicio");
  const [selectedCampaignId,setSelectedCampaignId]=useState("");
  const [selectedSurveyInstallationId,setSelectedSurveyInstallationId]=useState("");
- useEffect(()=>{const params=new URLSearchParams(window.location.search),target=initialTab&&allowed.includes(initialTab)?initialTab:(params.get("vista")||"inicio");setTab(allowed.includes(target)?target:"inicio");setSelectedCampaignId(params.get("campana")||"");setSelectedSurveyInstallationId(params.get("instalacion")||"")},[initialTab]);
+ useEffect(()=>{const sync=()=>{const params=new URLSearchParams(window.location.search),target=initialTab&&allowed.includes(initialTab)?initialTab:(params.get("vista")||"inicio");setTab(allowed.includes(target)?target:"inicio");setSelectedCampaignId(params.get("campana")||"");setSelectedSurveyInstallationId(params.get("instalacion")||"")};sync();window.addEventListener("popstate",sync);return()=>window.removeEventListener("popstate",sync)},[initialTab]);
  const navigate=(next:string)=>{if(!allowed.includes(next)||next===tab)return;const url=next==="inicio"?"/":`/?vista=${encodeURIComponent(next)}`;startTransition(()=>router.push(url,{scroll:true}))};
- const openSurveyScreen=(campaignId:string,installationId="")=>{const q=new URLSearchParams({vista:"levantamientos"});if(campaignId)q.set("campana",campaignId);if(installationId)q.set("instalacion",installationId);startTransition(()=>router.push(`/?${q.toString()}`,{scroll:true}))};
+ const openSurveyScreen=(campaignId:string,installationId="")=>{const q=new URLSearchParams({vista:"levantamientos"});if(campaignId)q.set("campana",campaignId);if(installationId)q.set("instalacion",installationId);if(tab==="levantamientos"){setSelectedCampaignId(campaignId);setSelectedSurveyInstallationId(installationId);window.history.pushState({view:"levantamientos",campaignId,installationId},"",`/?${q.toString()}`);window.scrollTo({top:0,behavior:"instant"});return}startTransition(()=>router.push(`/?${q.toString()}`,{scroll:true}))};
  const parent=parentOf(tab);
  const currentLinks=quickLinks[parent]||[];
  const navTitle=titles[tab]||"Inicio";
