@@ -68,7 +68,7 @@ export default function ConsolidatedSupplyModule({surveys,initialView="need"}:{s
  const createFromNeed=async()=>{
   setMessage("");setNext(null);
   if(!campaignId||!supplierId)return setMessage("Selecciona campaña y proveedor.");
-  const selections=needRows.map(r=>({material_id:r.material_id,qty:Number(selectedQty[r.material_id]||0),unit_net_price:Number(selectedPrice[r.material_id]??r.price||0)})).filter(x=>x.qty>0);
+  const selections=needRows.map(r=>({material_id:r.material_id,qty:Number(selectedQty[r.material_id]||0),unit_net_price:Number((selectedPrice[r.material_id]??r.price)||0)})).filter(x=>x.qty>0);
   if(!selections.length)return setMessage("Selecciona cantidades para cotizar o comprar.");
   const fd=new FormData();fd.set("campaign_id",campaignId);fd.set("supplier_id",supplierId);fd.set("document_kind",documentKind);fd.set("selections",JSON.stringify(selections));
   setSaving(true);
