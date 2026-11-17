@@ -27,6 +27,7 @@ export default function ConsolidatedSupplyModule({surveys,initialView="need"}:{s
  const [selectedQty,setSelectedQty]=useState<Record<string,number>>({}),[selectedPrice,setSelectedPrice]=useState<Record<string,number>>({});
  const [freeLines,setFreeLines]=useState<FreeLine[]>([emptyLine()]),[paymentTerms,setPaymentTerms]=useState(""),[deliveryTerms,setDeliveryTerms]=useState(""),[conditions,setConditions]=useState(""),[observations,setObservations]=useState("");
  const [quoteEdits,setQuoteEdits]=useState<Record<string,{qty:number;price:number;code:string}>>({});
+ const [selectedDocumentId,setSelectedDocumentId]=useState("");
  const [next,setNext]=useState<{kind:"quote"|"order";id:string;number:string}|null>(null);
 
  const load=async()=>{
@@ -120,6 +121,15 @@ export default function ConsolidatedSupplyModule({surveys,initialView="need"}:{s
  const selectedSupplier=suppliers.find(x=>x.id===supplierId);
  const freeNet=freeLines.reduce((sum,l)=>sum+(Number(l.qty)||0)*(Number(l.unit_net_price)||0),0);
  const quotes=orders.filter(isQuote),purchaseOrders=orders.filter(o=>!isQuote(o));
+ const selectedQuote=quotes.find(o=>o.id===selectedDocumentId)||null;
+
+ if(selectedQuote){
+  return <section className="panel procurement procurementDocumentPage">
+   <div className="procureHead"><div><button type="button" className="simpleBack" onClick={()=>{setSelectedDocumentId("");setMessage("")}}>← Documentos</button><p className="eyebrow">COTIZACIÓN</p><h2>{selectedQuote.order_number||"Cotización"}</h2><p>{suppliers.find(s=>s.id===selectedQuote.supplier_id)?.legal_name||"Proveedor"} · {selectedQuote.status}</p></div><strong>{money(selectedQuote.total_net)}</strong></div>
+   {message&&<div className="nextBar" role="status"><b>{message}</b></div>}
+   {!/convertid|anulad|cancelad/i.test(selectedQuote.status)?<><div className="quoteLines">{selectedQuote.purchase_order_lines.map(l=><div className="quoteLine" key={l.id}><span><b>{l.description||materials.find(m=>m.id===l.material_id)?.name||"Producto"}</b><small>{l.line_type||"Material"} · {l.unit||"UN"}</small></span><label>Cant.<input type="number" min=".01" step="any" value={quoteValue(l,"qty")} onChange={e=>editQuote(l,"qty",e.target.value)}/></label><label>Neto<input type="number" min="0" step="any" value={quoteValue(l,"price")} onChange={e=>editQuote(l,"price",e.target.value)}/></label><label>Código<input value={quoteValue(l,"code")} onChange={e=>editQuote(l,"code",e.target.value)}/></label></div>)}</div><div className="stickyAction"><span>{selectedQuote.payment_terms||"Condición de pago pendiente"}{selectedQuote.delivery_terms?" · "+selectedQuote.delivery_terms:""}</span><button disabled={saving} type="button" className="secondary" onClick={()=>saveQuote(selectedQuote)}>Guardar respuesta</button><button disabled={saving} type="button" onClick={()=>convertQuote(selectedQuote)}>Convertir a OC →</button></div></>:<div className="empty compactEmpty"><b>{selectedQuote.status}</b><span>Esta cotización ya no admite cambios.</span></div>}
+  </section>;
+ }
 
  return <section className="panel procurement">
   <div className="procureHead">
@@ -127,7 +137,7 @@ export default function ConsolidatedSupplyModule({surveys,initialView="need"}:{s
    <nav className="compactTabs"><button className={view==="need"?"active":""} onClick={()=>setView("need")}>Necesidades</button><button className={view==="new"?"active":""} onClick={()=>setView("new")}>Cotizar / comprar</button><button className={view==="documents"?"active":""} onClick={()=>setView("documents")}>Documentos</button></nav>
   </div>
   {message&&<div className="nextBar" role="status"><b>{message}</b></div>}
-  {next&&<div className="nextBar nextAction"><span><small>Siguiente acción</small><b>{next.number}</b></span>{next.kind==="quote"?<button type="button" onClick={()=>setView("documents")}>Registrar respuesta / convertir</button>:<a className="btn" href="/?vista=recepcion">Registrar factura y recepción →</a>}<button className="ghostBtn" type="button" onClick={()=>setNext(null)}>Después</button></div>}
+  {next&&<div className="nextBar nextAction"><span><small>Siguiente acción</small><b>{next.number}</b></span>{next.kind==="quote"?<button type="button" onClick={()=>{setView("documents");setSelectedDocumentId(next.id)}}>Registrar respuesta / convertir</button>:<a className="btn" href="/?vista=recepcion">Registrar factura y recepción →</a>}<button className="ghostBtn" type="button" onClick={()=>setNext(null)}>Después</button></div>}
 
   {view==="need"&&<div className="procureSection">
    <div className="compactFields">
@@ -169,10 +179,7 @@ export default function ConsolidatedSupplyModule({surveys,initialView="need"}:{s
 
   {view==="documents"&&<div className="procureSection">
    {loading?<div className="empty compactEmpty"><b>Cargando documentos…</b></div>:<>
-    <div className="documentGroup"><h3>Cotizaciones <span>{quotes.length}</span></h3>{quotes.length?quotes.map(o=><article className="procDocument" key={o.id}><header><span><b>{o.order_number||"Cotización"}</b><small>{suppliers.find(s=>s.id===o.supplier_id)?.legal_name||"Proveedor"} · {o.status}</small></span><strong>{money(o.total_net)}</strong></header>
-      {!/convertid|anulad|cancelad/i.test(o.status)&&<div className="quoteLines">{o.purchase_order_lines.map(l=><div className="quoteLine" key={l.id}><span><b>{l.description||materials.find(m=>m.id===l.material_id)?.name||"Producto"}</b><small>{l.line_type||"Material"} · {l.unit||"UN"}</small></span><label>Cant.<input type="number" min=".01" step="any" value={quoteValue(l,"qty")} onChange={e=>editQuote(l,"qty",e.target.value)}/></label><label>Neto<input type="number" min="0" step="any" value={quoteValue(l,"price")} onChange={e=>editQuote(l,"price",e.target.value)}/></label><label>Código<input value={quoteValue(l,"code")} onChange={e=>editQuote(l,"code",e.target.value)}/></label></div>)}</div>}
-      <footer>{!/convertid|anulad|cancelad/i.test(o.status)&&<><button disabled={saving} type="button" onClick={()=>saveQuote(o)}>Guardar respuesta</button><button disabled={saving} type="button" onClick={()=>convertQuote(o)}>Convertir a OC</button></>}<small>{o.payment_terms||"Condición de pago pendiente"}{o.delivery_terms?" · "+o.delivery_terms:""}</small></footer>
-    </article>):<div className="empty compactEmpty"><b>Sin cotizaciones</b></div>}</div>
+    <div className="documentGroup"><h3>Cotizaciones <span>{quotes.length}</span></h3>{quotes.length?quotes.map(o=><article className="procDocument compactDoc" key={o.id}><header><span><b>{o.order_number||"Cotización"}</b><small>{suppliers.find(s=>s.id===o.supplier_id)?.legal_name||"Proveedor"} · {o.status} · {o.purchase_order_lines.length} conceptos</small></span><strong>{money(o.total_net)}</strong></header><footer><button type="button" onClick={()=>setSelectedDocumentId(o.id)}>Abrir cotización →</button><small>{o.payment_terms||"Condición de pago pendiente"}{o.delivery_terms?" · "+o.delivery_terms:""}</small></footer></article>):<div className="empty compactEmpty"><b>Sin cotizaciones</b></div>}</div>
     <div className="documentGroup"><h3>Órdenes de compra <span>{purchaseOrders.length}</span></h3>{purchaseOrders.length?purchaseOrders.map(o=><article className="procDocument compactDoc" key={o.id}><header><span><b>{o.order_number||"OC"}</b><small>{suppliers.find(s=>s.id===o.supplier_id)?.legal_name||"Proveedor"} · {o.status}</small></span><strong>{money(o.total_net)}</strong></header><footer><a className="btn" href={"/ordenes-compra/"+o.id}>Ver documento</a>{!isClosed(o)&&<a className="btn" href="/?vista=recepcion">Factura / recepción →</a>}</footer></article>):<div className="empty compactEmpty"><b>Sin órdenes de compra</b></div>}</div>
    </>}
   </div>}
