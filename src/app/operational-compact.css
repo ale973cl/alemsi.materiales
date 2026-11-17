@@ -168,3 +168,37 @@
  .procDocument header{align-items:flex-start}
  .procDocument footer small{width:100%;margin-left:0}
 }
+
+
+/* Campañas: listado -> vista dedicada de instalaciones. */
+.campaignListHead,.campaignDetailHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.campaignListHead h2,.campaignDetailHead h2{margin:0;font-size:22px!important}
+.campaignListHead p,.campaignDetailHead p{margin:2px 0!important}
+.campaignSimpleList{display:grid;border:1px solid #d8e4e8;border-radius:8px;overflow:hidden;background:#fff}
+.campaignSimpleRow{display:grid;grid-template-columns:minmax(220px,2fr) 100px 90px 110px 80px;gap:8px;align-items:center;min-height:50px;padding:7px 9px;border-bottom:1px solid #e7eef0}
+.campaignSimpleRow:last-child{border-bottom:0}.campaignSimpleRow.head{min-height:36px;background:#eef5f6;font-size:13px;font-weight:800}
+.campaignSimpleRow>span:first-child{display:grid;gap:1px}.campaignSimpleRow>span:first-child>b{font-size:16px}.campaignSimpleRow small{font-size:13px!important}
+.campaignStatus{display:inline-flex;width:max-content;padding:3px 7px;border-radius:999px;font-size:12px;font-style:normal;font-weight:800}
+.campaignStatus.open{background:#e5f1fb;color:#185c8d}.campaignStatus.closed{background:#e4f5f1;color:#07594f}
+.campaignOpenLink,.campaignBackLink{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:5px 8px;border:1px solid #b9d2d9;border-radius:7px;background:#fff;color:#075d61;text-decoration:none;font-weight:800}
+.campaignDetailHead>div{display:grid;gap:3px}
+.campaignBackLink{width:max-content;color:#244e60;font-weight:700}
+.campaignMetricBar{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
+.campaignMetricBar button{display:flex;align-items:center;gap:5px;min-height:34px!important;padding:5px 8px!important;background:#fff;border:1px solid #d0dfe4;color:#284e60}
+.campaignMetricBar button.active{background:#e6f5f2;border-color:#6bb7ae;color:#075d61}
+.campaignMetricBar button b{font-size:16px}.campaignMetricBar button span{font-size:13px}
+.campaignInstallationRows{display:grid;gap:5px}.campaignRegionGroup{display:grid;gap:4px}.campaignRegionGroup h3{font-size:16px!important;margin:8px 0 2px!important}
+.campaignInstallationLine{display:grid;grid-template-columns:minmax(220px,1.8fr) minmax(160px,1.1fr) 125px minmax(220px,auto);gap:8px;align-items:center;padding:7px 9px;border:1px solid #dfe9ec;border-radius:8px;background:#fff}
+.campaignInstallationName{display:grid;gap:1px}.campaignInstallationName b{font-size:16px}.campaignInstallationName small,.campaignInstallationLine>small{font-size:13px!important}
+.campaignInstallationLineActions{display:flex;justify-content:flex-end;gap:5px;flex-wrap:wrap}.campaignInstallationLineActions button,.campaignInstallationLineActions a{min-height:34px!important;padding:5px 8px!important;font-size:14px!important}
+.campaignDetailAdminToggle{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;margin-top:9px}.campaignDetailAdminToggle form{margin:0}
+.campaignAdminCompact{border-top:1px solid #dfe8ea;margin-top:10px;padding-top:8px}.campaignAdminLine{display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(220px,2fr) auto;gap:7px;align-items:end;padding:5px 0}.campaignAdminLine span{display:grid}
+@media(max-width:900px){
+ .campaignSimpleList{overflow-x:auto}.campaignSimpleRow{min-width:650px}
+ .campaignInstallationLine{grid-template-columns:1fr 1fr}.campaignInstallationLineActions{grid-column:1/-1;justify-content:flex-start}
+}
+@media(max-width:600px){
+ .campaignListHead,.campaignDetailHead{display:grid}.campaignListHead>button{width:max-content}
+ .campaignInstallationLine{grid-template-columns:1fr}.campaignInstallationLineActions{grid-column:1}.campaignInstallationLineActions>*{flex:1 1 auto}
+ .campaignAdminLine{grid-template-columns:1fr}
+}
