@@ -6,6 +6,7 @@ import {isCancelledPurchaseOrder,isClosedPurchaseOrder} from "@/lib/purchase-ord
 import ReceiptUncataloguedMaterials from "./ReceiptUncataloguedMaterials";
 import ReceiptNoOcPanel from "./ReceiptNoOcPanel";
 import InvoiceReader,{type ExtractedInvoice} from "./InvoiceReader";
+import {invoiceUnitNet,matchInvoiceLine} from "@/lib/invoice-reconciliation";
 type Line={id:string;line_type?:string|null;material_id:string|null;description?:string|null;unit?:string|null;supplier_code?:string|null;ordered_qty:number;unit_net_price:number;already_received:number;pending_qty:number;materials?:{name?:string|null;presentation?:string|null;unit?:string|null;supplier_code?:string|null}|null};
 type Order={id:string;order_number?:string|null;status:string;total_net:number;payment_terms?:string|null;order_type?:string|null;suppliers?:{legal_name?:string|null;rut?:string|null}|null;purchase_order_lines:Line[]};
 type Receipt={id:string;has_document?:boolean;supplier_id?:string|null;commercial?:{payment_condition?:string;payment_days?:number;payment_due?:string;payment_status?:string;observation?:string}|null;purchase_order_id?:string|null;status:string;received_at?:string|null;shipping_condition?:string|null;freight_net?:number|null;document_type?:string|null;document_folio?:string|null;document_date?:string|null;document_net?:number|null;document_total?:number|null;reconciliation_status?:string|null;inventory_posted?:boolean|null;receipt_lines?:{purchase_order_line_id?:string|null;material_id?:string|null;received_qty?:number|null;actual_unit_net?:number|null;line_net?:number|null}[]};
@@ -30,14 +31,41 @@ export default function ConnectedReceiptModule({role}:{role:string}){
  const history=useMemo(()=>{const q=norm(historySearch);return receipts.filter(r=>{const o=orders.find(x=>x.id===r.purchase_order_id);return !q||norm(`${r.document_type} ${r.document_folio} ${o?.order_number} ${o?.suppliers?.legal_name}`).includes(q)}).slice(0,20)},[receipts,orders,historySearch]);
  useEffect(()=>{if(!selected){setQty({});setPrices({});return}const q:Record<string,number>={},p:Record<string,number>={};for(const line of materialLines){q[line.id]=Number(line.pending_qty||0);p[line.id]=Number(line.unit_net_price||0)}setQty(q);setPrices(p);setDocumentType("Factura");setDocumentFolio("");setDocumentDate(new Date().toISOString().slice(0,10));setDocumentNet(Number(selected.total_net||0));setDocumentVat(Math.round(Number(selected.total_net||0)*.19));setDocumentTotal(Math.round(Number(selected.total_net||0)*1.19));setShipping("Incluido");setFreight(0);setObservation("");setMessage("")},[selectedId]);
  const applyGemini=(data:ExtractedInvoice)=>{
-  setGeminiLines(data.lines||[]);
+  const invoiceLines=data.lines||[];
+  setGeminiLines(invoiceLines);
   if(data.folio)setDocumentFolio(data.folio);
   if(data.date&&/^\d{4}-\d{2}-\d{2}$/.test(data.date))setDocumentDate(data.date);
   if(data.net!=null)setDocumentNet(Number(data.net));
   if(data.vat!=null)setDocumentVat(Number(data.vat));
   if(data.total!=null)setDocumentTotal(Number(data.total));
   if(data.document_type&&["Factura","Boleta","Guía de despacho","Otro"].includes(data.document_type))setDocumentType(data.document_type);
-  setMessage("Gemini leyó el documento. Compara las líneas de la factura con el Maestro y los productos de la OC; los nombres no se vinculan automáticamente.");
+
+  const nextQty={...qty},nextPrices={...prices};
+  const candidates=materialLines.map(line=>({
+   id:line.id,
+   supplier_code:line.supplier_code||line.materials?.supplier_code||null,
+   name:line.materials?.name||line.description||"",
+   pending_qty:Number(line.pending_qty||0),
+  }));
+  const used=new Set<string>();
+  let matched=0,unmatched=0,over=0;
+  for(const invoiceLine of invoiceLines){
+   const found=matchInvoiceLine(invoiceLine,candidates.filter(c=>!used.has(c.id)));
+   if(!found.item){unmatched++;continue}
+   const quantity=Number(invoiceLine.quantity||0);
+   if(quantity>0){
+    if(quantity>found.item.pending_qty)over++;
+    nextQty[found.item.id]=Math.min(quantity,found.item.pending_qty);
+   }
+   nextPrices[found.item.id]=invoiceUnitNet(invoiceLine);
+   used.add(found.item.id);matched++;
+  }
+  if(matched){setQty(nextQty);setPrices(nextPrices)}
+  const parts=[`Factura leída: ${matched} línea(s) asociada(s) automáticamente.`];
+  if(unmatched)parts.push(`${unmatched} línea(s) requieren asociación manual.`);
+  if(over)parts.push(`${over} línea(s) superan la cantidad pendiente de la OC; revisa la diferencia.`);
+  parts.push("Los netos unitarios se calcularon desde neto de línea ÷ cantidad cuando correspondía.");
+  setMessage(parts.join(" "));
  };
  const closeOrder=async(id:string)=>{if(!window.confirm("¿Cerrar esta OC con las cantidades efectivamente recibidas? Los faltantes quedarán disponibles para una nueva orden."))return;setSaving(true);setMessage("");try{const r=await closePurchaseOrderReceipt(id);setMessage(`OC ${r.status}. Recibido: ${r.totalReceived}. No entregado: ${r.outstanding}.`);await load()}catch(e:any){setMessage(e?.message||"No se pudo cerrar la OC")}finally{setSaving(false)}};
  const reconcileReceipt=async(id:string)=>{if(reconcileText.trim().toUpperCase()!=="CONFIRMAR"){setMessage("Escribe CONFIRMAR para validar el cotejo");return}setReconciling(true);setMessage("");try{const formData=new FormData();formData.set("receipt_id",id);formData.set("confirmation","CONFIRMAR");const r=await reconcilePurchaseDocument(formData);setMessage(`Cotejo ${r.status}. Inventario actualizado.`);setReconcileId("");setReconcileText("");await load()}catch(e:any){setMessage(e?.message||"No se pudo cotejar el documento")}finally{setReconciling(false)}};
@@ -54,7 +82,7 @@ export default function ConnectedReceiptModule({role}:{role:string}){
    <ReceiptUncataloguedMaterials lines={(selected.purchase_order_lines||[]).filter(line=>line.line_type!=="Servicio"&&!line.material_id&&Number(line.pending_qty)>0)} onDone={load}/>
    <InvoiceReader onExtract={applyGemini} onFile={setInvoiceFile}/>
    <div className="receiptDocument"><label>Tipo de documento<select value={documentType} onChange={e=>setDocumentType(e.target.value)}><option>Factura</option><option>Boleta</option><option>Guía de despacho</option><option>Otro</option></select></label><label>Folio documento<input value={documentFolio} onChange={e=>setDocumentFolio(e.target.value)} placeholder="Folio obligatorio"/></label><label>Fecha documento<input type="date" value={documentDate} onChange={e=>setDocumentDate(e.target.value)}/></label><label>Neto documento<input type="number" min="0" value={documentNet} onChange={e=>setDocumentNet(Number(e.target.value))}/></label><label>IVA<input type="number" min="0" value={documentVat} onChange={e=>setDocumentVat(Number(e.target.value))}/></label><label>Total documento<input type="number" min="0" value={documentTotal} onChange={e=>setDocumentTotal(Number(e.target.value))}/></label></div>
-   {!!geminiLines?.length&&<section className="receiptExtracted"><h4>Comparar factura leída con materiales solicitados</h4><p>Revisa que las descripciones correspondan a los productos de la OC antes de registrar la recepción.</p><div className="receiptRecordedTable"><table><thead><tr><th>Descripción factura</th><th>Cantidad</th><th>Precio neto</th><th>Revisión</th></tr></thead><tbody>{geminiLines.map((l,i)=><tr key={i}><td>{l.description}</td><td>{l.quantity??"—"}</td><td>{l.unit_net??"—"}</td><td>{materialLines.some(m=>String(m.materials?.name||m.description||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es-CL").trim()===String(l.description||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es-CL").trim())?"Coincidencia de nombre; verificar código y cantidad":"Revisar correspondencia manual"}</td></tr>)}</tbody></table></div></section>}
+   {!!geminiLines?.length&&<section className="receiptExtracted"><h4>Comparar factura leída con materiales solicitados</h4><p>Las coincidencias seguras completan cantidad y neto unitario. Revisa únicamente asociaciones y diferencias antes de registrar.</p><div className="receiptRecordedTable"><table><thead><tr><th>Descripción factura</th><th>Cantidad</th><th>Neto línea</th><th>Neto unitario calculado</th><th>Revisión</th></tr></thead><tbody>{geminiLines.map((l,i)=><tr key={i}><td>{l.description}</td><td>{l.quantity??"—"}</td><td>{l.line_net??"—"}</td><td>{invoiceUnitNet(l)||"—"}</td><td>{materialLines.some(m=>String(m.materials?.name||m.description||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es-CL").trim()===String(l.description||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es-CL").trim())?"Coincidencia de nombre; verificar código y cantidad":"Revisar correspondencia manual"}</td></tr>)}</tbody></table></div></section>}
    <div className="receiptTable"><div className="receiptRow receiptHeader"><span>Material</span><span>Pedido</span><span>Recibido</span><span>Pendiente</span><span>Ingreso ahora</span><span>Valor neto unit.</span></div>{materialLines.map(line=>{const name=line.materials?.name||line.description||"Material";return <div className="receiptRow" key={line.id}><span><b>{name}</b><small>{line.materials?.presentation||line.materials?.unit||line.unit||""}</small></span><span>{Number(line.ordered_qty||0)}</span><span>{Number(line.already_received||0)}</span><span><b>{Number(line.pending_qty||0)}</b></span><span><input type="number" min="0" max={Number(line.pending_qty||0)} step="any" value={qty[line.id]??0} onChange={e=>setQty(current=>({...current,[line.id]:Number(e.target.value)}))}/></span><span><input type="number" min="0" step="any" value={prices[line.id]??0} onChange={e=>setPrices(current=>({...current,[line.id]:Number(e.target.value)}))}/></span></div>})}</div>
    <div className="receiptShipping"><label>Condición de envío<select value={shipping} onChange={e=>{setShipping(e.target.value);if(e.target.value!=="Por pagar")setFreight(0)}}><option>Incluido</option><option>Por pagar</option><option>Retiro</option></select></label><label>Flete neto<input type="number" min="0" step="1" value={freight} disabled={shipping!=="Por pagar"} onChange={e=>setFreight(Number(e.target.value))}/></label><label className="receiptObservation">Observación<textarea rows={3} value={observation} onChange={e=>setObservation(e.target.value)} placeholder="Diferencias, estado de bultos, referencia de transporte, etc."/></label></div>
    {message&&<p className="note"><b>{message}</b></p>}
