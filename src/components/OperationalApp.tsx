@@ -18,9 +18,16 @@ import InventoryModule from "@/components/modules/InventoryModule";
 type MasterMaterialRow=MaterialCatalogRow&{active?:boolean};type MasterClientGroup=ClientInstallationGroup&{active?:boolean};
 type Props={initialTab?:string;profile:any;summary:Record<string,number>;campaigns:any[];activeCampaigns:any[];consolidatedSurveys:any[];orders:any[];dispatches:any[];audit:any[];materialCatalog:MaterialCatalogRow[];materialCatalogSourceCount:number;materialCatalogError?:string|null;masterMaterialCatalog:MasterMaterialRow[];clientInstallations:ClientInstallationGroup[];masterClientInstallations:MasterClientGroup[];users:UserProfileRow[];userInstallationAccess:UserAccessRow[]};
 const titles:Record<string,string>={inicio:"Inicio",clientes:"Maestros y administración",campañas:"Campañas",levantamientos:"Levantamientos",consolidado:"Consolidado",preparacion:"Consolidado de preparación",inventario:"Inventario",compras:"Órdenes de compra",recepcion:"Recepción de materiales",entregas:"Preparación y entregas"};
-const mainNav=[["campañas","Campañas y levantamientos"],["consolidado","Consolidado y abastecimiento"],["inventario","Inventario y compras"],["entregas","Preparación y entregas"],["clientes","Maestros y administración"]] as const;
-const quickLinks:Record<string,[string,string][]>={campañas:[["campañas","Campañas"],["levantamientos","Levantamientos"]],entregas:[["preparacion","Consolidado de preparación"],["entregas","Guías y entregas"]],inventario:[["inventario","Existencias"],["compras","Órdenes de compra"],["recepcion","Recepción"]]};
-const parentOf=(tab:string)=>tab==="levantamientos"?"campañas":tab==="preparacion"?"entregas":tab==="compras"||tab==="recepcion"?"inventario":tab;
+const mainNav=[["campañas","Planificación"],["levantamientos","Levantamientos"],["consolidado","Abastecimiento"],["inventario","Bodega e inventario"],["preparacion","Preparación"],["entregas","Despachos y entregas"],["clientes","Maestros y administración"]] as const;
+const quickLinks:Record<string,[string,string][]>={
+ campañas:[["campañas","Campañas"],["levantamientos","Realizar levantamiento"]],
+ levantamientos:[["campañas","Planificación"],["levantamientos","Levantamientos"],["consolidado","Ver necesidades"]],
+ consolidado:[["consolidado","Necesidades y generar OC"],["compras","Órdenes de compra"],["recepcion","Recepción"],["preparacion","Preparar materiales"]],
+ inventario:[["inventario","Existencias"],["recepcion","Recibir materiales"],["preparacion","Preparar despacho"]],
+ preparacion:[["preparacion","Necesidades pendientes"],["entregas","Preparar tanda y guías"]],
+ entregas:[["preparacion","Consolidado"],["entregas","Guías, rutas y entregas"]]
+};
+const parentOf=(tab:string)=>tab==="compras"||tab==="recepcion"?"consolidado":tab;
 export default function OperationalApp({initialTab,profile,summary,campaigns,activeCampaigns,consolidatedSurveys,orders,dispatches,materialCatalog,materialCatalogSourceCount,materialCatalogError,masterMaterialCatalog,clientInstallations,masterClientInstallations,users,userInstallationAccess}:Props){
  const allowed=Object.keys(titles);
  const [tab,setTab]=useState(initialTab&&allowed.includes(initialTab)?initialTab:"inicio");
