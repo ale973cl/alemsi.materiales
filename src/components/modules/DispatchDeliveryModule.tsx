@@ -147,6 +147,14 @@ function BatchPreparationModal({suggestions,busy,close,confirm}:{suggestions:Sug
  </div></div>;
 }
 
+
+ function ComplementaryDispatchModal({dispatch,close,done}:{dispatch:Dispatch;close:()=>void;done:(id:string)=>void}){
+ const [pending,start]=useTransition();const lines=dispatch.dispatch_lines.filter(line=>n(line.pending_qty)>0);
+ const confirm=()=>start(async()=>{try{const result=await createComplementaryDispatch({parentDispatchId:dispatch.id});done(result.id)}catch(e:any){alert(e.message)}});
+ return <div className="modalBg"><div className="modal"><div className="modalHead"><div><h2>Completar entrega</h2><p>Saldo pendiente de {guideName(dispatch)}</p></div><button type="button" onClick={close}>Cerrar</button></div><div className="deliveryFixedSummary"><b>La guía original no se modificará</b><p>Al confirmar se generará la guía complementaria. La entrega seguirá pendiente: después deberá prepararse, salir a ruta y registrarse con los datos del receptor y su firma.</p></div><div className="deliveryLines deliveryLinesReadOnly">{lines.map(line=><div className="deliveryReadOnlyLine" key={line.id}><span><b>{line.materials?.name||"Material"}</b><small>{line.materials?.unit||""} · Pendiente</small></span><strong>{n(line.pending_qty)} {line.materials?.unit||""}</strong></div>)}</div><button type="button" className="deliveryConfirm" disabled={pending||!lines.length} onClick={confirm}>{pending?"Generando…":"Generar guía complementaria"}</button></div></div>;
+}
+
+
 function RoutePreparationModal({dispatches,users,currentUser,canAssign,close,done}:{dispatches:Dispatch[];users:RouteUser[];currentUser:{id:string;full_name?:string|null};canAssign:boolean;close:()=>void;done:(name:string)=>void}){
  const [ordered,setOrdered]=useState(dispatches),[pending,setPending]=useState(false),[routeName,setRouteName]=useState("");
  const [plannedDate,setPlannedDate]=useState(new Date().toISOString().slice(0,10));
