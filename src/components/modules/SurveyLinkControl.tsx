@@ -1,6 +1,6 @@
 "use client";
 import {useState} from "react";
-import {createSurveyAccess} from "@/app/survey-access-actions";
+import {createSurveyAccessLink} from "@/app/survey-link-actions";
 
 export default function SurveyLinkControl({campaignId,installationId,installationName}:{campaignId:string;installationId:string;installationName:string}){
   const [email,setEmail]=useState("");
@@ -12,7 +12,7 @@ export default function SurveyLinkControl({campaignId,installationId,installatio
     if(mode==="email"&&!email.trim()){setMessage("Ingresa un correo para enviar el acceso.");return}
     setBusy(true);setMessage("");
     try{
-      const result=await createSurveyAccess({campaignId,installationId,email:email.trim()||undefined,sendEmail:mode==="email"});
+      const result=await createSurveyAccessLink({campaign_id:campaignId,installation_id:installationId,mode,email:email.trim()||null,valid_hours:72});
       setLink(result.link);
       if(mode==="link")setMessage("Acceso listo.");
       else if(result.email_status==="sent")setMessage("Correo enviado.");
