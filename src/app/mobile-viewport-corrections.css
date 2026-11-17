@@ -1,0 +1,43 @@
+/* Mobile-first correction: keep the document viewport at device width. */
+html{width:100%;max-width:100%;overflow-x:clip}
+body{width:100%;max-width:100%;overflow-x:clip}
+.portal,.portalBody,.workspace,.simpleApp,.procurement,.procureSection,.panel,.card{min-width:0;max-width:100%}
+img,svg,video,canvas{max-width:100%}
+@media(max-width:760px){
+ .portalBody{display:block!important;width:100%!important;min-width:0!important}
+ .workspace{width:100%!important;min-width:0!important;padding:12px!important;margin:0!important}
+ .portalTop{width:100%;min-width:0;padding:8px 12px}
+ .pageHead,.procureHead{min-width:0;flex-wrap:wrap}
+ .pageHead h1,.procureHead h2{overflow-wrap:anywhere}
+ .compactTabs{max-width:100%;display:flex;flex-wrap:wrap;gap:6px;overflow:visible!important}
+ .compactTabs button{white-space:normal;min-width:0;flex:1 1 auto}
+ .procurement,.procureSection,.compactTable,.lineEditor,.quoteLines{width:100%;max-width:100%;min-width:0;overflow:visible!important}
+ .compactRow{min-width:0!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px;padding:12px;border-bottom:1px solid #dbe6ea}
+ .compactRow>*{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ .compactRow>*:first-child{grid-column:1/-1}
+ .compactRow input,.compactRow select{width:100%;min-width:0;max-width:100%;font-size:16px}
+ .purchaseLine,.quoteLine{min-width:0!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px;padding:12px}
+ .purchaseLine>*:nth-child(2),.quoteLine>*:first-child{grid-column:1/-1}
+ .purchaseLine>*,.quoteLine>*{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ .purchaseLine input,.purchaseLine select,.quoteLine input,.quoteLine select{width:100%;min-width:0;max-width:100%;font-size:16px!important}
+ .purchaseLine .lineTotal{text-align:left;white-space:normal}
+ .stickyAction,.nextBar,.procDocument footer{flex-wrap:wrap}
+ .stickyAction button,.nextBar button{max-width:100%;white-space:normal}
+ .campaignSimpleRow,.campaignInstallationLine,.surveyInstallationCompactRow{min-width:0!important;grid-template-columns:1fr!important}
+ .campaignSimpleRow.head{display:none}
+ .surveyEditorStandalone .surveyMaterialList article{grid-template-columns:1fr!important}
+ .supplierIndexList,.receivedInvoiceList{overflow:visible!important}
+ .supplierIndexRow,.receivedInvoiceRow{min-width:0!important;grid-template-columns:1fr!important}
+ .receiptRow{min-width:0!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .receiptRow>*:first-child{grid-column:1/-1}
+ .receiptRow input,.receiptRow select{min-width:0}
+ .inventory .stockHead{min-width:0!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .inventory .stockHead>*:first-child{grid-column:1/-1}
+ .inventory .krow{min-width:0!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .inventory .krow>*{overflow-wrap:anywhere}
+ .panel input,.panel select,.panel textarea{max-width:100%}
+}
+@media(max-width:430px){
+ .compactRow,.purchaseLine,.quoteLine{grid-template-columns:1fr!important}
+ .compactRow>*,.purchaseLine>*,.quoteLine>*{grid-column:1/-1}
+}
