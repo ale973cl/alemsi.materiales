@@ -22,10 +22,11 @@ export async function createPurchaseOrderFromConsolidated(formData:FormData){
   const {supabase,user,profile}=await supplyContext();
   const campaignId=String(formData.get("campaign_id")||"");
   const supplierId=String(formData.get("supplier_id")||"");
+  const documentKind=String(formData.get("document_kind")||"Orden de compra")==="Cotización"?"Cotización":"Orden de compra";
   const selections=JSON.parse(String(formData.get("selections")||"[]")) as Selection[];
   if(!campaignId||!supplierId)throw new Error("Selecciona campaña y proveedor");
   const chosen=selections.map(item=>({material_id:String(item.material_id),qty:Number(item.qty||0),unit_net_price:Number(item.unit_net_price||0)})).filter(item=>item.qty>0);
-  if(!chosen.length)throw new Error("Ingresa al menos una cantidad para la OC");
+  if(!chosen.length)throw new Error("Ingresa al menos una cantidad para el documento");
   if(chosen.some(item=>item.qty<0||item.unit_net_price<0))throw new Error("Cantidades y precios deben ser válidos");
 
   const [{data:campaign,error:campaignError},{data:supplier,error:supplierError}]=await Promise.all([
@@ -83,17 +84,18 @@ export async function createPurchaseOrderFromConsolidated(formData:FormData){
   }
 
   const t=totals(chosen.reduce((sum,item)=>sum+item.qty*item.unit_net_price,0));
-  const createdOrder=await supabase.from("purchase_orders").insert({supply_run_id:run.id,supplier_id:supplierId,order_type:"Abastecimiento",status:"Borrador",total_net:t.net,vat_rate:t.vatRate,vat_amount:t.vat,total_amount:t.total,currency:"CLP"}).select("id").single();
-  if(createdOrder.error||!createdOrder.data)throw createdOrder.error||new Error("No se pudo crear la orden de compra");
+  const isQuote=documentKind==="Cotización";
+  const createdOrder=await supabase.from("purchase_orders").insert({supply_run_id:run.id,supplier_id:supplierId,order_type:isQuote?"Cotización":"Abastecimiento",status:isQuote?"Solicitud de cotización":"Borrador",total_net:t.net,vat_rate:t.vatRate,vat_amount:t.vat,total_amount:t.total,currency:"CLP"}).select("id").single();
+  if(createdOrder.error||!createdOrder.data)throw createdOrder.error||new Error("No se pudo crear el documento");
   const orderId=createdOrder.data.id;
-  const folio=folioFromId(orderId);
+  const folio=folioFromId(orderId,isQuote?"COT":"OC");
   const updateFolio=await supabase.from("purchase_orders").update({order_number:folio}).eq("id",orderId);if(updateFolio.error)throw updateFolio.error;
   const poLines=chosen.map(item=>({purchase_order_id:orderId,supply_line_id:lineByMaterial.get(item.material_id)?.id||null,material_id:item.material_id,line_type:"Material",ordered_qty:item.qty,unit_net_price:item.unit_net_price,line_net:item.qty*item.unit_net_price}));
   const insertedLines=await supabase.from("purchase_order_lines").insert(poLines);if(insertedLines.error)throw insertedLines.error;
 
-  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Órdenes de compra",action:"Crear OC desde consolidado",entity_table:"purchase_orders",entity_id:orderId,new_data:{campaign_id:campaignId,supplier_id:supplierId,supplier:supplier.legal_name,order_number:folio,total_net:t.net,vat_amount:t.vat,total_amount:t.total,lines:poLines},observation:"OC creada únicamente desde carencias de levantamientos confirmados; se conserva la asignación por instalación para preparación y guía."});
+  await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Compras",action:isQuote?"Crear cotización desde consolidado":"Crear OC desde consolidado",entity_table:"purchase_orders",entity_id:orderId,new_data:{campaign_id:campaignId,supplier_id:supplierId,supplier:supplier.legal_name,order_number:folio,total_net:t.net,vat_amount:t.vat,total_amount:t.total,lines:poLines},observation:isQuote?"Solicitud de cotización vinculada a la necesidad; no reserva demanda hasta convertirse en OC.":"OC vinculada a carencias confirmadas y asignaciones por instalación."});
   revalidatePath("/");
-  return{ok:true,id:orderId,order_number:folio,total_net:t.net,total_amount:t.total};
+  return{ok:true,id:orderId,order_number:folio,total_net:t.net,total_amount:t.total,document_kind:documentKind};
 }
 
 export async function createFreePurchaseOrder(formData:FormData){
