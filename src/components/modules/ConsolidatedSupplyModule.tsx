@@ -1,120 +1,180 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
 import {useRouter} from "next/navigation";
-import {createFreePurchaseOrder,createPurchaseOrderFromConsolidated} from "@/app/supply-actions";
+import {convertQuotationToPurchaseOrder,createFreePurchaseOrder,createPurchaseOrderFromConsolidated,updateQuotationResponse} from "@/app/supply-actions";
 
-type Material={id?:string;name?:string|null;family?:string|null;presentation?:string|null;unit?:string|null;supplier_code?:string|null};
-type SurveyLine={id?:string;material_id:string;shortage_qty?:number|null;unit_net_price?:number|null;materials?:Material|null};
-type SurveyRow={id:string;campaign_id:string;installation_id:string;status:string;confirmed_at?:string|null;campaigns?:{id?:string;label?:string|null;status?:string|null}|null;installations?:{id?:string;name?:string|null;region?:string|null;contracts?:{id?:string;name?:string|null;clients?:{id?:string;legal_name?:string|null}|null}|null}|null;survey_lines?:SurveyLine[]};
-type Supplier={id:string;legal_name:string;rut?:string|null;address?:string|null;payment_terms?:string|null;conditions?:string|null};
-type SupplyOrder={id:string;order_number?:string|null;status:string;supply_runs?:{campaign_id?:string|null}|null;purchase_order_lines?:{material_id:string;ordered_qty:number|null;committed_qty?:number|null}[]};
-type FreeLine={line_type:"Material"|"Servicio";material_id:string;description:string;qty:number;unit:string;unit_net_price:number};
-type MasterMaterial={id:string;name:string;family?:string|null;presentation?:string|null;unit?:string|null;supplier_code?:string|null;current_net_price?:number|null};
-type Mode="manual"|"requirement"|null;
+type View="need"|"new"|"documents";
+type Material={id:string;name:string;family?:string|null;presentation?:string|null;unit?:string|null;supplier_code?:string|null;current_net_price?:number|null};
+type Supplier={id:string;legal_name:string;rut?:string|null;purchase_order_email?:string|null;payment_terms?:string|null;conditions?:string|null};
+type OrderLine={id:string;material_id?:string|null;line_type?:string|null;description?:string|null;unit?:string|null;supplier_code?:string|null;ordered_qty:number;unit_net_price:number;line_net:number;committed_qty?:number|null};
+type Order={id:string;order_number?:string|null;status:string;total_net:number;total_amount:number;order_type:string;supply_run_id?:string|null;supplier_id:string;payment_terms?:string|null;delivery_terms?:string|null;conditions?:string|null;observations?:string|null;created_at?:string|null;supply_runs?:{campaign_id?:string|null}|null;purchase_order_lines:OrderLine[]};
+type SurveyLine={id?:string;material_id:string;shortage_qty?:number|null;unit_net_price?:number|null;materials?:{id?:string;name?:string|null;family?:string|null;presentation?:string|null;unit?:string|null;supplier_code?:string|null}|null};
+type SurveyRow={id:string;campaign_id:string;installation_id:string;status:string;campaigns?:{id?:string;label?:string|null}|null;installations?:{name?:string|null;contracts?:{clients?:{legal_name?:string|null}|null}|null}|null;survey_lines?:SurveyLine[]};
+type FreeLine={line_type:"Material"|"Producto nuevo"|"Servicio";material_id:string;description:string;qty:number;unit:string;unit_net_price:number;supplier_code:string};
 
-const campaignName=(label?:string|null)=>{if(!label)return "Campaña";try{const value=JSON.parse(label);return typeof value?.name==="string"?value.name:label}catch{return label}};
-const money=(n:number)=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n||0);
-const emptyFreeLine=():FreeLine=>({line_type:"Material",material_id:"",description:"",qty:1,unit:"UN",unit_net_price:0});
-const familyName=(row:any)=>String(row.material?.family||"Sin familia").trim()||"Sin familia";
+const money=(n:number)=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(Number(n)||0);
+const emptyLine=():FreeLine=>({line_type:"Material",material_id:"",description:"",qty:1,unit:"UN",unit_net_price:0,supplier_code:""});
+const campaignName=(label?:string|null)=>{if(!label)return"Campaña";try{const j=JSON.parse(label);return j?.name||label}catch{return label}};
+const isQuote=(o:Order)=>o.order_type==="Cotización";
+const isClosed=(o:Order)=>/cerrad|convertid|anulad|cancelad|recepcionad|finalizad/i.test(o.status||"");
 
-export default function ConsolidatedSupplyModule({surveys}:{surveys:SurveyRow[]}){
+export default function ConsolidatedSupplyModule({surveys,initialView="need"}:{surveys:SurveyRow[];initialView?:View}){
  const router=useRouter();
- const [mode,setMode]=useState<Mode>(null);
- const [campaignId,setCampaignId]=useState("");
- const [showInstallationDetail,setShowInstallationDetail]=useState(false);
- const [selectedFamilies,setSelectedFamilies]=useState<string[]>([]);
- const [suppliers,setSuppliers]=useState<Supplier[]>([]);
- const [orders,setOrders]=useState<SupplyOrder[]>([]);
- const [masterMaterials,setMasterMaterials]=useState<MasterMaterial[]>([]);
- const [supplierId,setSupplierId]=useState("");
- const [quantities,setQuantities]=useState<Record<string,number>>({});
- const [prices,setPrices]=useState<Record<string,number>>({});
- const [saving,setSaving]=useState(false);
- const [message,setMessage]=useState("");
- const [freeSupplierId,setFreeSupplierId]=useState("");
- const [freeLines,setFreeLines]=useState<FreeLine[]>([emptyFreeLine()]);
- const [paymentTerms,setPaymentTerms]=useState("");
- const [deliveryTerms,setDeliveryTerms]=useState("");
- const [conditions,setConditions]=useState("");
- const [observations,setObservations]=useState("");
- const [freeSaving,setFreeSaving]=useState(false);
- const [freeMessage,setFreeMessage]=useState("");
- const loadSupplyContext=async()=>{try{const response=await fetch("/api/supply/context",{cache:"no-store"});const data=await response.json();if(response.ok){setSuppliers(data.suppliers||[]);setOrders(data.orders||[]);setMasterMaterials(data.materials||[])}}catch{}};
- useEffect(()=>{void loadSupplyContext()},[]);
+ const [view,setView]=useState<View>(initialView);
+ const [suppliers,setSuppliers]=useState<Supplier[]>([]),[orders,setOrders]=useState<Order[]>([]),[materials,setMaterials]=useState<Material[]>([]);
+ const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[message,setMessage]=useState("");
+ const [campaignId,setCampaignId]=useState(""),[supplierId,setSupplierId]=useState(""),[documentKind,setDocumentKind]=useState<"Cotización"|"Orden de compra">("Orden de compra");
+ const [selectedQty,setSelectedQty]=useState<Record<string,number>>({}),[selectedPrice,setSelectedPrice]=useState<Record<string,number>>({});
+ const [freeLines,setFreeLines]=useState<FreeLine[]>([emptyLine()]),[paymentTerms,setPaymentTerms]=useState(""),[deliveryTerms,setDeliveryTerms]=useState(""),[conditions,setConditions]=useState(""),[observations,setObservations]=useState("");
+ const [quoteEdits,setQuoteEdits]=useState<Record<string,{qty:number;price:number;code:string}>>({});
+ const [next,setNext]=useState<{kind:"quote"|"order";id:string;number:string}|null>(null);
 
- const confirmedSurveys=useMemo(()=>surveys.filter(s=>s.status==="Confirmada"&&Boolean(s.confirmed_at)),[surveys]);
- const campaigns=useMemo(()=>{const map=new Map<string,string>();for(const survey of confirmedSurveys){if(survey.campaign_id)map.set(survey.campaign_id,campaignName(survey.campaigns?.label))}return [...map.entries()].map(([id,name])=>({id,name}));},[confirmedSurveys]);
- const filtered=useMemo(()=>campaignId?confirmedSurveys.filter(s=>s.campaign_id===campaignId):[],[confirmedSurveys,campaignId]);
- const globalRows=useMemo(()=>{const map=new Map<string,any>();for(const survey of filtered){for(const line of survey.survey_lines||[]){const qty=Number(line.shortage_qty||0);if(qty<=0)continue;const current=map.get(line.material_id)||{material_id:line.material_id,material:line.materials,qty:0,unit_net_price:Number(line.unit_net_price||0)};current.qty+=qty;if(!current.unit_net_price)current.unit_net_price=Number(line.unit_net_price||0);map.set(line.material_id,current)}}return [...map.values()].sort((a,b)=>String(a.material?.name||"").localeCompare(String(b.material?.name||""),"es"));},[filtered]);
- const families=useMemo(()=>{const map=new Map<string,{family:string;products:number;qty:number}>();for(const row of globalRows){const family=familyName(row),current=map.get(family)||{family,products:0,qty:0};current.products+=1;current.qty+=Number(row.qty||0);map.set(family,current)}return [...map.values()].sort((a,b)=>a.family.localeCompare(b.family,"es"));},[globalRows]);
- const visibleRows=useMemo(()=>selectedFamilies.length?globalRows.filter(row=>selectedFamilies.includes(familyName(row))):[],[globalRows,selectedFamilies]);
- const installations=useMemo(()=>{const map=new Map<string,any>();for(const survey of filtered){const shortageLines=(survey.survey_lines||[]).filter(line=>Number(line.shortage_qty||0)>0&&(!selectedFamilies.length||selectedFamilies.includes(String(line.materials?.family||"Sin familia").trim()||"Sin familia")));const inst=survey.installations;map.set(survey.installation_id,{installation_id:survey.installation_id,name:inst?.name||"Instalación",region:inst?.region||"",client:inst?.contracts?.clients?.legal_name||"Cliente",contract:inst?.contracts?.name||"Contrato",lines:shortageLines})}return [...map.values()].sort((a,b)=>String(a.client).localeCompare(String(b.client),"es")||String(a.name).localeCompare(String(b.name),"es"));},[filtered,selectedFamilies]);
- const orderedByMaterial=useMemo(()=>{const map=new Map<string,number>();if(!campaignId)return map;for(const order of orders){const run:any=Array.isArray(order.supply_runs)?order.supply_runs[0]:order.supply_runs;if(run?.campaign_id!==campaignId)continue;for(const line of order.purchase_order_lines||[])if(line.material_id)map.set(line.material_id,Number(map.get(line.material_id)||0)+Number(line.committed_qty??line.ordered_qty??0))}return map},[orders,campaignId]);
- const orderTotal=visibleRows.reduce((sum,row)=>sum+Number(quantities[row.material_id]||0)*Number(prices[row.material_id]??row.unit_net_price??0),0);
+ const load=async()=>{
+  setLoading(true);
+  try{
+   const res=await fetch("/api/supply/context",{cache:"no-store"}),body=await res.json();
+   if(!res.ok)throw new Error(body.error||"No se pudo cargar compras");
+   setSuppliers(body.suppliers||[]);setOrders(body.orders||[]);setMaterials(body.materials||[]);
+  }catch(e:any){setMessage(e?.message||"No se pudo cargar compras")}finally{setLoading(false)}
+ };
+ useEffect(()=>{void load()},[]);
+ useEffect(()=>{setView(initialView)},[initialView]);
 
- const resetRequirement=()=>{setCampaignId("");setSelectedFamilies([]);setSupplierId("");setQuantities({});setPrices({});setMessage("");setShowInstallationDetail(false)};
- const toggleFamily=(family:string)=>{setSelectedFamilies(current=>current.includes(family)?current.filter(x=>x!==family):[...current,family]);setQuantities({});setMessage("")};
- const takeAllPending=()=>{const next:Record<string,number>={};for(const row of visibleRows){const ordered=Number(orderedByMaterial.get(row.material_id)||0);const pending=Math.max(Number(row.qty||0)-ordered,0);if(pending>0)next[row.material_id]=pending}setQuantities(next);setMessage("")};
- const createOrder=async()=>{setMessage("");if(!campaignId){setMessage("Selecciona una campaña.");return}if(!selectedFamilies.length){setMessage("Selecciona al menos una familia.");return}if(!supplierId){setMessage("Selecciona un proveedor.");return}const selections=visibleRows.map(row=>({material_id:row.material_id,qty:Number(quantities[row.material_id]||0),unit_net_price:Number(prices[row.material_id]??row.unit_net_price??0)})).filter(item=>item.qty>0);if(!selections.length){setMessage("Ingresa al menos una cantidad para comprar.");return}const formData=new FormData();formData.set("campaign_id",campaignId);formData.set("supplier_id",supplierId);formData.set("selections",JSON.stringify(selections));setSaving(true);try{const result=await createPurchaseOrderFromConsolidated(formData);setMessage(`OC ${result.order_number} creada en borrador.`);setQuantities({});await loadSupplyContext();router.refresh()}catch(error:any){setMessage(error?.message||"No se pudo crear la OC")}finally{setSaving(false)}};
+ const campaignOptions=useMemo(()=>{
+  const m=new Map<string,{id:string;name:string;client:string}>();
+  for(const s of surveys){if(s.status!=="Confirmada")continue;if(!m.has(s.campaign_id))m.set(s.campaign_id,{id:s.campaign_id,name:campaignName(s.campaigns?.label),client:s.installations?.contracts?.clients?.legal_name||""})}
+  return [...m.values()];
+ },[surveys]);
 
- const selectedFreeSupplier=useMemo(()=>suppliers.find(item=>item.id===freeSupplierId)||null,[suppliers,freeSupplierId]);
- const freeNet=freeLines.reduce((sum,line)=>sum+Number(line.qty||0)*Number(line.unit_net_price||0),0);
- const freeVat=Math.round(freeNet*.19);
- const updateFreeLine=(index:number,key:keyof FreeLine,value:string|number)=>setFreeLines(current=>current.map((line,i)=>i===index?{...line,[key]:value}:line));
- const createFreeOrder=async()=>{setFreeMessage("");if(!freeSupplierId){setFreeMessage("Selecciona un proveedor.");return}const valid=freeLines.filter(line=>Number(line.qty)>0&&(line.line_type==="Servicio"?line.description.trim():Boolean(line.material_id)));if(!valid.length||valid.length!==freeLines.length){setFreeMessage("Selecciona cada producto del Maestro o describe los servicios.");return}const formData=new FormData();formData.set("supplier_id",freeSupplierId);formData.set("lines",JSON.stringify(valid));formData.set("payment_terms",paymentTerms);formData.set("delivery_terms",deliveryTerms);formData.set("conditions",conditions);formData.set("observations",observations);formData.set("vat_rate","19");setFreeSaving(true);try{const result=await createFreePurchaseOrder(formData);setFreeMessage(`OC ${result.order_number} creada en borrador.`);setFreeLines([emptyFreeLine()]);setObservations("");await loadSupplyContext();router.refresh()}catch(error:any){setFreeMessage(error?.message||"No se pudo crear la OC manual")}finally{setFreeSaving(false)}};
+ const needRows=useMemo(()=>{
+  if(!campaignId)return[];
+  const m=new Map<string,{material_id:string;name:string;family:string;presentation:string;unit:string;required:number;committed:number;pending:number;price:number}>();
+  for(const s of surveys.filter(x=>x.campaign_id===campaignId&&x.status==="Confirmada")){
+   for(const l of s.survey_lines||[]){const q=Math.max(0,Number(l.shortage_qty||0));if(!q)continue;const id=l.material_id;const cur=m.get(id)||{material_id:id,name:l.materials?.name||"Material",family:l.materials?.family||"",presentation:l.materials?.presentation||"",unit:l.materials?.unit||"UN",required:0,committed:0,pending:0,price:Number(l.unit_net_price||0)};cur.required+=q;if(!cur.price)cur.price=Number(l.unit_net_price||0);m.set(id,cur)}
+  }
+  for(const o of orders.filter(o=>o.supply_runs?.campaign_id===campaignId&&!isQuote(o)))for(const l of o.purchase_order_lines||[]){if(!l.material_id)continue;const cur=m.get(l.material_id);if(cur)cur.committed+=Number(l.committed_qty||0)}
+  for(const cur of m.values())cur.pending=Math.max(0,cur.required-cur.committed);
+  return [...m.values()].sort((a,b)=>a.family.localeCompare(b.family,"es")||a.name.localeCompare(b.name,"es"));
+ },[surveys,campaignId,orders]);
 
- return <section className="panel consolidatedModule ocFlowModule">
-  <style dangerouslySetInnerHTML={{__html:`
-   .ocChoiceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}.ocChoiceGrid button{display:grid;gap:7px;text-align:left;padding:22px;border:1px solid #c7dbe5;border-radius:14px;background:#fff;color:#173650}.ocChoiceGrid button:hover{border-color:#5daea2;background:#f6fbfa}.ocChoiceGrid b{font-size:18px;color:#0b2f4a}.ocChoiceGrid span{font-size:13px;line-height:1.45;color:#557084}.ocStepHead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}.ocFamilyGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.ocFamilyGrid button{display:grid;gap:4px;text-align:left;padding:14px;border:1px solid #c8dce8;border-radius:12px;background:#fff}.ocFamilyGrid button.active{border-color:#55aa9e;background:#eaf7f4}.ocFamilyGrid small{color:#557084}.ocSummaryStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.ocSummaryStrip span{padding:12px;border-radius:10px;background:#f2f6f8}.ocSummaryStrip b,.ocSummaryStrip small{display:block}.ocInstallationDetail{margin-top:12px}.ocBack{margin-bottom:12px}@media(max-width:900px){.ocFamilyGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.ocSummaryStrip{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.ocChoiceGrid,.ocFamilyGrid,.ocSummaryStrip{grid-template-columns:1fr}}
-  `}}/>
-  <div className="catalogIntro"><div><h2>Generar orden de compra</h2><p>Elige primero el origen de la compra. Solo se despliega el proceso que vas a utilizar.</p></div></div>
+ const usePending=()=>{
+  const q:Record<string,number>={},p:Record<string,number>={};
+  for(const r of needRows){if(r.pending>0){q[r.material_id]=r.pending;p[r.material_id]=r.price}}
+  setSelectedQty(q);setSelectedPrice(p);
+ };
+ const chooseSupplier=(id:string)=>{
+  setSupplierId(id);const s=suppliers.find(x=>x.id===id);setPaymentTerms(s?.payment_terms||"");setConditions(s?.conditions||"");
+ };
+ const createFromNeed=async()=>{
+  setMessage("");setNext(null);
+  if(!campaignId||!supplierId)return setMessage("Selecciona campaña y proveedor.");
+  const selections=needRows.map(r=>({material_id:r.material_id,qty:Number(selectedQty[r.material_id]||0),unit_net_price:Number(selectedPrice[r.material_id]??r.price||0)})).filter(x=>x.qty>0);
+  if(!selections.length)return setMessage("Selecciona cantidades para cotizar o comprar.");
+  const fd=new FormData();fd.set("campaign_id",campaignId);fd.set("supplier_id",supplierId);fd.set("document_kind",documentKind);fd.set("selections",JSON.stringify(selections));
+  setSaving(true);
+  try{
+   const r=await createPurchaseOrderFromConsolidated(fd);
+   setMessage(documentKind==="Cotización"?"Solicitud de cotización creada. La necesidad sigue disponible hasta convertirla en OC.":"Orden de compra creada desde la necesidad consolidada.");
+   setNext({kind:documentKind==="Cotización"?"quote":"order",id:r.id,number:r.order_number});
+   setSelectedQty({});await load();router.refresh();
+  }catch(e:any){setMessage(e?.message||"No se pudo crear el documento")}finally{setSaving(false)}
+ };
 
-  {!mode&&<div className="ocChoiceGrid">
-   <button type="button" onClick={()=>setMode("manual")}><b>Generar OC manual</b><span>Para servicios, software, arriendos, mantenciones o cualquier compra que ALEMSI necesite realizar fuera de una campaña.</span></button>
-   <button type="button" onClick={()=>setMode("requirement")}><b>Generar OC desde requerimiento</b><span>Parte desde una campaña con conteos confirmados, toma el consolidado y permite seleccionar las familias que se comprarán.</span></button>
+ const updateFree=(index:number,patch:Partial<FreeLine>)=>setFreeLines(rows=>rows.map((r,i)=>i===index?{...r,...patch}:r));
+ const changeFreeType=(index:number,type:FreeLine["line_type"])=>updateFree(index,{...emptyLine(),line_type:type});
+ const chooseMaterial=(index:number,id:string)=>{
+  const m=materials.find(x=>x.id===id);updateFree(index,{material_id:id,description:m?.name||"",unit:m?.unit||"UN",unit_net_price:Number(m?.current_net_price||0),supplier_code:m?.supplier_code||""});
+ };
+ const createFree=async()=>{
+  setMessage("");setNext(null);
+  if(!supplierId)return setMessage("Selecciona proveedor.");
+  const valid=freeLines.filter(l=>l.qty>0&&(l.line_type==="Material"?!!l.material_id:!!l.description.trim()));
+  if(!valid.length||valid.length!==freeLines.length)return setMessage("Completa cada línea antes de continuar.");
+  const fd=new FormData();fd.set("supplier_id",supplierId);fd.set("document_kind",documentKind);fd.set("lines",JSON.stringify(valid));fd.set("payment_terms",paymentTerms);fd.set("delivery_terms",deliveryTerms);fd.set("conditions",conditions);fd.set("observations",observations);fd.set("vat_rate","19");
+  setSaving(true);
+  try{
+   const r=await createFreePurchaseOrder(fd);
+   setMessage(documentKind==="Cotización"?"Cotización creada. Puedes registrar la respuesta del proveedor en Documentos.":"Orden de compra creada.");
+   setNext({kind:documentKind==="Cotización"?"quote":"order",id:r.id,number:r.order_number});
+   setFreeLines([emptyLine()]);setObservations("");await load();router.refresh();
+  }catch(e:any){setMessage(e?.message||"No se pudo crear el documento")}finally{setSaving(false)}
+ };
+
+ const editQuote=(line:OrderLine,field:"qty"|"price"|"code",value:string|number)=>{
+  const cur=quoteEdits[line.id]||{qty:Number(line.ordered_qty||0),price:Number(line.unit_net_price||0),code:line.supplier_code||""};
+  setQuoteEdits(x=>({...x,[line.id]:{...cur,[field]:field==="code"?String(value):Number(value)}}));
+ };
+ const quoteValue=(line:OrderLine,field:"qty"|"price"|"code")=>{
+  const e=quoteEdits[line.id];if(e)return e[field];return field==="qty"?Number(line.ordered_qty||0):field==="price"?Number(line.unit_net_price||0):line.supplier_code||"";
+ };
+ const saveQuote=async(o:Order)=>{
+  const fd=new FormData();fd.set("quote_id",o.id);fd.set("lines",JSON.stringify(o.purchase_order_lines.map(l=>({id:l.id,qty:Number(quoteValue(l,"qty")),unit_net_price:Number(quoteValue(l,"price")),supplier_code:String(quoteValue(l,"code"))}))));fd.set("payment_terms",o.payment_terms||"");fd.set("delivery_terms",o.delivery_terms||"");fd.set("conditions",o.conditions||"");
+  setSaving(true);setMessage("");
+  try{await updateQuotationResponse(fd);setMessage("Respuesta de cotización guardada. Ya puedes convertirla en OC.");await load();router.refresh()}catch(e:any){setMessage(e?.message||"No se pudo guardar la cotización")}finally{setSaving(false)}
+ };
+ const convertQuote=async(o:Order)=>{
+  const fd=new FormData();fd.set("quote_id",o.id);setSaving(true);setMessage("");
+  try{const r=await convertQuotationToPurchaseOrder(fd);setMessage("Cotización convertida en "+r.order_number+". No se redigitaron productos ni valores.");setNext({kind:"order",id:r.id,number:r.order_number});await load();router.refresh()}catch(e:any){setMessage(e?.message||"No se pudo convertir la cotización")}finally{setSaving(false)}
+ };
+
+ const selectedSupplier=suppliers.find(x=>x.id===supplierId);
+ const freeNet=freeLines.reduce((sum,l)=>sum+(Number(l.qty)||0)*(Number(l.unit_net_price)||0),0);
+ const quotes=orders.filter(isQuote),purchaseOrders=orders.filter(o=>!isQuote(o));
+
+ return <section className="panel procurement">
+  <div className="procureHead">
+   <div><p className="eyebrow">ABASTECIMIENTO</p><h2>Compras</h2><p>Necesidad, cotización, orden de compra y recepción conectadas en un mismo circuito.</p></div>
+   <nav className="compactTabs"><button className={view==="need"?"active":""} onClick={()=>setView("need")}>Necesidades</button><button className={view==="new"?"active":""} onClick={()=>setView("new")}>Cotizar / comprar</button><button className={view==="documents"?"active":""} onClick={()=>setView("documents")}>Documentos</button></nav>
+  </div>
+  {message&&<div className="nextBar" role="status"><b>{message}</b></div>}
+  {next&&<div className="nextBar nextAction"><span><small>Siguiente acción</small><b>{next.number}</b></span>{next.kind==="quote"?<button type="button" onClick={()=>setView("documents")}>Registrar respuesta / convertir</button>:<a className="btn" href="/?vista=recepcion">Registrar factura y recepción →</a>}<button className="ghostBtn" type="button" onClick={()=>setNext(null)}>Después</button></div>}
+
+  {view==="need"&&<div className="procureSection">
+   <div className="compactFields">
+    <label>Campaña<select value={campaignId} onChange={e=>{setCampaignId(e.target.value);setSelectedQty({});setSelectedPrice({})}}><option value="">Seleccionar</option>{campaignOptions.map(c=><option key={c.id} value={c.id}>{c.name}{c.client?" · "+c.client:""}</option>)}</select></label>
+    <label>Proveedor<select value={supplierId} onChange={e=>chooseSupplier(e.target.value)}><option value="">Seleccionar</option>{suppliers.map(s=><option value={s.id} key={s.id}>{s.legal_name}</option>)}</select></label>
+    <label>Documento<select value={documentKind} onChange={e=>setDocumentKind(e.target.value as any)}><option>Cotización</option><option>Orden de compra</option></select></label>
+    <button type="button" disabled={!needRows.some(r=>r.pending>0)} onClick={usePending}>Usar todos los pendientes</button>
+   </div>
+   {!campaignId?<div className="empty compactEmpty"><b>Selecciona una campaña</b><span>Mostraremos solamente las necesidades confirmadas y aún no cubiertas.</span></div>:<div className="compactTable"><div className="compactRow compactHeader"><span>Producto</span><span>Necesidad</span><span>Cubierto</span><span>Pendiente</span><span>Cantidad</span><span>Valor neto</span></div>{needRows.map(r=><div className="compactRow" key={r.material_id}><span><b>{r.name}</b><small>{[r.family,r.presentation,r.unit].filter(Boolean).join(" · ")}</small></span><span>{r.required}</span><span>{r.committed}</span><span><b>{r.pending}</b></span><span><input aria-label={"Cantidad "+r.name} type="number" min="0" max={r.pending} step="any" value={selectedQty[r.material_id]??0} onChange={e=>setSelectedQty(x=>({...x,[r.material_id]:Math.max(0,Math.min(r.pending,Number(e.target.value)||0))}))}/></span><span><input aria-label={"Precio "+r.name} type="number" min="0" step="any" value={selectedPrice[r.material_id]??r.price} onChange={e=>setSelectedPrice(x=>({...x,[r.material_id]:Math.max(0,Number(e.target.value)||0)}))}/></span></div>)}</div>}
+   <div className="stickyAction"><span>{selectedSupplier?.legal_name||"Sin proveedor"} · {documentKind}</span><button type="button" disabled={saving||!campaignId||!supplierId} onClick={createFromNeed}>{saving?"Guardando…":documentKind==="Cotización"?"Solicitar cotización":"Generar orden de compra"}</button></div>
   </div>}
 
-  {mode==="manual"&&<div>
-   <button type="button" className="linkBtn ocBack" onClick={()=>setMode(null)}>← Volver a opciones</button>
-   <section className="panel">
-    <div className="catalogIntro"><div><h3>OC manual / administrativa</h3><p>Los productos físicos se seleccionan exclusivamente desde el Maestro ALEMSI. Los servicios no inventariables pueden describirse aparte. No modifica carencias de campaña.</p></div><span className="catalogCount">Borrador</span></div>
-    <div className="surveyCampaignFilters"><label>Proveedor<select value={freeSupplierId} onChange={e=>{const id=e.target.value;setFreeSupplierId(id);const supplier=suppliers.find(item=>item.id===id);setPaymentTerms(supplier?.payment_terms||"");setConditions(supplier?.conditions||"")}}><option value="">Seleccionar proveedor</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.legal_name}</option>)}</select></label><label>RUT<input value={selectedFreeSupplier?.rut||""} readOnly placeholder="RUT proveedor"/></label><label>Condición de pago<input value={paymentTerms} onChange={e=>setPaymentTerms(e.target.value)} placeholder="Ej. 30 días fecha factura"/></label><label>Plazo/condición de entrega<input value={deliveryTerms} onChange={e=>setDeliveryTerms(e.target.value)} placeholder="Ej. entrega inmediata"/></label></div>
-    <div className="table" style={{marginTop:12}}>{freeLines.map((line,index)=><div className="row" key={`free-${index}`} style={{flexWrap:"wrap",alignItems:"end"}}>
- <label>Tipo<select value={line.line_type} onChange={e=>setFreeLines(current=>current.map((item,i)=>i===index?{...emptyFreeLine(),line_type:e.target.value as "Material"|"Servicio"}:item))}><option value="Material">Producto del Maestro</option><option value="Servicio">Servicio / concepto no inventariable</option></select></label>
- {line.line_type==="Material"?<label style={{flex:2,minWidth:240}}>Producto ALEMSI<select value={line.material_id} onChange={e=>{const material=masterMaterials.find(m=>m.id===e.target.value);setFreeLines(current=>current.map((item,i)=>i===index?{...item,material_id:material?.id||"",description:material?.name||"",unit:material?.unit||"UN",unit_net_price:Number(material?.current_net_price||0)}:item))}}><option value="">Seleccionar producto existente</option>{masterMaterials.map(m=><option key={m.id} value={m.id}>{m.name}{m.presentation?` · ${m.presentation}`:""}</option>)}</select></label>:<label style={{flex:2,minWidth:240}}>Descripción del servicio<input value={line.description} onChange={e=>updateFreeLine(index,"description",e.target.value)} placeholder="Servicio, licencia, arriendo..."/></label>}
- <label>Cantidad<input type="number" min="0.01" step="any" value={line.qty} onChange={e=>updateFreeLine(index,"qty",Number(e.target.value))}/></label>
- <label>Unidad<input value={line.unit} readOnly={line.line_type==="Material"} onChange={e=>updateFreeLine(index,"unit",e.target.value)}/></label>
- <label>Precio neto<input type="number" min="0" step="any" value={line.unit_net_price} onChange={e=>updateFreeLine(index,"unit_net_price",Number(e.target.value))}/></label>
- <button type="button" onClick={()=>setFreeLines(current=>current.length===1?[emptyFreeLine()]:current.filter((_,i)=>i!==index))}>Quitar</button>
- </div>)}</div>
-    <button type="button" className="linkBtn" onClick={()=>setFreeLines(current=>[...current,emptyFreeLine()])}>+ Agregar concepto</button>
-    <div className="surveyCampaignFilters" style={{marginTop:12}}><label>Condiciones de la OC<textarea rows={3} value={conditions} onChange={e=>setConditions(e.target.value)}/></label><label>Observaciones<textarea rows={3} value={observations} onChange={e=>setObservations(e.target.value)}/></label></div>
-    <div className="campaignMetrics" style={{marginTop:12}}><span><b>{money(freeNet)}</b><small>Neto</small></span><span><b>{money(freeVat)}</b><small>IVA 19%</small></span><span><b>{money(freeNet+freeVat)}</b><small>Total</small></span></div>
-    <div className="campaignCardHead" style={{marginTop:12}}><span><small>La OC queda disponible para revisión y posterior envío al proveedor.</small></span><button type="button" disabled={freeSaving} onClick={createFreeOrder}>{freeSaving?"Generando...":"Generar OC manual"}</button></div>
-    {freeMessage&&<p className="note"><b>{freeMessage}</b></p>}
-   </section>
+  {view==="new"&&<div className="procureSection">
+   <div className="compactFields">
+    <label>Documento<select value={documentKind} onChange={e=>setDocumentKind(e.target.value as any)}><option>Cotización</option><option>Orden de compra</option></select></label>
+    <label className="grow2">Proveedor<select value={supplierId} onChange={e=>chooseSupplier(e.target.value)}><option value="">Seleccionar proveedor</option>{suppliers.map(s=><option value={s.id} key={s.id}>{s.legal_name}{s.rut?" · "+s.rut:""}</option>)}</select></label>
+    <label>Pago<input value={paymentTerms} onChange={e=>setPaymentTerms(e.target.value)} placeholder="30 días"/></label>
+    <label>Entrega<input value={deliveryTerms} onChange={e=>setDeliveryTerms(e.target.value)} placeholder="Entrega inmediata"/></label>
+   </div>
+   <div className="lineEditor">
+    <div className="lineEditorHead"><b>Conceptos</b><button type="button" onClick={()=>setFreeLines(x=>[...x,emptyLine()])}>+ Agregar</button></div>
+    {freeLines.map((l,i)=><div className="purchaseLine" key={i}>
+      <select aria-label="Tipo" value={l.line_type} onChange={e=>changeFreeType(i,e.target.value as FreeLine["line_type"])}><option value="Material">Maestro</option><option value="Producto nuevo">Producto nuevo</option><option value="Servicio">Servicio</option></select>
+      {l.line_type==="Material"?<select className="lineDescription" value={l.material_id} onChange={e=>chooseMaterial(i,e.target.value)}><option value="">Buscar / seleccionar producto</option>{materials.map(m=><option key={m.id} value={m.id}>{m.name}{m.presentation?" · "+m.presentation:""}</option>)}</select>:<input className="lineDescription" value={l.description} onChange={e=>updateFree(i,{description:e.target.value})} placeholder={l.line_type==="Producto nuevo"?"Descripción del producto a cotizar":"Descripción del servicio"}/>}
+      <input className="lineCode" value={l.supplier_code} onChange={e=>updateFree(i,{supplier_code:e.target.value})} placeholder="Código"/>
+      <input className="lineQty" type="number" min=".01" step="any" value={l.qty} onChange={e=>updateFree(i,{qty:Number(e.target.value)})} aria-label="Cantidad"/>
+      <input className="lineUnit" value={l.unit} readOnly={l.line_type==="Material"} onChange={e=>updateFree(i,{unit:e.target.value})} aria-label="Unidad"/>
+      <input className="linePrice" type="number" min="0" step="any" value={l.unit_net_price} onChange={e=>updateFree(i,{unit_net_price:Number(e.target.value)})} aria-label="Precio neto"/>
+      <b className="lineTotal">{money(l.qty*l.unit_net_price)}</b>
+      <button type="button" className="removeBtn" aria-label="Quitar línea" onClick={()=>setFreeLines(x=>x.length===1?[emptyLine()]:x.filter((_,ix)=>ix!==i))}>×</button>
+    </div>)}
+   </div>
+   <div className="compactFields">
+    <label className="grow2">Condiciones<textarea rows={2} value={conditions} onChange={e=>setConditions(e.target.value)}/></label>
+    <label className="grow2">Observaciones<textarea rows={2} value={observations} onChange={e=>setObservations(e.target.value)}/></label>
+   </div>
+   <div className="stickyAction"><span><b>Neto {money(freeNet)}</b> · Total aprox. {money(freeNet*1.19)}</span><button type="button" disabled={saving||!supplierId} onClick={createFree}>{saving?"Guardando…":documentKind==="Cotización"?"Crear solicitud de cotización":"Crear orden de compra"}</button></div>
   </div>}
 
-  {mode==="requirement"&&<div>
-   <button type="button" className="linkBtn ocBack" onClick={()=>{resetRequirement();setMode(null)}}>← Volver a opciones</button>
-   <section className="panel">
-    <div className="ocStepHead"><div><h3>OC desde campaña / consolidado</h3><p>Selecciona una campaña y después las familias que quieres comprar.</p></div></div>
-    <label>1. Campaña<select value={campaignId} onChange={e=>{setCampaignId(e.target.value);setSelectedFamilies([]);setQuantities({});setPrices({});setMessage("");setShowInstallationDetail(false)}}><option value="">Seleccionar campaña con conteos confirmados</option>{campaigns.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-    {campaignId&&<>
-     <div className="ocSummaryStrip"><span><b>{globalRows.length}</b><small>Productos con necesidad</small></span><span><b>{globalRows.reduce((s,r)=>s+Number(r.qty||0),0)}</b><small>Unidades consolidadas</small></span><span><b>{filtered.length}</b><small>Instalaciones contabilizadas</small></span><span><b>{families.length}</b><small>Familias disponibles</small></span></div>
-     <h4>2. Familias a comprar</h4>
-     {families.length?<div className="ocFamilyGrid">{families.map(item=><button type="button" key={item.family} className={selectedFamilies.includes(item.family)?"active":""} onClick={()=>toggleFamily(item.family)}><b>{item.family}</b><small>{item.products} producto{item.products===1?"":"s"} · {item.qty} unidades</small></button>)}</div>:<div className="empty"><b>Sin necesidades pendientes</b><span>La campaña no contiene carencias para generar una OC.</span></div>}
-     {selectedFamilies.length>0&&<>
-      <div className="catalogIntro"><div><h4>3. Preparar OC</h4><p>{selectedFamilies.length} familia{selectedFamilies.length===1?"":"s"} seleccionada{selectedFamilies.length===1?"":"s"}. El detalle por instalación queda disponible solo como respaldo.</p></div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button type="button" onClick={takeAllPending}>Tomar todo pendiente</button><button type="button" className="linkBtn" onClick={()=>setQuantities({})}>Limpiar</button><button type="button" className="linkBtn" onClick={()=>setShowInstallationDetail(v=>!v)}>{showInstallationDetail?"Ocultar origen":"Ver origen por instalación"}</button></div></div>
-      {showInstallationDetail&&<div className="ocInstallationDetail">{installations.filter(x=>x.lines.length).map(group=><article className="campaignCard" key={group.installation_id}><div className="campaignCardHead"><span><b>{group.name}</b><small>{group.client} · {group.contract}{group.region?` · ${group.region}`:""}</small></span><strong>{group.lines.length} líneas</strong></div><div className="table">{group.lines.map((line:SurveyLine)=><div className="row" key={line.id||line.material_id}><span><b>{line.materials?.name||"Material"}</b><small>{line.materials?.family||"Sin familia"}</small></span><b>{Number(line.shortage_qty||0)}</b></div>)}</div></article>)}</div>}
-      <label>Proveedor<select value={supplierId} onChange={e=>setSupplierId(e.target.value)}><option value="">Seleccionar proveedor para esta OC</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.legal_name}</option>)}</select></label>
-      <div className="table" style={{marginTop:12}}>{visibleRows.map(row=>{const ordered=Number(orderedByMaterial.get(row.material_id)||0);const pending=Math.max(Number(row.qty||0)-ordered,0);return <div className="row" key={`oc-${row.material_id}`}><span><b>{row.material?.name||"Material"}</b><small>{familyName(row)} · Necesidad {row.qty} · Ya en OC {ordered} · Pendiente {pending}</small></span><label>Cantidad OC<input type="number" min="0" max={pending} step="any" value={quantities[row.material_id]??""} disabled={pending<=0} onChange={e=>setQuantities(current=>({...current,[row.material_id]:Number(e.target.value)}))}/></label><label>Precio neto<input type="number" min="0" step="any" value={prices[row.material_id]??row.unit_net_price??0} onChange={e=>setPrices(current=>({...current,[row.material_id]:Number(e.target.value)}))}/></label></div>})}</div>
-      <div className="campaignCardHead" style={{marginTop:12}}><span><small>Total neto de esta OC</small><b>{money(orderTotal)}</b></span><button type="button" disabled={saving} onClick={createOrder}>{saving?"Generando...":"Generar OC en borrador"}</button></div>
-      {message&&<p className="note"><b>{message}</b></p>}
-     </>}
-    </>}
-   </section>
+  {view==="documents"&&<div className="procureSection">
+   {loading?<div className="empty compactEmpty"><b>Cargando documentos…</b></div>:<>
+    <div className="documentGroup"><h3>Cotizaciones <span>{quotes.length}</span></h3>{quotes.length?quotes.map(o=><article className="procDocument" key={o.id}><header><span><b>{o.order_number||"Cotización"}</b><small>{suppliers.find(s=>s.id===o.supplier_id)?.legal_name||"Proveedor"} · {o.status}</small></span><strong>{money(o.total_net)}</strong></header>
+      {!/convertid|anulad|cancelad/i.test(o.status)&&<div className="quoteLines">{o.purchase_order_lines.map(l=><div className="quoteLine" key={l.id}><span><b>{l.description||materials.find(m=>m.id===l.material_id)?.name||"Producto"}</b><small>{l.line_type||"Material"} · {l.unit||"UN"}</small></span><label>Cant.<input type="number" min=".01" step="any" value={quoteValue(l,"qty")} onChange={e=>editQuote(l,"qty",e.target.value)}/></label><label>Neto<input type="number" min="0" step="any" value={quoteValue(l,"price")} onChange={e=>editQuote(l,"price",e.target.value)}/></label><label>Código<input value={quoteValue(l,"code")} onChange={e=>editQuote(l,"code",e.target.value)}/></label></div>)}</div>}
+      <footer>{!/convertid|anulad|cancelad/i.test(o.status)&&<><button disabled={saving} type="button" onClick={()=>saveQuote(o)}>Guardar respuesta</button><button disabled={saving} type="button" onClick={()=>convertQuote(o)}>Convertir a OC</button></>}<small>{o.payment_terms||"Condición de pago pendiente"}{o.delivery_terms?" · "+o.delivery_terms:""}</small></footer>
+    </article>):<div className="empty compactEmpty"><b>Sin cotizaciones</b></div>}</div>
+    <div className="documentGroup"><h3>Órdenes de compra <span>{purchaseOrders.length}</span></h3>{purchaseOrders.length?purchaseOrders.map(o=><article className="procDocument compactDoc" key={o.id}><header><span><b>{o.order_number||"OC"}</b><small>{suppliers.find(s=>s.id===o.supplier_id)?.legal_name||"Proveedor"} · {o.status}</small></span><strong>{money(o.total_net)}</strong></header><footer><a className="btn" href={"/ordenes-compra/"+o.id}>Ver documento</a>{!isClosed(o)&&<a className="btn" href="/?vista=recepcion">Factura / recepción →</a>}</footer></article>):<div className="empty compactEmpty"><b>Sin órdenes de compra</b></div>}</div>
+   </>}
   </div>}
-  <p className="note"><b>Flujo posterior:</b> OC borrador → revisión/envío al proveedor → recepción → factura → cotejo de cantidades y precios → aceptación → inventario y Finanzas.</p>
  </section>;
 }
