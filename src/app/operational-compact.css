@@ -233,3 +233,33 @@
  .surveyEditorStandalone .surveyMaterialList article{grid-template-columns:1fr}.surveyEditorActions{display:grid;grid-template-columns:1fr 1fr}
  .surveySavedNext{display:grid}.surveySavedNext>span{display:grid}.surveySavedNext button{width:100%}
 }
+
+
+/* Acceso remoto compacto: acción secundaria, sin bloque vertical extra. */
+.surveyAccessCompact{
+ display:grid;
+ grid-template-columns:auto minmax(180px,1fr) auto auto auto;
+ gap:6px;
+ align-items:center;
+ padding:6px 8px;
+ border:1px solid #d9e6e9;
+ border-radius:8px;
+ background:#f8fbfc;
+}
+.surveyAccessMeta{display:grid;gap:0;min-width:110px}
+.surveyAccessMeta b{font-size:13px}
+.surveyAccessMeta small{font-size:11px!important;color:#607887}
+.surveyAccessCompact input{min-height:34px!important;padding:4px 7px!important}
+.surveyAccessCompact button{min-height:34px!important;padding:5px 8px!important;white-space:nowrap}
+.surveyAccessStatus{
+ grid-column:2/-1;
+ font-size:12px!important;
+ color:#476574;
+ line-height:1.25;
+}
+@media(max-width:700px){
+ .surveyAccessCompact{grid-template-columns:1fr auto auto}
+ .surveyAccessMeta{grid-column:1/-1}
+ .surveyAccessCompact input{grid-column:1/-1}
+ .surveyAccessStatus{grid-column:1/-1}
+}
