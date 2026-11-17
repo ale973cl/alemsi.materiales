@@ -1,0 +1,87 @@
+/* Lectura amplia, navegación estable, acciones compactas y uso táctil. */
+.simpleApp{font-size:16px;line-height:1.45;--font-size-body:16px;--font-size-small:14px;--ui-button-font:15px;--ui-button-height:36px;--ui-control-height:40px}
+.simpleApp .simpleBody{display:grid;grid-template-columns:200px minmax(0,1fr);align-items:start}
+.simpleApp .simpleSidebar{position:sticky;top:0;width:200px;min-width:0;height:100vh;padding:8px;overflow:auto;transition:none;box-shadow:none}
+.simpleApp .simpleSidebar:hover{width:200px;box-shadow:none}
+.simpleApp .simpleSidebar .productTitle{font-size:17px;height:auto;min-height:36px;padding:8px;margin:0 0 6px;line-height:1.2;white-space:normal}
+.simpleApp .simpleSidebar .productTitle:before,.simpleApp .simpleSidebar .nav:before{content:none}
+.simpleApp .simpleSidebar .nav{height:auto;min-height:36px;width:100%;font-size:15px;line-height:1.3;white-space:normal;padding:6px 8px;gap:8px;margin:2px 0;text-align:left}
+.simpleApp .simpleNavNumber{font-size:12px;flex-shrink:0}
+.simpleApp .simpleWorkspace{width:100%;max-width:none;min-width:0;margin:0;padding:12px 16px}
+.simpleApp .simpleTop{height:54px;min-height:54px;padding:4px 12px}
+.simpleApp .simpleLogoButton img{max-height:44px}
+.simpleApp .simplePageHead{margin:0 0 8px;gap:8px}
+.simpleApp .simplePageHead h1{font-size:clamp(24px,2vw,29px);line-height:1.2;margin:0}
+.simpleApp .simplePageHead .eyebrow{display:none}
+.simpleApp .simpleSubnav{margin:0 0 10px;padding:0 0 8px;gap:6px}
+.simpleApp .simpleSubnav button{padding:6px 10px;font-size:15px;min-height:36px;flex:0 1 auto}
+.simpleApp .simpleBack{padding:6px 10px;min-height:36px;font-size:14px}
+.simpleApp .panel{font-size:16px;padding:12px;border-radius:9px;margin-bottom:10px}
+.simpleApp .panel h2,.simpleApp .catalogIntro h2{font-size:21px;margin:0 0 4px}
+.simpleApp .panel h3{font-size:18px;margin:8px 0}
+.simpleApp .panel p{font-size:16px;line-height:1.4;margin:5px 0 8px}
+.simpleApp small,.simpleApp .panel small,.simpleApp .row small{font-size:14px;line-height:1.4;color:#425968}
+.simpleApp label{font-size:15px;line-height:1.3}
+.simpleApp button:not(.simpleLogoButton):not(.nav),.simpleApp .btn{font-size:15px;min-height:36px;padding:6px 10px;border-radius:7px;line-height:1.25;max-width:100%}
+.simpleApp input:not([type=checkbox]):not([type=radio]),.simpleApp select,.simpleApp textarea{font-size:16px;min-height:40px;padding:7px 9px;max-width:100%;min-width:0}
+.simpleApp input[type=checkbox],.simpleApp input[type=radio]{width:20px;height:20px;min-height:0;flex-shrink:0;accent-color:#087a73}
+.simpleApp .catalogIntro{gap:8px;margin-bottom:8px;align-items:center}
+.simpleApp .simpleHomeGrid,.simpleApp .mastersLanding{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:7px}
+.simpleApp .simpleHomeTile,.simpleApp .mastersLanding button{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;position:static;min-height:42px;padding:8px 10px;box-shadow:none;text-align:left}
+.simpleApp .simpleHomeTile strong,.simpleApp .mastersLanding button b{font-size:16px;line-height:1.3}
+.simpleApp .mastersLanding button{flex-wrap:wrap}
+.simpleApp .mastersLanding button span{font-size:14px;line-height:1.4;flex:1 1 100%}
+.simpleApp .simpleTileArrow{position:static;align-self:center;margin:0 0 0 auto;font-size:18px}
+.simpleApp .simpleSummary{gap:6px;margin-top:10px}
+.simpleApp .simpleSummary>span{padding:7px 9px;font-size:14px}
+.simpleApp .dispatchBuckets{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0!important;overflow:visible}
+.simpleApp .dispatchBuckets button{white-space:normal;min-width:0;gap:5px;font-size:15px;padding:6px 8px}
+.simpleApp .dispatchFilters{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:6px;margin-bottom:9px}
+.simpleApp .dispatchFilters input,.simpleApp .dispatchFilters select{width:100%}
+.simpleApp .dispatchSuggestionRow{display:grid;grid-template-columns:24px minmax(150px,1.4fr) minmax(120px,1fr) minmax(120px,1fr) minmax(90px,.6fr) auto;gap:8px;align-items:center;padding:8px 10px;border-top:1px solid #e3edf2;font-size:15px}
+.simpleApp .dispatchSuggestionRow>div{min-width:0;overflow-wrap:anywhere}
+.simpleApp .dispatchSuggestionRow button{width:auto!important;min-height:36px}
+.simpleApp table th,.simpleApp table td{font-size:15px;line-height:1.35}
+.simpleApp .modal{padding:14px;max-height:94dvh;overflow:auto}
+.simpleApp .modalHead{gap:8px;margin-bottom:8px}
+.simpleApp .modalHead h2{font-size:22px;margin:0}
+.simpleApp .modal p,.simpleApp .modal label{font-size:16px}
+.simpleApp .installationGrid article>.contractActions button{font-size:14px!important;min-width:0;padding:6px 8px!important}
+.simpleApp .materialProfileHelp,.simpleApp .materialProfileFoot,.simpleApp .profileField,.simpleApp .materialProfileToggle b{font-size:15px!important}
+.simpleApp .materialProfileToggle small,.simpleApp .profileMetric small,.simpleApp .profileField small{font-size:14px!important}
+.simpleApp .materialProfileDedicated article{min-height:0}
+.simpleApp .surveyInstallationCard .surveyMaterialList article>span:first-child b{font-size:16px}
+.simpleApp button:disabled{cursor:not-allowed;opacity:.64}
+.simpleApp button:focus-visible,.simpleApp input:focus-visible,.simpleApp select:focus-visible,.simpleApp a:focus-visible{outline:2px solid #087a73;outline-offset:2px}
+@media(max-width:1000px){
+ .simpleApp .simpleBody{display:block}
+ .simpleApp .simpleSidebar,.simpleApp .simpleSidebar:hover{position:static;width:100%;height:auto;padding:6px;display:flex;gap:5px;overflow-x:auto;box-shadow:none;align-items:center}
+ .simpleApp .simpleSidebar .productTitle{display:none}
+ .simpleApp .simpleSidebar .nav{flex:0 0 auto;width:auto;min-height:44px;white-space:nowrap;margin:0;padding:7px 9px;font-size:15px}
+ .simpleApp .simpleNavNumber{display:none}
+ .simpleApp .simpleWorkspace{padding:10px}
+ .simpleApp .dispatchSuggestionRow{grid-template-columns:24px minmax(0,1.4fr) minmax(0,1fr) auto;gap:7px}
+ .simpleApp .dispatchSuggestionRow>div:nth-child(4){grid-column:2}
+ .simpleApp .dispatchSuggestionRow>div:nth-child(5){grid-column:3}
+ .simpleApp .dispatchSuggestionRow>div:last-child{grid-column:4;grid-row:1/3}
+}
+@media(max-width:600px){
+ .simpleApp .simpleWorkspace{padding:8px}
+ .simpleApp .panel{padding:9px}
+ .simpleApp .simpleTopRight>span{display:none}
+ .simpleApp .simpleHomeGrid,.simpleApp .mastersLanding{grid-template-columns:1fr}
+ .simpleApp .simpleHomeTile{min-height:44px;gap:8px}
+ .simpleApp .simpleSubnav button,.simpleApp button:not(.simpleLogoButton):not(.nav),.simpleApp .btn{min-height:44px;padding:6px 9px}
+ .simpleApp .dispatchBuckets button{flex:1 1 auto;justify-content:center;font-size:14px}
+ .simpleApp .dispatchFilters{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .simpleApp .dispatchFilters input{grid-column:1/-1}
+ .simpleApp .dispatchSuggestionRow{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr)!important;gap:6px!important;padding:8px!important}
+ .simpleApp .dispatchSuggestionRow>div:nth-child(2){grid-column:2/-1}
+ .simpleApp .dispatchSuggestionRow>div:nth-child(3){grid-column:2}
+ .simpleApp .dispatchSuggestionRow>div:nth-child(4){grid-column:3}
+ .simpleApp .dispatchSuggestionRow>div:nth-child(5){grid-column:2}
+ .simpleApp .dispatchSuggestionRow>div:last-child{grid-column:3;grid-row:auto}
+ .simpleApp .dispatchSuggestionRow>div button{width:auto!important}
+ .simpleApp .modalBg{padding:5px}
+ .simpleApp .modal{max-width:100%!important;width:100%!important;padding:10px;max-height:95dvh!important}
+}
