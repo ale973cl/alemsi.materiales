@@ -5,6 +5,7 @@ import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
 import {coveredCampaignQuantity} from "@/lib/campaign-dispatch-balance";
 import {enqueueModuleEmail} from "@/lib/email-queue";
+import {formatInternalGuideNumber} from "@/lib/guide-number";
 
 const PRE_OUTPUT=["Borrador","Pendiente","En preparación","Listo para despacho"];
 
@@ -108,7 +109,7 @@ export async function registerDeliveryWithEmail(input:{dispatchId:string;recipie
     const contract:any=Array.isArray(installation?.contracts)?installation.contracts[0]:installation?.contracts;
     const client:any=Array.isArray(contract?.clients)?contract.clients[0]:contract?.clients;
     const base=await origin();
-    const queued=await enqueueModuleEmail(supabase,{module:"dispatch",event:"signed_delivery_copy",emailType:"signed_delivery_copy",relatedTable:"dispatches",relatedId:input.dispatchId,subject:`Comprobante de entrega ${d?.internal_number||""} · ALEMSI`,summary:"Se registró la entrega de materiales. Este correo corresponde al respaldo informado por la persona que recibió.",to:[email],facts:{Cliente:client?.legal_name||"—",Contrato:contract?.name||"—",Instalación:installation?.name||"—",Receptor:input.recipientName,Estado:String(status||"Entregado")},actionUrl:base?`${base}/despachos/${input.dispatchId}/guia`:null,idempotencyKey:`signed-delivery:${input.dispatchId}:${String(status)}`});
+    const queued=await enqueueModuleEmail(supabase,{module:"dispatch",event:"signed_delivery_copy",emailType:"signed_delivery_copy",relatedTable:"dispatches",relatedId:input.dispatchId,subject:`Comprobante de entrega ${formatInternalGuideNumber(d?.internal_number)} · ALEMSI`,summary:"Se registró la entrega de materiales. Este correo corresponde al respaldo informado por la persona que recibió.",to:[email],facts:{Cliente:client?.legal_name||"—",Contrato:contract?.name||"—",Instalación:installation?.name||"—",Receptor:input.recipientName,Estado:String(status||"Entregado")},actionUrl:base?`${base}/despachos/${input.dispatchId}/guia`:null,idempotencyKey:`signed-delivery:${input.dispatchId}:${String(status)}`});
     emailStatus=String((queued as any)?.status||(queued as any)?.delivery?.status||"Pendiente");
   }catch(mailError){
     emailError=mailError instanceof Error?mailError.message:String(mailError);
