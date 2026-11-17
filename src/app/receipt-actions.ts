@@ -39,6 +39,7 @@ export async function registerPurchaseOrderReceipt(formData:FormData){
  const masterLines=new Map((poLines||[]).map((l:any)=>[String(l.id),l]));
  const {data:previousReceipts,error:previousError}=await supabase.from("receipts").select("id,supplier_id,document_type,document_folio,receipt_lines(purchase_order_line_id,received_qty)").eq("purchase_order_id",purchaseOrderId);
  if(previousError)throw new Error(previousError.message);
+ if((previousReceipts||[]).length)throw new Error("Esta OC ya tiene un documento registrado. Coteja ese documento; los faltantes se tramitan en una nueva OC.");
  if((previousReceipts||[]).some((r:any)=>String(r.document_type||"")===documentType&&String(r.document_folio||"").trim().toLowerCase()===documentFolio.toLowerCase()))throw new Error("Este folio ya está vinculado a la OC");
  const previous=new Map<string,number>();
  for(const r of previousReceipts||[])for(const l of (r as any).receipt_lines||[]){const key=String(l.purchase_order_line_id||"");previous.set(key,(previous.get(key)||0)+Number(l.received_qty||0))}
