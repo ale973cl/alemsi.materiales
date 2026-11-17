@@ -22,8 +22,8 @@ const mainNav=[["campañas","Planificación"],["levantamientos","Levantamientos"
 const quickLinks:Record<string,[string,string][]>={
  campañas:[["campañas","Campañas"],["levantamientos","Realizar levantamiento"]],
  levantamientos:[["campañas","Planificación"],["levantamientos","Levantamientos"],["consolidado","Ver necesidades"]],
- consolidado:[["consolidado","Necesidades y generar OC"],["compras","Órdenes de compra"],["recepcion","Recepción"],["preparacion","Preparar materiales"]],
- inventario:[["inventario","Existencias"],["recepcion","Recibir materiales"],["preparacion","Preparar despacho"]],
+ consolidado:[["consolidado","Necesidades y generar OC"],["compras","Órdenes de compra"],["recepcion","Facturas y recepción"],["preparacion","Preparar materiales"]],
+ inventario:[["inventario","Existencias"],["recepcion","Facturas y entrada de mercadería"],["preparacion","Preparar despacho"]],
  preparacion:[["preparacion","Necesidades pendientes"],["entregas","Preparar tanda y guías"]],
  entregas:[["preparacion","Consolidado"],["entregas","Guías, rutas y entregas"]]
 };
@@ -45,7 +45,7 @@ export default function OperationalApp({initialTab,profile,summary,campaigns,act
    <div className="simplePageHead"><div><p className="eyebrow">ALEMSI · OPERACIÓN</p><h1>{navTitle}</h1></div>{tab!=="inicio"&&<button type="button" className="simpleBack" onClick={()=>navigate("inicio")}>← Inicio</button>}</div>
    {currentLinks.length>0&&<nav className="simpleSubnav" aria-label="Vistas de trabajo">{currentLinks.map(([id,name])=><button key={id} type="button" className={tab===id?"active":""} onClick={()=>navigate(id)}>{name}</button>)}</nav>}
    {tab==="inicio"&&<><p className="simpleLead">Selecciona la tarea que necesitas realizar.</p><section className="simpleHomeGrid">{mainNav.map(([id,name],i)=><button key={id} className="simpleHomeTile" type="button" onClick={()=>navigate(id)}><span className="simpleTileNumber">0{i+1}</span><strong>{name}</strong><span className="simpleTileArrow">→</span></button>)}</section><section className="simpleSummary"><span>Campañas abiertas <b>{summary.openCampaigns}</b></span><span>Levantamientos pendientes <b>{summary.pendingSurveys}</b></span><span>Entregas pendientes <b>{summary.openDispatches}</b></span></section></>}
-   {tab==="clientes"&&<MastersModule simple role={profile.role} materials={masterMaterialCatalog} materialSourceCount={materialCatalogSourceCount} materialError={materialCatalogError} clients={masterClientInstallations} campaigns={campaigns} users={users} access={userInstallationAccess} currentUserId={profile.id}/>}
+   {tab==="clientes"&&<MastersModule role={profile.role} materials={masterMaterialCatalog} materialSourceCount={materialCatalogSourceCount} materialError={materialCatalogError} clients={masterClientInstallations} campaigns={campaigns} users={users} access={userInstallationAccess} currentUserId={profile.id}/>}
    {tab==="campañas"&&<CampaignsModule campaigns={campaigns} clients={clientInstallations} onOpenSurveys={(campaignId,installationId)=>{setSelectedCampaignId(campaignId);setSelectedSurveyInstallationId(installationId||"");navigate("levantamientos")}}/>}
    {tab==="levantamientos"&&<SurveyCampaignSelector campaigns={activeCampaigns} surveys={consolidatedSurveys} selectedCampaignId={selectedCampaignId} onSelect={id=>{setSelectedCampaignId(id);setSelectedSurveyInstallationId("")}} selectedInstallationId={selectedSurveyInstallationId} onSelectInstallation={setSelectedSurveyInstallationId}/>}
    {tab==="consolidado"&&<ConsolidatedSupplyModule surveys={consolidatedSurveys}/>}
