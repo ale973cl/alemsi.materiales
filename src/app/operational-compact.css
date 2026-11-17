@@ -287,3 +287,59 @@
 .inventory .kardex{overflow:auto;border:1px solid #e1e9ec;border-radius:8px}.inventory .krow{display:grid;grid-template-columns:145px 105px 85px 115px minmax(220px,1fr);gap:8px;padding:7px 8px;border-bottom:1px solid #edf1f2;min-width:720px}.inventory .kh{font-weight:800;background:#f5f8f9}.inventory .negative{color:#b42318}
 @media(max-width:900px){.inventorySummary{grid-template-columns:repeat(2,1fr)}.inventory .stockHead{grid-template-columns:2fr 1fr 1fr}.inventory .stockHead span:nth-of-type(2),.inventory .stockHead span:nth-of-type(3){display:none}.inventoryCountGrid{grid-template-columns:1fr 1fr}.inventoryCountGrid .wide{grid-column:1/-1}}
 @media(max-width:600px){.inventoryHead,.inventoryDetailHead{display:grid}.inventory .stockHead{grid-template-columns:1fr 1fr}.inventory .stockHead>span:first-child{grid-column:1/-1}.inventory .stockHead strong{grid-column:1/-1}.inventoryDetailActions{align-items:flex-start;flex-direction:column}.inventoryCountActions{display:grid;grid-template-columns:1fr 1fr}}
+
+
+/* Pantallas dedicadas de administración y recepción. */
+.materialDedicatedHead,.receiptDedicatedHead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px}
+.materialDedicatedHead>div,.receiptDedicatedHead>div{display:grid;gap:3px}
+.materialDedicatedHead h2,.receiptDedicatedHead h2{margin:0!important;font-size:22px!important}
+.materialDedicatedHead p,.receiptDedicatedHead p{margin:0!important}
+.dedicatedActions,.receiptDedicatedActions{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;margin-top:9px}
+.tableActionGroup{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap}
+.materialPriceForm{max-width:620px}
+.receiptSummary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.receiptSummary span{display:grid;gap:1px;border:1px solid #dfe6ea;border-radius:8px;padding:7px 8px;background:#fff}
+.receiptSummary small{font-size:12px!important}
+.receiptDocument{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:9px 0}
+.receiptDocument label,.receiptShipping label{display:grid;gap:3px;font-weight:700}
+.receiptDocument input,.receiptDocument select,.receiptShipping input,.receiptShipping select,.receiptShipping textarea,.receiptRow input{width:100%;box-sizing:border-box}
+.receiptTable{overflow:auto;border:1px solid #dfe6ea;border-radius:8px}
+.receiptRow{display:grid;grid-template-columns:minmax(220px,2fr) repeat(5,minmax(90px,1fr));gap:7px;align-items:center;padding:7px 8px;border-bottom:1px solid #e7ecef;min-width:820px}
+.receiptRow>span:first-child{display:grid;gap:1px}.receiptHeader{font-weight:800;background:#f4f7f8}
+.receiptShipping{display:grid;grid-template-columns:1fr 1fr 2fr;gap:7px;margin:9px 0}
+.receiptRecordedTable{overflow:auto;border:1px solid #dfe6ea;border-radius:8px}
+.receiptRecordedTable table{border-collapse:collapse;width:100%;min-width:560px;font-size:12px}
+.receiptRecordedTable th,.receiptRecordedTable td{text-align:left;padding:8px;border-bottom:1px solid #dfe9ee}
+.receiptExtracted,.receiptReconcilePage{padding:8px 9px;margin:8px 0;border:1px solid #c5dde0;border-radius:8px;background:#f8fbfc}
+.receiptExtracted h4,.receiptReconcilePage h3{margin:0 0 4px!important}
+.receiptExtracted p,.receiptReconcilePage p{margin:0 0 7px!important;font-size:13px!important}
+.receiptReconcilePage label{display:grid;gap:3px;font-weight:700;max-width:360px}
+.supplierEditor,.csvPreview{padding:10px;border:1px solid #c4ded9;border-radius:8px;background:#f8fbfa}
+.supplierSection{margin-top:10px;padding-top:9px;border-top:1px solid #dbe7ec}
+.supplierSection:first-of-type{margin-top:0;padding-top:0;border-top:0}
+.supplierSectionTitle{display:block;margin-bottom:6px;font-size:12px;font-weight:800;text-transform:uppercase;color:#557084}
+.supplierGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.supplierGrid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.supplierGrid label{display:grid;gap:3px;font-size:13px;font-weight:700}.supplierFull{grid-column:1/-1}
+.supplierActive{display:flex;align-items:center;gap:7px;margin-top:8px}.supplierActions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:9px}
+.csvStats{display:flex;gap:6px;flex-wrap:wrap}.csvStats span{padding:5px 7px;border:1px solid #dbe7ec;border-radius:7px;background:#fff}
+.contractIndexList,.contractInstallationList,.userIndexList{display:grid;gap:5px}
+.contractIndexRow{display:grid;grid-template-columns:minmax(220px,2fr) 130px 100px 80px;gap:7px;align-items:center;padding:7px 8px;border:1px solid #dfe8eb;border-radius:8px;background:#fff}
+.contractIndexRow.head{background:#eef5f6;font-size:13px;font-weight:800}.contractIndexRow>span:first-child{display:grid;gap:1px}
+.contractDedicatedActions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.contractInstallationRow{display:grid;grid-template-columns:minmax(220px,2fr) 120px auto;gap:7px;align-items:center;padding:7px 8px;border:1px solid #dfe8eb;border-radius:8px;background:#fff}
+.contractInstallationRow>span:first-child{display:grid}.contractInstallationRow>div{display:flex;gap:5px;justify-content:flex-end}
+.userIndexList>button{display:grid;grid-template-columns:minmax(220px,2fr) 130px 90px 80px;gap:7px;align-items:center;text-align:left;padding:7px 8px;border:1px solid #dfe8eb;border-radius:8px;background:#fff;color:inherit}
+.userIndexList>button>span:first-child{display:grid}.userSecondaryActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0}
+@media(max-width:900px){
+ .receiptSummary,.receiptDocument{grid-template-columns:1fr 1fr}.receiptShipping{grid-template-columns:1fr}
+ .supplierGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .contractIndexList,.userIndexList{overflow:auto}.contractIndexRow,.userIndexList>button{min-width:620px}
+ .contractInstallationRow{grid-template-columns:1fr 1fr}.contractInstallationRow>div{grid-column:1/-1;justify-content:flex-start}
+}
+@media(max-width:600px){
+ .materialDedicatedHead,.receiptDedicatedHead{display:grid}.receiptSummary,.receiptDocument{grid-template-columns:1fr}
+ .supplierGrid,.supplierGrid.two,.userSecondaryActions{grid-template-columns:1fr}.supplierFull{grid-column:auto}
+ .dedicatedActions,.receiptDedicatedActions{display:grid;grid-template-columns:1fr 1fr}
+ .contractInstallationRow{grid-template-columns:1fr}.contractInstallationRow>div{grid-column:1}.contractInstallationRow>div button{flex:1}
+}
