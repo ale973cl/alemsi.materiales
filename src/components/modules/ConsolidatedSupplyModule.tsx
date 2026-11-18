@@ -146,7 +146,7 @@ export default function ConsolidatedSupplyModule({surveys,initialView="need"}:{s
  return <section className="panel procurement">
   <div className="procureHead">
    <div><p className="eyebrow">ABASTECIMIENTO</p><h2>Compras</h2><p>Necesidad, cotización, orden de compra y recepción conectadas en un mismo circuito.</p></div>
-   <nav className="compactTabs"><button className={view==="need"?"active":""} onClick={()=>setView("need")}>Necesidades</button><button className={view==="new"?"active":""} onClick={()=>setView("new")}>Cotizar / comprar</button><button className={view==="documents"?"active":""} onClick={()=>setView("documents")}>Documentos</button></nav>
+   <nav className="compactTabs"><button className={view==="need"?"active":""} onClick={()=>setView("need")}>Necesidades ({needRows.length})</button><button className={view==="new"?"active":""} onClick={()=>setView("new")}>Cotizar / comprar</button><button className={view==="documents"?"active":""} onClick={()=>setView("documents")}>Documentos ({orders.length})</button></nav>
   </div>
   {message&&<div className="nextBar" role="status"><b>{message}</b></div>}
   {next&&<div className="nextBar nextAction"><span><small>Siguiente acción</small><b>{next.number}</b></span>{next.kind==="quote"?<button type="button" onClick={()=>{setView("documents");setSelectedDocumentId(next.id)}}>Registrar respuesta / convertir</button>:<a className="btn" href="/?vista=recepcion">Registrar factura y recepción →</a>}<button className="ghostBtn" type="button" onClick={()=>setNext(null)}>Después</button></div>}
