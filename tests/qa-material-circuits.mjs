@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {invoiceUnitNet,invoiceLineNet} from '../src/lib/invoice-reconciliation.ts';
 import {committedPurchaseQty,isClosedPurchaseOrder,isCancelledPurchaseOrder} from '../src/lib/purchase-order-balance.ts';
 import {coveredCampaignQuantity} from '../src/lib/campaign-dispatch-balance.ts';
 
@@ -35,4 +36,10 @@ const cases=[
  ['29 entrega negativa no cubre',()=>assert.equal(coveredCampaignQuantity('Entrega parcial',10,-4),0)],
  ['30 recepción posterior permite nueva carencia',()=>assert.equal(10-committedPurchaseQty('Cerrada incompleta',10,4),6)],
 ];
+cases.push(
+ ['31 factura sin neto de línea usa precio unitario',()=>assert.equal(invoiceUnitNet({quantity:30,line_net:null,unit_net:150}),150)],
+ ['32 factura con neto de línea divide entre cantidad',()=>assert.equal(invoiceUnitNet({quantity:30,line_net:4500,unit_net:null}),150)],
+ ['33 factura sin neto calcula total desde precio unitario',()=>assert.equal(invoiceLineNet({quantity:30,line_net:null,unit_net:150}),4500)],
+ ['34 factura con neto explícito cero conserva cero',()=>assert.equal(invoiceUnitNet({quantity:30,line_net:0,unit_net:150}),0)],
+);
 for (const [name,fn] of cases)test(name,fn);
