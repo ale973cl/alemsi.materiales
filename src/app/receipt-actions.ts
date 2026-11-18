@@ -1,7 +1,9 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
+import {receiptTransactionsEnabled} from "@/lib/receipt-transactions";
 import {isClosedPurchaseOrder,isCancelledPurchaseOrder} from "@/lib/purchase-order-balance";
+import {parseReceiptLines,validateReceiptDraft} from "@/lib/receipt-validation";
 
 async function ctx(roles:string[]){const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)throw new Error("Sesión no válida");const {data:profile}=await supabase.from("user_profiles").select("role,active,full_name,email").eq("id",user.id).single();if(!profile?.active||!roles.includes(profile.role))throw new Error("No autorizado para esta operación");return{supabase,user,profile};}
 
@@ -17,13 +19,18 @@ export async function registerPurchaseOrderReceipt(formData:FormData){
  const shippingCondition=String(formData.get("shipping_condition")||"Incluido").trim();
  const freightNet=Number(formData.get("freight_net")||0);
  const observation=String(formData.get("observation")||"").trim()||null;
- const lines=JSON.parse(String(formData.get("lines")||"[]"));
+ const lines=validateReceiptDraft({documentType,folio:documentFolio,date:documentDate,net:documentNet,vat:documentVat,total:documentTotal,lines:parseReceiptLines(formData.get("lines")),withOrder:true,shipping:shippingCondition,freight:freightNet});
  if(!purchaseOrderId)throw new Error("Selecciona una orden de compra");
  if(!["Factura","Boleta","Guía de despacho","Otro"].includes(documentType))throw new Error("Selecciona el tipo de documento");
  if(!documentFolio)throw new Error("El folio del documento es obligatorio");
  if(!documentDate)throw new Error("La fecha del documento es obligatoria");
  if(!Array.isArray(lines)||!lines.some((l:any)=>Number(l.received_qty)>0))throw new Error("Ingresa al menos una cantidad recibida mayor a cero");
  if(shippingCondition==="Por pagar"&&freightNet<=0)throw new Error("Ingresa el valor neto del flete por pagar");
+ if(receiptTransactionsEnabled()){
+  const {data:id,error}=await supabase.rpc("register_receipt_v2",{p_document:{purchase_order_id:purchaseOrderId,document_type:documentType,document_folio:documentFolio,document_date:documentDate,document_net:documentNet,vat_amount:documentVat,document_total:documentTotal,shipping_condition:shippingCondition,freight_net:shippingCondition==="Por pagar"?freightNet:0,observation},p_lines:lines});
+  if(error||!id)throw new Error(error?.message||"No se pudo registrar la recepción transaccional");
+  revalidatePath("/");return{ok:true,id:String(id)};
+ }
  const {data:po,error:poError}=await supabase.from("purchase_orders").select("id,supplier_id,status").eq("id",purchaseOrderId).single();if(poError||!po)throw new Error("OC no encontrada");
  if(isClosedPurchaseOrder(po.status)||isCancelledPurchaseOrder(po.status))throw new Error("Esta orden de compra está cerrada o anulada y no admite más recepciones");
  if(!Array.isArray(lines)||lines.length>500)throw new Error("Detalle de recepción inválido");
@@ -39,7 +46,7 @@ export async function registerPurchaseOrderReceipt(formData:FormData){
  const masterLines=new Map((poLines||[]).map((l:any)=>[String(l.id),l]));
  const {data:previousReceipts,error:previousError}=await supabase.from("receipts").select("id,supplier_id,document_type,document_folio,receipt_lines(purchase_order_line_id,received_qty)").eq("purchase_order_id",purchaseOrderId);
  if(previousError)throw new Error(previousError.message);
- if((previousReceipts||[]).length)throw new Error("Esta OC ya tiene un documento registrado. Coteja ese documento; los faltantes se tramitan en una nueva OC.");
+ if(!receiptTransactionsEnabled()&&(previousReceipts||[]).length)throw new Error("Esta OC ya tiene un documento registrado. Coteja ese documento; los faltantes se tramitan en una nueva OC.");
  if((previousReceipts||[]).some((r:any)=>String(r.document_type||"")===documentType&&String(r.document_folio||"").trim().toLowerCase()===documentFolio.toLowerCase()))throw new Error("Este folio ya está vinculado a la OC");
  const previous=new Map<string,number>();
  for(const r of previousReceipts||[])for(const l of (r as any).receipt_lines||[]){const key=String(l.purchase_order_line_id||"");previous.set(key,(previous.get(key)||0)+Number(l.received_qty||0))}
@@ -51,7 +58,8 @@ export async function registerPurchaseOrderReceipt(formData:FormData){
  }
  const {data:duplicateDocument,error:duplicateError}=await supabase.from("receipts").select("id").eq("supplier_id",po.supplier_id).eq("document_type",documentType).eq("document_folio",documentFolio).limit(1);
  if(duplicateError)throw new Error(duplicateError.message);
- if((duplicateDocument||[]).length)throw new Error("Este folio ya fue registrado para el mismo proveedor");
+ if(!receiptTransactionsEnabled()&&(duplicateDocument||[]).length)throw new Error("Este folio ya fue registrado para el mismo proveedor");
+
 
  const {data:receipt,error}=await supabase.from("receipts").insert({purchase_order_id:purchaseOrderId,supplier_id:po.supplier_id,invoice_number:documentType==="Factura"?documentFolio:null,invoice_date:documentDate,invoice_net:documentNet,vat_amount:documentVat,status:"Pendiente cotejo",received_by:user.id,received_at:new Date().toISOString(),shipping_condition:shippingCondition,freight_net:shippingCondition==="Por pagar"?freightNet:0,document_type:documentType,document_folio:documentFolio,document_date:documentDate,document_net:documentNet,document_total:documentTotal,reconciliation_status:"Pendiente cotejo",inventory_posted:false}).select("id").single();
  if(error||!receipt)throw new Error(error?.message||"No se pudo registrar el documento");

@@ -1,6 +1,8 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
+import {receiptTransactionsEnabled} from "@/lib/receipt-transactions";
+import {parseReceiptLines,validateReceiptDraft} from "@/lib/receipt-validation";
 
 async function ctx(roles:string[]){
  const supabase=await createClient();
@@ -19,12 +21,26 @@ export async function registerPurchaseWithoutOc(formData:FormData){
  const documentDate=String(formData.get("document_date")||"").trim();
  const net=Number(formData.get("document_net")||0),vat=Number(formData.get("document_vat")||0),total=Number(formData.get("document_total")||0);
  const reason=String(formData.get("no_oc_reason")||"").trim();
- const lines=JSON.parse(String(formData.get("lines")||"[]"));
+ const lines=validateReceiptDraft({documentType,folio,date:documentDate,net,vat,total,lines:parseReceiptLines(formData.get("lines")),withOrder:false,reason});
  if(!supplierId)throw new Error("Selecciona proveedor");
  if(!folio)throw new Error("El folio es obligatorio");
  if(!documentDate)throw new Error("La fecha del documento es obligatoria");
  if(!reason)throw new Error("Debes indicar por qué la compra no tiene OC");
  if(!Array.isArray(lines)||!lines.some((l:any)=>l.material_id&&Number(l.received_qty)>0))throw new Error("Agrega al menos un material recibido");
+ const [{data:supplier,error:se},{data:materials,error:me},{data:duplicates,error:de}]=await Promise.all([
+  supabase.from("suppliers").select("id").eq("id",supplierId).eq("active",true).single(),
+  supabase.from("materials").select("id").in("id",lines.map(l=>l.material_id)).eq("active",true),
+  supabase.from("receipts").select("id").eq("supplier_id",supplierId).eq("document_type",documentType).eq("document_folio",folio).limit(1),
+ ]);
+ if(se||!supplier)throw new Error("Proveedor no válido");
+ if(me||(materials||[]).length!==lines.length)throw new Error("Selecciona productos activos del Maestro ALEMSI");
+ if(de)throw new Error(de.message);
+ if(!receiptTransactionsEnabled()&&duplicates?.length)throw new Error("Este proveedor ya tiene registrado el folio indicado");
+ if(receiptTransactionsEnabled()){
+  const {data:id,error}=await supabase.rpc("register_receipt_v2",{p_document:{supplier_id:supplierId,document_type:documentType,document_folio:folio,document_date:documentDate,document_net:net,vat_amount:vat,document_total:total,no_oc_reason:reason},p_lines:lines});
+  if(error||!id)throw new Error(error?.message||"No se pudo registrar la recepción transaccional");
+  revalidatePath("/");return{ok:true,id:String(id)};
+ }
  const {data:r,error}=await supabase.from("receipts").insert({purchase_order_id:null,supplier_id:supplierId,invoice_number:documentType==="Factura"?folio:null,invoice_date:documentDate,invoice_net:net,vat_amount:vat,status:"Pendiente cotejo",received_by:user.id,received_at:new Date().toISOString(),shipping_condition:"Incluido",freight_net:0,document_type:documentType,document_folio:folio,document_date:documentDate,document_net:net,document_total:total,no_oc_reason:reason,reconciliation_status:"Pendiente cotejo",inventory_posted:false}).select("id").single();
  if(error||!r)throw new Error(error?.message||"No se pudo registrar la compra");
  const rows=lines.filter((l:any)=>l.material_id&&Number(l.received_qty)>0).map((l:any)=>({receipt_id:r.id,purchase_order_line_id:null,material_id:l.material_id,received_qty:Number(l.received_qty),actual_unit_net:Number(l.actual_unit_net||0),line_net:Number(l.received_qty)*Number(l.actual_unit_net||0),difference_note:"Compra sin OC: "+reason}));
@@ -37,6 +53,11 @@ export async function reconcilePurchaseDocument(formData:FormData){
  const {supabase,user,profile}=await ctx(["Admin Total","Gerencia","Finanzas"]);
  const receiptId=String(formData.get("receipt_id")||""),confirmation=String(formData.get("confirmation")||"");
  if(confirmation!=="CONFIRMAR")throw new Error("Confirma expresamente el cotejo antes de cargar inventario");
+ if(receiptTransactionsEnabled()){
+  const {data,error}=await supabase.rpc("reconcile_receipt_v2",{p_receipt_id:receiptId});
+  if(error||!data?.ok)throw new Error(error?.message||"No se pudo cotejar el documento");
+  revalidatePath("/");return data as {ok:boolean;status:string;purchaseOrderId:string|null;orderStatus:string|null;outstanding:number;alreadyPosted:boolean};
+ }
  const {data:r,error}=await supabase.from("receipts").select("id,purchase_order_id,document_folio,document_net,document_total,no_oc_reason,inventory_posted,receipt_lines(id,purchase_order_line_id,material_id,received_qty,actual_unit_net,line_net)").eq("id",receiptId).single();
  if(error||!r)throw new Error("Documento no encontrado");
  if(r.inventory_posted)throw new Error("Este documento ya fue cargado al inventario");

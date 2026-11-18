@@ -8,6 +8,44 @@ La instrucción actual del usuario determina este repositorio; no se cambió al 
 Este documento distingue implementación de contrato pendiente. No certifica el sistema
 completo, pruebas conectadas ni aislamiento de Preview.
 
+## Incremento ejecutado después de 7ebcc26
+
+La matriz inferior describe la auditoría inicial. Se avanzó en documento único y recepción:
+
+- Validación común en las tres acciones: fechas civiles reales, tipos/folios, importes,
+  neto+IVA, líneas repetidas y cantidades/precios finitos. Sin OC se exige concordancia
+  del neto de líneas; con OC se conservan diferencias físicas para cotejo.
+- Migración local `20261118011206_receipt_integrity_v2.sql`: captura RUT normalizado
+  del proveedor al registrar, índice por RUT/tipo/folio (espacios exteriores y caja del folio
+  ignorados), único documento por OC e índice de entradas por línea. No elimina duplicados
+  históricos: si existen, la migración falla y revierte para permitir regularización explícita.
+- `register_receipt_v2` guarda cabecera, líneas y auditoría en una transacción. Conserva
+  payload de solicitud; reintento idéntico devuelve el mismo ID, contenido distinto se rechaza.
+  Un borrador editado invalida ese reconocimiento de reintento. No crea stock por OCR ni registro.
+- `reconcile_receipt_v2` bloquea el documento y materiales en orden estable, confirma solo
+  cantidades declaradas, conserva el cálculo ponderado ya existente, cierra OC completa o
+  incompleta y audita en una transacción. Reintentos no repiten movimientos. Rechaza estados
+  previos inconsistentes; no intenta reparar silenciosamente cargas históricas parciales.
+- RPC `SECURITY INVOKER`, sesión y rol activos verificados. Adiciones RLS delimitadas para
+  registro de Gerencia y entradas de inventario financiero ligadas a línea/actor/cantidad.
+  Se mantienen políticas existentes; no se certifica aquí toda su superficie de permisos.
+- Triggers protegen documentos y líneas confirmados y exigen recepción validada para nuevas
+  entradas de tipo `receipt`. Las RPC antiguas de recepción inmediata son incompatibles con
+  esta regla y deben inventariarse antes de aplicar la migración; no se borraron funciones.
+- Integración optativa en las tres acciones y en cotejo: `ALEMSI_RECEIPT_V2=1`, solo pruebas
+  y Preview. Desactivado por defecto; no se modificaron variables de Vercel.
+
+Validación: `test:receipts` ejecuta PostgreSQL en memoria con fixture mínimo de columnas
+y políticas observadas, migración real y fallos inducidos. No reconstruye toda la base:
+no certifica triggers ajenos al incremento, autorización completa de Supabase, Storage,
+OCR real, concurrencia entre conexiones ni navegación móvil. Estas pruebas siguen pendientes.
+
+El usuario confirmó datos ficticios en la base actual; no se aplicó la migración porque esa
+base también sirve a Production. Aplicarla requiere resolver ese efecto compartido conservando
+la restricción vigente de no modificar Production.
+
+Referencias técnicas consultadas: [funciones Supabase](https://supabase.com/docs/guides/database/functions).
+
 ## Evidencia y protección de Production
 
 - Clon de la rama con árbol inicialmente limpio; referencia local de restauración:

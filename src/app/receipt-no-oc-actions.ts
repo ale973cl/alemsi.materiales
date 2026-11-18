@@ -1,6 +1,8 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
+import {receiptTransactionsEnabled} from "@/lib/receipt-transactions";
+import {validateReceiptDraft} from "@/lib/receipt-validation";
 
 type MaterialLine={material_id:string;received_qty:number;actual_unit_net:number};
 const number=(x:unknown)=>Number(x);
@@ -24,6 +26,7 @@ export async function registerReceiptWithoutOrder(formData:FormData){
  const notes=String(formData.get("observation")||"").trim();
  let lines:MaterialLine[];
  try{lines=JSON.parse(String(formData.get("lines")||"[]"));}catch{throw new Error("Productos recibidos inválidos");}
+ validateReceiptDraft({documentType,folio,date,net,vat,total,lines,withOrder:false,reason,shipping,freight});
  if(!supplierId||!folio||!/^\d{4}-\d{2}-\d{2}$/.test(date)||reason.length<8)throw new Error("Proveedor, folio, fecha y justificación sin OC (8 caracteres mínimo) son obligatorios");
  if(!["Factura","Boleta","Guía de despacho","Otro"].includes(documentType))throw new Error("Tipo de documento inválido");
  if(!["Incluido","Por pagar","Retiro"].includes(shipping)||shipping==="Por pagar"&&!(freight>0))throw new Error("Revisa la condición y costo del flete");
@@ -43,10 +46,15 @@ export async function registerReceiptWithoutOrder(formData:FormData){
  ]);
  if(supplierError||!supplier)throw new Error("Proveedor no válido");
  if(materialError||(materials||[]).length!==ids.size)throw new Error("Selecciona productos activos del Maestro ALEMSI");
- if(dupError||(duplicates||[]).length)throw new Error("Este proveedor ya tiene registrado el folio indicado");
+ if(dupError||(!receiptTransactionsEnabled()&&(duplicates||[]).length))throw new Error("Este proveedor ya tiene registrado el folio indicado");
  const rows=lines.map(l=>({material_id:l.material_id,received_qty:l.received_qty,actual_unit_net:l.actual_unit_net,line_net:l.received_qty*l.actual_unit_net,purchase_order_line_id:null as null}));
  const linesNet=rows.reduce((sum,l)=>sum+l.line_net,0);
  if(Math.abs(linesNet-net)>1)throw new Error("El neto de las líneas no coincide con el neto de la factura. Corrige antes de guardar");
+ if(receiptTransactionsEnabled()){
+  const {data:id,error}=await supabase.rpc("register_receipt_v2",{p_document:{supplier_id:supplierId,document_type:documentType,document_folio:folio,document_date:date,document_net:net,vat_amount:vat,document_total:total,no_oc_reason:reason,shipping_condition:shipping,freight_net:shipping==="Por pagar"?freight:0,observation:notes,payment_condition:paymentCondition,payment_days:paymentDays,payment_due:paymentDue||null},p_lines:lines});
+  if(error||!id)throw new Error(error?.message||"No se pudo registrar la recepción transaccional");
+  revalidatePath("/");return{ok:true,id:String(id),inventory_updated:false};
+ }
  const {data:receipt,error}=await supabase.from("receipts").insert({
   purchase_order_id:null,supplier_id:supplierId,invoice_number:documentType==="Factura"?folio:null,invoice_date:date,invoice_net:net,vat_amount:vat,
   document_type:documentType,document_folio:folio,document_date:date,document_net:net,document_total:total,

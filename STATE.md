@@ -3,6 +3,39 @@
 
 ## Estado actual — 2026-11-17
 
+### Continuación de ejecución: recepción V2
+
+- Base local de este incremento: `7ebcc26ebd285639e54474c8c7f10efb37dc9346`.
+  Restauración: `backup/alemsi-continuacion-20261117`; árbol inicialmente limpio.
+- Las tres acciones de recepción comparten validación de documentos y cantidades.
+  Finanzas sin OC ahora comprueba proveedor/materiales activos y duplicados previos.
+  Contra OC se conserva recepción parcial aunque su neto físico difiera de la factura.
+- Migración `20261118011206_receipt_integrity_v2.sql`, generada con CLI local, implementa
+  identidad por RUT emisor/tipo/folio, un documento por OC, un movimiento por línea,
+  registro/cotejo transaccional, reintentos idénticos y bloqueo de ediciones confirmadas.
+- Las acciones existentes invocan las RPC únicamente con `ALEMSI_RECEIPT_V2=1`.
+  Por defecto se mantiene el circuito anterior. El piloto rechaza `VERCEL_ENV=production`.
+  Un error de RPC nunca deriva al circuito antiguo. Migración sin aplicar remotamente.
+- PostgreSQL en memoria (PGlite) ejecuta la migración con fixture mínimo de columnas/RLS
+  inspeccionados. Pruebas de registro/cotejo, RUT equivalente, reintento, cambio de contenido,
+  reversión por fallos de líneas/auditoría, stock prematuro, roles y recepción parcial.
+  No sustituye réplica completa, Auth real, concurrencia multi-conexión ni prueba móvil/OCR.
+- Validación final: 68 pruebas aprobadas (30 circuitos, 15 importación, 9 calendario,
+  14 recepción incluyendo el contenedor SQL), TypeScript sin errores y compilación final
+  de Next.js con código 0. Primer build restringido detenido por bloqueo del entorno;
+  repetición con procesos habilitados completada. No hay script lint separado.
+- Vercel: el último despliegue de esta rama es Preview; Production corresponde a `main`.
+  Se comprobó que no existe variable `ALEMSI_RECEIPT_V2` global ni override observado;
+  subir el código no activa el piloto ni aplica la migración.
+- Usuario indicó que la base actual contiene datos ficticios. Se usó para SELECT de esquema
+  y políticas. Al estar conectada también a Production, no se cambió su estructura ni datos.
+- Próximo paso: aplicar el piloto en un destino que no cambie Production, revisar todas las
+  políticas/triggers remotos y probar pantalla → servidor → RPC con sesiones reales.
+  Pagos/rendiciones, cuentas por pagar, calendario conectado, flota ampliada y gastos siguen
+  pendientes; este incremento no los declara implementados.
+
+### Antecedentes del incremento anterior
+
 - Repositorio solicitado: `ale973cl/alemsi.materiales`.
 - Rama local: `feat/alemsi-motor-integral`; base `e51916f9658d71bbd3d0663871b83b5c62fcc201`.
 - Respaldo Git local: `backup/alemsi-motor-integral-20261117` al SHA de partida.
