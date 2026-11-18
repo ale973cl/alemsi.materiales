@@ -17,15 +17,15 @@ export const normalizeInvoiceText=(value:unknown)=>String(value??"")
 
 export function invoiceUnitNet(line:InvoiceLineLike){
   const quantity=Number(line.quantity||0);
-  const lineNet=Number(line.line_net);
-  const unitNet=Number(line.unit_net);
+  const lineNet=line.line_net==null?NaN:Number(line.line_net);
+  const unitNet=line.unit_net==null?NaN:Number(line.unit_net);
   if(quantity>0&&Number.isFinite(lineNet)&&lineNet>=0)return Number((lineNet/quantity).toFixed(6));
   if(Number.isFinite(unitNet)&&unitNet>=0)return unitNet;
   return 0;
 }
 
 export function invoiceLineNet(line:InvoiceLineLike){
-  const lineNet=Number(line.line_net);
+  const lineNet=line.line_net==null?NaN:Number(line.line_net);
   if(Number.isFinite(lineNet)&&lineNet>=0)return lineNet;
   const quantity=Number(line.quantity||0),unit=invoiceUnitNet(line);
   return Number((quantity*unit).toFixed(6));
