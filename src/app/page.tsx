@@ -101,7 +101,6 @@ export default async function Page({searchParams}:{searchParams:Promise<{vista?:
  let clientInstallations:any[]=[];
  let masterClientInstallations:any[]=[];
  let users:any[]=[];
- let userInstallationAccess:any[]=[];
 
  if(view==="inicio"){
   const values=await Promise.all([
@@ -144,20 +143,19 @@ export default async function Page({searchParams}:{searchParams:Promise<{vista?:
  }
 
  if(view==="clientes"){
-  const [catalogResult,inactiveResult,clientsResult,campaignResult,usersResult,accessResult]=await Promise.all([
+  const [catalogResult,inactiveResult,clientsResult,campaignResult,usersResult]=await Promise.all([
    loadMaterialCatalog(supabase),
    supabase.from("materials").select("id,family,name,presentation,unit,supplier_code,current_net_price,active").eq("active",false).order("family").order("name"),
    supabase.from("clients").select("id,legal_name,rut,business_center,active,contracts(id,name,code,net_budget,active,installations(id,name,address,region,city,commune,surface_m2,collaborator_count,delivery_contact_name,delivery_email,delivery_phone,phone,general_email,active))").order("legal_name"),
    supabase.from("campaigns").select("id,label,status,created_at,campaign_installations(campaign_id,installation_id,status,justification,installations(id,name))").order("created_at",{ascending:false}),
-   supabase.from("user_profiles").select("id,full_name,email,role,active,created_at").order("full_name"),
-   supabase.from("user_installation_access").select("id,user_id,installation_id,active,can_view_master,can_survey")
+   supabase.from("user_profiles").select("id,full_name,email,role,active,created_at").order("full_name")
   ]);
   materialCatalog=catalogResult.rows;materialCatalogSourceCount=catalogResult.sourceCount;materialCatalogError=catalogResult.error;
   masterMaterialCatalog=[
    ...catalogResult.rows.map((row:any)=>({...row,active:true})),
    ...(inactiveResult.data||[]).map((row:any)=>({id:row.id,family:row.family,supplier:null,supplier_code:row.supplier_code,product:row.name,presentation:row.presentation,unit:row.unit,net_value:row.current_net_price,availability:0,duplicate_count:1,active:false}))
   ];
-  masterClientInstallations=clientsResult.data||[];campaigns=campaignResult.data||[];users=usersResult.data||[];userInstallationAccess=accessResult.data||[];
+  masterClientInstallations=clientsResult.data||[];campaigns=campaignResult.data||[];users=usersResult.data||[];
  }
 
  return <OperationalApp initialTab={view} profile={profile} summary={summary}
@@ -165,5 +163,5 @@ export default async function Page({searchParams}:{searchParams:Promise<{vista?:
   orders={[]} dispatches={dispatches} audit={[]}
   materialCatalog={materialCatalog} materialCatalogSourceCount={materialCatalogSourceCount} materialCatalogError={materialCatalogError}
   masterMaterialCatalog={masterMaterialCatalog} clientInstallations={clientInstallations} masterClientInstallations={masterClientInstallations}
-  users={users} userInstallationAccess={userInstallationAccess}/>;
+  users={users}/>;
 }
