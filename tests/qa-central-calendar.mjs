@@ -60,3 +60,24 @@ test('flota conserva solo documentos actuales y no estima fechas desde km', () =
   assert.equal(alerts[0].daysRemaining, null);
   assert.equal(alerts[0].kmRemaining, 800);
 });
+
+test('facturas pagadas y revertidas no generan alertas', async () => {
+  const { payableCalendarEvents } = await import('../src/lib/payable-calendar.ts');
+  const base = { id: 'f1', documentType: 'factura', folio: '123', supplierName: 'Proveedor', dueDate: '2026-11-20', totalCents: 10000, creditedCents: 0 };
+  const events = payableCalendarEvents([base, { ...base, id: 'f2', creditedCents: 10000 }, { ...base, id: 'f3', reversed: true }]);
+  assert.equal(events.length, 1);
+  assert.equal(buildCentralCalendar(events, thresholds, '2026-11-17')[0].state, 'proximo');
+});
+test('factura parcialmente abonada conserva alerta y fecha', async () => {
+  const { payableCalendarEvents } = await import('../src/lib/payable-calendar.ts');
+  const events = payableCalendarEvents([{ id: 'f1', documentType: 'factura', folio: '5', supplierName: 'Proveedor', dueDate: '2026-11-16', totalCents: 10000, creditedCents: 4000 }]);
+  assert.equal(buildCentralCalendar(events, thresholds, '2026-11-17')[0].state, 'vencido');
+});
+test('facturas duplicadas, importes inválidos y sobrepagos se rechazan', async () => {
+  const { payableCalendarEvents } = await import('../src/lib/payable-calendar.ts');
+  const base = { id: 'f1', documentType: 'factura', folio: '123', supplierName: 'Proveedor', dueDate: null, totalCents: 10000, creditedCents: 0 };
+  assert.throws(() => payableCalendarEvents([base, base]));
+  for (const amount of [-1, 10001, 1.5, Infinity]) {
+    assert.throws(() => payableCalendarEvents([{ ...base, creditedCents: amount }]));
+  }
+});
