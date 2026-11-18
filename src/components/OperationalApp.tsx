@@ -8,7 +8,7 @@ import { saveSurveyWithTrace } from "@/app/survey-actions";
 import MastersModule from "@/components/modules/MastersModule";
 import {type MaterialCatalogRow} from "@/components/modules/MaterialsCatalogModule";
 import {type ClientInstallationGroup} from "@/components/modules/ClientInstallationsModule";
-import {type UserAccessRow,type UserProfileRow} from "@/components/modules/UsersModule";
+import {type UserProfileRow} from "@/components/modules/UsersModule";
 import DispatchDeliveryModule from "@/components/modules/DispatchDeliveryModule";
 import CampaignsModule from "@/components/modules/CampaignsModule";
 import ConsolidatedSupplyModule from "@/components/modules/ConsolidatedSupplyModule";
@@ -17,7 +17,7 @@ import ConnectedReceiptModule from "@/components/modules/ConnectedReceiptModule"
 import SurveyLinkControl from "@/components/modules/SurveyLinkControl";
 import InventoryModule from "@/components/modules/InventoryModule";
 type MasterMaterialRow=MaterialCatalogRow&{active?:boolean};type MasterClientGroup=ClientInstallationGroup&{active?:boolean};
-type Props={initialTab?:string;profile:any;summary:Record<string,number>;campaigns:any[];activeCampaigns:any[];consolidatedSurveys:any[];orders:any[];dispatches:any[];audit:any[];materialCatalog:MaterialCatalogRow[];materialCatalogSourceCount:number;materialCatalogError?:string|null;masterMaterialCatalog:MasterMaterialRow[];clientInstallations:ClientInstallationGroup[];masterClientInstallations:MasterClientGroup[];users:UserProfileRow[];userInstallationAccess:UserAccessRow[]};
+type Props={initialTab?:string;profile:any;summary:Record<string,number>;campaigns:any[];activeCampaigns:any[];consolidatedSurveys:any[];orders:any[];dispatches:any[];audit:any[];materialCatalog:MaterialCatalogRow[];materialCatalogSourceCount:number;materialCatalogError?:string|null;masterMaterialCatalog:MasterMaterialRow[];clientInstallations:ClientInstallationGroup[];masterClientInstallations:MasterClientGroup[];users:UserProfileRow[]};
 const titles:Record<string,string>={inicio:"Inicio",clientes:"Administración",campañas:"Planificación",levantamientos:"Levantamientos",consolidado:"Abastecimiento y compras",preparacion:"Preparación",inventario:"Bodega e inventario",compras:"Documentos de compra",recepcion:"Recepción de mercadería",entregas:"Despachos y entregas"};
 const mainNav=[["campañas","Planificación"],["consolidado","Abastecimiento"],["inventario","Bodega"],["entregas","Entregas"],["clientes","Administración"]] as const;
 const quickLinks:Record<string,[string,string][]>={
@@ -28,7 +28,7 @@ const quickLinks:Record<string,[string,string][]>={
  clientes:[["clientes","Maestros y configuración"]]
 };
 const parentOf=(tab:string)=>tab==="levantamientos"?"campañas":tab==="compras"||tab==="recepcion"?"consolidado":tab==="preparacion"?"inventario":tab;
-export default function OperationalApp({initialTab,profile,summary,campaigns,activeCampaigns,consolidatedSurveys,orders,dispatches,materialCatalog,materialCatalogSourceCount,materialCatalogError,masterMaterialCatalog,clientInstallations,masterClientInstallations,users,userInstallationAccess}:Props){
+export default function OperationalApp({initialTab,profile,summary,campaigns,activeCampaigns,consolidatedSurveys,orders,dispatches,materialCatalog,materialCatalogSourceCount,materialCatalogError,masterMaterialCatalog,clientInstallations,masterClientInstallations,users}:Props){
  const router=useRouter();
  const [isNavigating,startTransition]=useTransition();
  const allowed=Object.keys(titles);
@@ -49,7 +49,7 @@ export default function OperationalApp({initialTab,profile,summary,campaigns,act
    <div className="simplePageHead"><div><p className="eyebrow">ALEMSI · OPERACIÓN</p><h1>{navTitle}</h1></div>{tab!=="inicio"&&<button type="button" className="simpleBack" onClick={()=>navigate("inicio")}>← Inicio</button>}</div>
    {currentLinks.length>0&&<nav className="simpleSubnav" aria-label="Vistas de trabajo">{currentLinks.map(([id,name])=><button key={id} type="button" className={tab===id?"active":""} onClick={()=>navigate(id)}>{name}</button>)}</nav>}
    {tab==="inicio"&&<><p className="simpleLead">Continúa por el proceso o entra directamente a una tarea.</p><section className="simpleHomeGrid">{mainNav.map(([id,name],i)=><button key={id} className="simpleHomeTile" type="button" onClick={()=>navigate(id)}><span className="simpleTileNumber">0{i+1}</span><strong>{name}</strong><span className="simpleTileArrow">→</span></button>)}</section><section className="simpleSummary"><span>Campañas abiertas <b>{summary.openCampaigns}</b></span><span>Levantamientos pendientes <b>{summary.pendingSurveys}</b></span><span>Entregas pendientes <b>{summary.openDispatches}</b></span></section></>}
-   {tab==="clientes"&&<MastersModule role={profile.role} materials={masterMaterialCatalog} materialSourceCount={materialCatalogSourceCount} materialError={materialCatalogError} clients={masterClientInstallations} campaigns={campaigns} users={users} access={userInstallationAccess} currentUserId={profile.id}/>}
+   {tab==="clientes"&&<MastersModule role={profile.role} materials={masterMaterialCatalog} materialSourceCount={materialCatalogSourceCount} materialError={materialCatalogError} clients={masterClientInstallations} campaigns={campaigns} users={users} currentUserId={profile.id}/>}
    {tab==="campañas"&&<CampaignsModule campaigns={campaigns} clients={clientInstallations} onOpenSurveys={(campaignId,installationId)=>openSurveyScreen(campaignId,installationId||"")}/>}
    {tab==="levantamientos"&&<SurveyCampaignSelector campaigns={activeCampaigns} surveys={consolidatedSurveys} selectedCampaignId={selectedCampaignId} selectedInstallationId={selectedSurveyInstallationId} onOpen={(campaignId,installationId)=>openSurveyScreen(campaignId,installationId||"")} onBack={()=>openSurveyScreen(selectedCampaignId)} onNextNeed={()=>navigate("consolidado")}/>}
    {tab==="consolidado"&&<ConsolidatedSupplyModule surveys={consolidatedSurveys} initialView="need"/>}
