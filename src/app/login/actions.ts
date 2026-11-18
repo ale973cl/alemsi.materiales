@@ -77,7 +77,7 @@ export async function login(formData: FormData) {
 export async function requestPreviewTestCode(formData: FormData) {
   if (process.env.VERCEL_ENV !== "preview") redirect("/login");
   const email = String(formData.get("email") || "").trim().toLowerCase();
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) redirect("/login?error=Ingresa%20un%20correo%20v%C3%A1lido");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) redirect("/login?error=Ingresa%20un%20correo%20v%C3%A1lido");
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email,
@@ -91,7 +91,7 @@ export async function verifyPreviewTestCode(formData: FormData) {
   if (process.env.VERCEL_ENV !== "preview") redirect("/login");
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const token = String(formData.get("token") || "").trim();
-  if (!email || !/^\\d{6,8}$/.test(token)) redirect(`/login?test_code=1&email=${encodeURIComponent(email)}&error=C%C3%B3digo%20inv%C3%A1lido`);
+  if (!email || !/^\d{6,8}$/.test(token)) redirect(`/login?test_code=1&email=${encodeURIComponent(email)}&error=C%C3%B3digo%20inv%C3%A1lido`);
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
   if (error) redirect(`/login?test_code=1&email=${encodeURIComponent(email)}&error=C%C3%B3digo%20incorrecto%20o%20vencido`);
