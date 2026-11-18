@@ -1,7 +1,7 @@
 "use client";
 
 import {useMemo,useRef,useState} from "react";
-import {confirmUnifiedClientCsv,previewUnifiedClientCsv} from "@/app/client-unified-import-actions";
+import {confirmUnifiedClientCsv,previewUnifiedClientCsv,previewMaterialCoverage} from "@/app/client-unified-import-actions";
 import type {UnifiedCsvRow} from "@/lib/client-unified-import";
 
 type Detail={row:number;level:"Cliente"|"Contrato"|"Instalación"|"Material";item:string;status:"NUEVO"|"EXISTE"|"CONFLICTO"|"DUPLICADO";reason?:string};
@@ -86,6 +86,19 @@ export default function UnifiedClientImportPanel(){
  const inputRef=useRef<HTMLInputElement|null>(null);
  const guideRef=useRef<HTMLDivElement|null>(null);
  const [rows,setRows]=useState<UnifiedCsvRow[]>([]);
+ const [materialText,setMaterialText]=useState("");
+ const [coverage,setCoverage]=useState<Awaited<ReturnType<typeof previewMaterialCoverage>>|null>(null);
+ async function checkMaterials(){
+  setBusy(true);setMessage("");setCoverage(null);
+  try{
+   const requested=materialText.split(/\r?\n/).map(line=>line.trim()).filter(Boolean).map(requested=>({requested}));
+   const result=await previewMaterialCoverage(requested);
+   setCoverage(result);
+   setMessage("Cobertura consultada en Maestro ALEMSI. Ningún producto ni asignación se ha guardado.");
+  }catch(error:any){setMessage(error?.message||"No se pudo consultar el maestro");}
+  finally{setBusy(false);}
+ }
+
  const [preview,setPreview]=useState<{summary:Summary;details:Detail[]}|null>(null);
  const [summary,setSummary]=useState<Summary|null>(null);
  const [busy,setBusy]=useState(false);
@@ -231,6 +244,16 @@ export default function UnifiedClientImportPanel(){
    <button type="button" onClick={()=>{setShowGuide(true);window.setTimeout(()=>guideRef.current?.scrollIntoView({behavior:"smooth"}),50);}}>Guía de uso</button>
   </div>
   <p style={{fontSize:12,color:"#557084",margin:"0 0 8px"}}>Separador punto y coma (;), UTF-8. La plantilla contiene únicamente 15 columnas administrativas. También se aceptan CSV antiguos de 21 columnas, pero sus materiales y cantidades se ignoran. Una segunda carga idéntica no duplica registros.</p>
+  <section className="unifiedGuide" aria-label="Cobertura del Maestro de Materiales">
+   <h4>Consultar cobertura de materiales existentes</h4>
+   <p>Una línea por material solicitado en las bases. El análisis no crea productos ni asigna materiales. Sin coincidencias, no hay preselección.</p>
+   <textarea className="unifiedPrompt" value={materialText} onChange={e=>{setMaterialText(e.target.value);setCoverage(null);}} placeholder={"Poett\\nLimpiavidrios"} aria-label="Materiales solicitados" />
+   <div className="unifiedActions"><button type="button" disabled={busy||!materialText.trim()} onClick={()=>void checkMaterials()}>Consultar Maestro ALEMSI</button></div>
+   {coverage&&<><p>Productos consultados: {coverage.catalogCount}. Coincidencias: {coverage.coverage.filter(x=>x.status==="COINCIDENCIA").length}. Revisión: {coverage.coverage.filter(x=>x.status==="REVISION").length}. No atendidos: {coverage.coverage.filter(x=>x.status==="NO_ATENDIDO").length}.</p>
+    <div className="unifiedTable"><table><thead><tr><th>Solicitado</th><th>Resultado</th><th>Producto existente</th><th>Justificación</th></tr></thead><tbody>
+    {coverage.coverage.map((x,i)=><tr key={i}><td>{x.requested}</td><td>{x.status}</td><td>{x.materialName||"Sin preselección"}</td><td>{x.reason}</td></tr>)}
+    </tbody></table></div></>}
+  </section>
   {showPrompt&&<textarea className="unifiedPrompt" readOnly value={PROMPT} onFocus={e=>e.currentTarget.select()} aria-label="Prompt completo para IA"/>}
   {message&&<p className="note">{message}</p>}
   {summary&&<div className="unifiedChips">
