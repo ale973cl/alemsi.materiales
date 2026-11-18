@@ -252,9 +252,12 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
   let existingAssignments = 0;
 
   const clientsByRut = new Map<string, ExistingClient>();
+  const ambiguousRuts = new Set<string>();
   for (const client of existing.clients || []) {
     const key = rutNorm(client.rut);
-    if (key && !clientsByRut.has(key)) clientsByRut.set(key, client);
+    if (!key) continue;
+    if (clientsByRut.has(key) && clientsByRut.get(key)!.id !== client.id) ambiguousRuts.add(key);
+    else clientsByRut.set(key, client);
   }
   const materials = existing.materials || [];
   const assignments = existing.assignments || [];
@@ -288,6 +291,11 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
       blocked.add("client");
     }
 
+    if (ambiguousRuts.has(clientRut)) {
+      detail(rowNumber, "Cliente", clientName, "CONFLICTO", "Existen varios clientes guardados con el mismo RUT. Se requiere depuración; no se creará otro cliente.");
+      continue;
+    }
+
     const clientKey = "rut:" + clientRut;
     if (!blocked.has("client")) {
       let clientOp = clientIndex.get(clientKey);
@@ -305,9 +313,13 @@ export function buildUnifiedPlan(rows: UnifiedCsvRow[], existing: ExistingImport
         clientIndex.set(clientKey, clientOp);
         detail(rowNumber, "Cliente", clientName, clientOp.isNew ? "NUEVO" : "EXISTE", clientOp.isNew ? `RUT ${text(raw.client_rut)}` : "Se conserva el cliente existente identificado por RUT");
       } else if (!same(clientOp.name, clientName)) {
-        clientOp.invalid = true;
-        detail(rowNumber, "Cliente", clientName, "CONFLICTO", `El mismo RUT aparece con dos nombres: "${clientOp.name}" y "${clientName}"`);
-        blocked.add("client");
+        if (existingClient) {
+          detail(rowNumber, "Cliente", existingClient.legal_name, "EXISTE", `Mismo RUT: se reutiliza el cliente existente; nombre alternativo en archivo: "${clientName}"`);
+        } else {
+          clientOp.invalid = true;
+          detail(rowNumber, "Cliente", clientName, "CONFLICTO", `El mismo RUT nuevo aparece con dos nombres: "${clientOp.name}" y "${clientName}"`);
+          blocked.add("client");
+        }
       }
       if (existingClient && !same(existingClient.legal_name, clientName)) {
         detail(rowNumber, "Cliente", existingClient.legal_name, "EXISTE", `RUT ya registrado; se conserva el nombre existente y no se sobrescribe con "${clientName}"`);
