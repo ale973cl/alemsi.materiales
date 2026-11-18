@@ -1,8 +1,8 @@
 "use client";
 import {useMemo,useState} from "react";
+import {useRouter} from "next/navigation";
 import Link from "next/link";
 import {useSearchParams} from "next/navigation";
-import {useFormStatus} from "react-dom";
 import {closeCampaign} from "@/app/actions";
 import {createRegionalCampaign} from "@/app/campaign-create-actions";
 import {forceCloseCampaign,justifyCampaignInstallation} from "@/app/campaign-actions";
@@ -22,15 +22,34 @@ const regionName=(value?:string|null)=>clean(value)||"Sin región";
 const statusKey=(value?:string|null)=>{const s=clean(value).toLocaleLowerCase("es-CL");if(s.includes("complet")||s.includes("tomad"))return"done";if(s.includes("justific"))return"justified";if(s.includes("proceso")||s.includes("inici"))return"progress";return"pending"};
 const statusLabel=(value?:string|null)=>statusKey(value)==="done"?"Toma completada":statusKey(value)==="progress"?"Toma en proceso":statusKey(value)==="justified"?"Justificada":"Pendiente de toma";
 
-function CampaignCreateSubmit({disabled}:{disabled:boolean}){
- const {pending}=useFormStatus();
+function CampaignCreateSubmit({disabled,pending}:{disabled:boolean;pending:boolean}){
  return <button type="submit" disabled={disabled||pending} aria-busy={pending}>{pending?"Creando campaña…":"Crear campaña"}</button>;
 }
 export default function CampaignsModule({campaigns,clients,onOpenSurveys}:{campaigns:CampaignRow[];clients:ClientInstallationGroup[];onOpenSurveys?:(campaignId:string,installationId?:string)=>void}){
+ const router=useRouter();
  const searchParams=useSearchParams();
  const selectedCampaignId=searchParams.get("campana")||"";
- const [showNew,setShowNew]=useState(false),[selectedInstallationIds,setSelectedInstallationIds]=useState<string[]>([]),[adminCampaign,setAdminCampaign]=useState<string|null>(null),[viewFilter,setViewFilter]=useState<ViewFilter>("all"),[campaignMessage,setCampaignMessage]=useState(""),[deletingCampaign,setDeletingCampaign]=useState<string|null>(null);
+ const [creatingCampaign,setCreatingCampaign]=useState(false),[showNew,setShowNew]=useState(false),[selectedInstallationIds,setSelectedInstallationIds]=useState<string[]>([]),[adminCampaign,setAdminCampaign]=useState<string|null>(null),[viewFilter,setViewFilter]=useState<ViewFilter>("all"),[campaignMessage,setCampaignMessage]=useState(""),[deletingCampaign,setDeletingCampaign]=useState<string|null>(null);
  const [regionFilter,setRegionFilter]=useState(""),[cityFilter,setCityFilter]=useState(""),[clientFilter,setClientFilter]=useState(""),[contractFilter,setContractFilter]=useState(""),[statusFilter,setStatusFilter]=useState("available"),[search,setSearch]=useState("");
+ async function submitCampaign(event: React.FormEvent<HTMLFormElement>){
+  event.preventDefault();
+  if(creatingCampaign)return;
+  setCreatingCampaign(true);
+  setCampaignMessage("Guardando campaña y verificando instalaciones…");
+  try{
+   const result=await createRegionalCampaign(new FormData(event.currentTarget));
+   setCampaignMessage(result.message);
+   if(result.ok){
+    setShowNew(false);
+    setSelectedInstallationIds([]);
+    router.refresh();
+   }
+  }catch{
+   setCampaignMessage("Ocurrió un error de conexión. Comprueba si la campaña se creó antes de volver a intentarlo.");
+  }finally{
+   setCreatingCampaign(false);
+  }
+ }
  const occupied=useMemo(()=>{const m=new Map<string,{campaign:string;status:string}>();for(const c of campaigns.filter(x=>x.status==="Abierta")){for(const item of c.campaign_installations||[]){const id=item.installation_id||item.installations?.id;if(id)m.set(id,{campaign:campaignInfo(c.label).name,status:item.status});}}return m},[campaigns]);
  const flat=useMemo<FlatInstallation[]>(()=>clients.flatMap(client=>(client.contracts||[]).flatMap(contract=>(contract.installations||[]).map(installation=>({region:regionName(installation.region),city:clean(installation.city)||clean(installation.commune)||"Sin ciudad",commune:clean(installation.commune)||clean(installation.city)||"Sin comuna",clientId:client.id,client:client.legal_name,contractId:contract.id,contract:contract.name,installation})))),[clients]);
  const regions=useMemo(()=>canonicalOptions(flat.map(x=>x.region)),[flat]);const cities=useMemo(()=>canonicalOptions(flat.filter(x=>!regionFilter||normalizeText(x.region)===normalizeText(regionFilter)).map(x=>x.city)),[flat,regionFilter]);
@@ -66,7 +85,7 @@ export default function CampaignsModule({campaigns,clients,onOpenSurveys}:{campa
   return <section className="panel campaignModule campaignCreatePage">
    <div className="campaignDetailHead"><div><button type="button" className="campaignBackLink" onClick={()=>setShowNew(false)}>← Campañas</button><h2>Nueva campaña</h2><p>Selecciona únicamente las instalaciones que participarán en este ciclo.</p></div></div>
    {campaignMessage&&<p className="note">{campaignMessage}</p>}
-   <form action={createRegionalCampaign} className="adminForm campaignForm">
+   <form onSubmit={submitCampaign} className="adminForm campaignForm">
     <div className="campaignFields"><label>Nombre de campaña<input name="name" required placeholder="Ej.: Levantamiento Temuco"/></label><label>Periodicidad<select name="periodicity" required defaultValue="Mensual"><option>Mensual</option><option>Bimensual</option><option>Trimestral</option><option>Cuatrimestral</option><option>Semestral</option><option>Personalizada</option></select></label></div>
     {selectedInstallationIds.map(id=><input key={id} type="hidden" name="installation_ids" value={id}/>)}
     <div className="campaignFilters"><label>Región<select value={regionFilter} onChange={e=>{setRegionFilter(e.target.value);setCityFilter("");setClientFilter("");setContractFilter("")}}><option value="">Todas</option>{regions.map(x=><option key={x}>{x}</option>)}</select></label><label>Ciudad<select value={cityFilter} onChange={e=>{setCityFilter(e.target.value);setClientFilter("");setContractFilter("")}}><option value="">Todas</option>{cities.map(x=><option key={x}>{x}</option>)}</select></label><label>Cliente<select value={clientFilter} onChange={e=>{setClientFilter(e.target.value);setContractFilter("")}}><option value="">Todos</option>{clientOptions.map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label><label>Contrato / servicio<select value={contractFilter} onChange={e=>setContractFilter(e.target.value)}><option value="">Todos</option>{contractOptions.map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label><label>Estado<select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="all">Todos</option><option value="available">Disponibles</option><option value="occupied">En campaña activa</option><option value="progress">Toma en proceso</option><option value="done">Toma completada</option></select></label></div>
@@ -75,7 +94,7 @@ export default function CampaignsModule({campaigns,clients,onOpenSurveys}:{campa
     <div className="campaignSelectionSummary"><b>{visible.length} instalaciones encontradas</b><span>{visibleAvailableIds.length} disponibles · {visible.length-visibleAvailableIds.length} bloqueadas · {selectedInstallationIds.length} seleccionadas total</span></div>
     <div className="campaignClientPicker">{visibleGroups.length?visibleGroups.map(g=><fieldset key={g.region} style={{marginBottom:14}}><legend>{g.region}</legend>{g.clients.map(c=>{const ids=c.contracts.flatMap(k=>k.installations.map(i=>i.id)),available=ids.filter(id=>!occupied.has(id)),checked=available.length>0&&available.every(id=>selectedInstallationIds.includes(id));return <div key={g.region+"-"+c.id}><label><input type="checkbox" checked={checked} disabled={!available.length} onChange={()=>toggleGroup(ids)}/><span><b>{c.legal_name}</b><small>{available.length} disponibles · {ids.length-available.length} bloqueadas · {ids.length} visibles</small></span></label>{c.contracts.map(k=><div key={k.id} className="campaignInstallationPicker"><b>{k.name}</b>{k.installations.map(i=>{const busy=occupied.get(i.id);return <label key={i.id} className={busy?"occupied":""}><input type="checkbox" checked={selectedInstallationIds.includes(i.id)} disabled={!!busy} onChange={()=>toggle(i.id)}/><span><b>{i.name}</b><small>{[i.commune,i.city].filter(Boolean).join(" · ")||g.region}</small></span><span className={"statePill "+(busy?"st-occupied":"st-available")}>{busy?statusLabel(busy.status)+" · "+busy.campaign:"Disponible"}</span></label>})}</div>)}</div>})}</fieldset>):<div className="empty"><b>Sin instalaciones para estos filtros</b></div>}</div>
     <div className="campaignUniversePreview"><div className="campaignUniverseHead"><b>Instalaciones seleccionadas</b><span>{selectedUniverse.length} instalaciones · {selectedClientCount} clientes · {selectedRegionCount} regiones</span></div>{selectedUniverse.length?<div className="campaignUniverseList">{selectedUniverse.map(({region,client,contract,installation})=><article key={installation.id}><span><b>{installation.name}</b><small>{client} · {contract}</small></span><small>{[installation.commune,installation.city,region].filter(Boolean).join(" · ")}</small></article>)}</div>:<p>Usa los filtros y selecciona las instalaciones que participarán en este ciclo.</p>}</div>
-    <div className="dedicatedActions"><button type="button" className="secondary" onClick={()=>setShowNew(false)}>Cancelar</button><CampaignCreateSubmit disabled={!selectedInstallationIds.length}/></div>
+    <div className="dedicatedActions"><button type="button" className="secondary" onClick={()=>setShowNew(false)}>Cancelar</button><CampaignCreateSubmit disabled={!selectedInstallationIds.length} pending={creatingCampaign}/></div>
    </form>
   </section>;
  }
