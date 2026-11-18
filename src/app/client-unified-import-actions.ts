@@ -11,6 +11,8 @@ import {
   type UnifiedImportExecutor,
 } from "@/lib/client-unified-import";
 
+import {evaluarCobertura, type MaterialRequerido} from "@/lib/material-coverage";
+
 const MAX_ROWS=2000;
 
 async function importContext(){
@@ -41,6 +43,21 @@ async function loadExisting(supabase:any):Promise<ExistingImportData>{
 // Compatibilidad con CSV históricos de 21 columnas: se ignoran materiales y cantidades.
 function administrativeOnly(rows:UnifiedCsvRow[]):UnifiedCsvRow[]{
  return rows.map(({material_code,material_name,material_presentation,quantity,unit,quantity_scope,...administrative})=>administrative);
+}
+
+/** Consulta de solo lectura: nunca crea materiales ni asignaciones. */
+export async function previewMaterialCoverage(requested:MaterialRequerido[]){
+ const {supabase}=await importContext();
+ if(!Array.isArray(requested)||requested.length>500)throw new Error("Máximo 500 materiales solicitados");
+ for(const item of requested){
+  if(!item||typeof item.requested!=="string"||item.requested.length>250)throw new Error("Material solicitado inválido");
+  for(const value of [item.function,item.surface,item.source])if(value!=null&&(typeof value!=="string"||value.length>500))throw new Error("Detalle de material inválido");
+ }
+ if(!requested.length)return{coverage:[],catalogCount:0};
+ const {data,error}=await supabase.from("materials").select("id,name,supplier_code,presentation").eq("active",true).order("name").limit(5000);
+ if(error)throw new Error("No se pudo consultar el Maestro ALEMSI: "+error.message);
+ const catalog=(data||[]).map(m=>({id:m.id,name:m.name,supplier_code:m.supplier_code,presentation:m.presentation}));
+ return{coverage:evaluarCobertura(requested,catalog),catalogCount:catalog.length};
 }
 
 export async function previewUnifiedClientCsv(rows:UnifiedCsvRow[]){
