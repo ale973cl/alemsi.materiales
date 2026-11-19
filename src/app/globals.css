@@ -19,59 +19,25 @@
 .dispatchBuckets{display:flex;gap:7px;overflow:auto;margin:20px 0}.dispatchBuckets button{display:flex;gap:8px;align-items:center;white-space:nowrap;background:#edf4f5!important;color:var(--navy)!important}.dispatchBuckets button.active{background:var(--navy)!important;color:#fff!important}.dispatchBuckets b{display:grid;place-items:center;min-width:21px;height:21px;border-radius:99px;background:#ffffff26}.dispatchFilters{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:8px;margin-bottom:16px}.dispatchCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.dispatchCards>article{border:1px solid var(--line);border-radius:12px;padding:16px}.dispatchCardHead{display:flex;justify-content:space-between;gap:10px}.dispatchCardHead span{display:grid;gap:4px}.dispatchCardHead small,.dispatchCards article p{color:#627d98}.dispatchCardHead em{font-style:normal;font-size:11px;background:#e6f7f4;color:#087a73;padding:6px 9px;border-radius:99px;height:max-content}.dispatchCards h3{margin:14px 0 4px}.dispatchTotals,.dispatchActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.dispatchTotals span{font-size:11px;background:#f2f6f7;padding:6px 8px;border-radius:7px}.dispatchActions a{display:inline-flex;align-items:center;padding:9px 11px;border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--navy);font-weight:700;font-size:12px}.dangerAction{background:#fff!important;color:#a63a3a!important;border:1px solid #e3b4b4!important}.dispatchHierarchy{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.dispatchHierarchy label{display:grid;gap:5px;font-weight:700;font-size:12px}.contactSummary{display:grid;gap:5px;background:#edf7f6;border-radius:9px;padding:13px;margin:13px 0}.contactSummary span{font-size:12px}.materialSearch{width:100%;margin:0 0 10px}.dispatchMaterialTable{max-height:390px;overflow:auto;border:1px solid var(--line);border-radius:9px}.dispatchMaterialTable table{min-width:760px}.dispatchMaterialTable small{display:block;color:#627d98}.dispatchMaterialTable input{width:110px}.dispatchSubmit{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:12px}.deliveryLines{display:grid;gap:7px;margin:14px 0}.deliveryLines label{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:8px}.deliveryLines label span{flex:1}.deliveryLines small{display:block;color:#627d98}.deliveryLines input{width:110px}.deliveryFields{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.deliveryFields textarea{grid-column:1/-1}.signatureLabel{display:grid;gap:6px;margin:12px 0;font-weight:700;font-size:12px}.signatureLabel canvas{width:100%;height:150px;border:1px dashed #78909c;border-radius:9px;touch-action:none;background:#fff}.signatureLabel button{width:max-content;background:#edf5f6!important;color:var(--navy)!important}.deliveryConfirm{width:100%;font-size:16px}.guidePage{background:#e9eef0;min-height:100vh;padding:24px}.printControls{max-width:216mm;margin:0 auto 12px;display:flex;align-items:center;gap:12px}.printControls button{border:0;background:#073b5c;color:#fff;padding:10px 14px;border-radius:8px;font-weight:700}.internalGuide{width:216mm;min-height:279mm;margin:auto;background:#fff;padding:15mm;box-shadow:0 6px 30px #0002;color:#111}.internalGuide header{display:grid;grid-template-columns:180px 1fr 190px;gap:18px;align-items:center;border-bottom:2px solid #073b5c;padding-bottom:12px}.internalGuide header>div{display:grid;gap:4px}.internalGuide header>div b{font-size:22px;color:#073b5c}.internalGuide header>div span{font-size:16px;font-weight:800}.internalGuide header>div small{font-size:10px;color:#555}.internalGuide header section{display:grid;border:2px solid #159a9c;padding:10px;text-align:center}.internalGuide header section strong{font-size:17px;margin:5px 0}.guideData{display:grid;grid-template-columns:2fr 1fr 2fr;gap:0;border:1px solid #bbb;margin:16px 0}.guideData p{display:grid;gap:4px;margin:0;padding:9px;border:1px solid #ddd}.guideData small,.internalGuide footer small{color:#666}.internalGuide table{min-width:0}.guideObservation{min-height:95px;border:1px solid #bbb;margin-top:18px;padding:10px}.guideObservation p{white-space:pre-wrap}.internalGuide footer{margin-top:24px;border:2px solid #073b5c;padding:12px}.internalGuide footer h3{margin:0 0 10px;color:#073b5c}.internalGuide footer>div{display:grid;grid-template-columns:2fr 1fr 2fr;gap:10px}.internalGuide footer p{display:grid;gap:8px;margin:0;min-height:54px}.internalGuide footer .signature{grid-column:3;grid-row:1/3}.internalGuide footer .signature img{max-width:180px;max-height:80px}@media(max-width:900px){.dispatchFilters{grid-template-columns:1fr 1fr}.dispatchCards{grid-template-columns:1fr}.dispatchHierarchy,.deliveryFields{grid-template-columns:1fr}.dispatchSubmit{grid-template-columns:1fr}}@media print{.printControls{display:none}.guidePage{padding:0;background:#fff}.internalGuide{box-shadow:none;margin:0;width:100%;min-height:0;padding:10mm}@page{size:letter portrait;margin:0}}
 
 
-/* ALEMSI login institucional: solo afecta /login */
-.loginExperience{display:block;min-height:100svh;padding:0;overflow:hidden;background:#c7b6a9}
-.loginScene{position:relative;isolation:isolate;min-height:100svh;width:100%;display:grid;grid-template-columns:minmax(350px,43%) minmax(0,57%);grid-template-rows:auto 1fr;align-items:center;gap:0;padding:clamp(22px,4vh,44px) clamp(28px,5vw,86px);background:radial-gradient(ellipse at 52% 78%,#f2e8de 0%,transparent 45%),linear-gradient(105deg,#b9a89b 0%,#ded1c6 50%,#c6b6a9 100%)}
-.loginScene:before{content:"";position:absolute;inset:15px 15px auto;height:5px;background:#fff4dc;box-shadow:0 0 18px 5px #ffdfac;z-index:-1}
-.loginScene:after{content:"";position:absolute;bottom:0;left:0;right:0;height:17%;background:linear-gradient(180deg,#ded3c9,#c7bdb3);border-top:2px solid #eee3d8;z-index:-1}
-.loginBrand{grid-column:1;grid-row:1;display:flex;justify-content:center;align-items:center;width:100%;max-width:540px;min-height:120px;margin:0 auto clamp(8px,1.5vh,18px)}
-.loginBrand img{width:min(100%,460px);height:auto;max-height:170px;object-fit:contain;filter:drop-shadow(0 0 13px #fff8e7)}
-.loginCompactCard{grid-column:1;grid-row:2;align-self:start;justify-self:center;width:min(100%,475px);padding:clamp(22px,2.5vw,34px);border:1.5px solid #c8a87c;border-radius:24px;box-shadow:0 16px 38px #392d2440,0 0 17px #ffe6bd77;background:linear-gradient(145deg,#fffdfb,#f7f4f2)}
-.loginCompactCard .eyebrow{font-size:11px;letter-spacing:.17em;color:#123b4d}
-.loginCompactCard h1{font-size:clamp(29px,3vw,39px);color:#082e44;margin:9px 0}
-.loginCompactCard p:not(.eyebrow){font-size:13px;line-height:1.5}
-.loginCompactCard .formStack{gap:12px;margin:18px 0}
-.loginCompactCard .formStack input{min-height:44px;padding:11px 12px}
-.loginCompactCard .formStack button{min-height:46px}
-.loginCompactCard>a,.loginCompactCard>small{display:block;margin-top:12px;font-size:12px}
-.loginShowcase{grid-column:2;grid-row:1/3;align-self:stretch;position:relative;display:flex;align-items:flex-end;justify-content:flex-start;min-width:0;padding-bottom:7vh}
-.loginMascotStand{position:relative;z-index:2;width:min(58%,440px);display:flex;justify-content:center;align-items:flex-end;min-height:50vh}
-.loginMascotStand:after{content:"";position:absolute;bottom:0;left:3%;width:94%;height:30px;border-radius:50%;background:linear-gradient(#f3dfbd,#aa8d70);box-shadow:0 5px 14px #4d392b55,0 0 20px #ffebbf;z-index:-1}
-.loginMascotStand .loginMascot{display:block;width:100%;height:auto;max-height:66vh;object-fit:contain;object-position:bottom}
-.loginWarehouse{position:absolute;right:0;bottom:11vh;width:43%;max-width:320px;height:min(52vh,400px);border:7px solid #263943;background:#0a324b;box-shadow:0 12px 25px #302b2755}
-.loginWarehouseTitle{height:21%;display:grid;place-items:center;text-align:center;color:#fff;font-weight:800;font-size:clamp(12px,1.5vw,20px);letter-spacing:.04em}
-.loginWarehouseDoor{position:relative;display:flex;justify-content:space-between;height:79%;overflow:hidden;border:5px solid #304652;background:linear-gradient(90deg,#a8b9bb,#e0e4de 48%,#9baeb0);box-shadow:inset 0 0 20px #223b4d66}
-.loginWarehouseDoor:after{content:"";position:absolute;left:49%;top:0;bottom:0;width:5px;background:#243d49}
-.loginShelf{width:36%;height:100%;background:repeating-linear-gradient(to bottom,transparent 0 17%,#3b6172 17% 20%,transparent 20% 34%),repeating-linear-gradient(to right,#d9e8e9 0 22%,#77a3b5 22% 37%,#e4eff1 37% 52%);border:4px solid #527082;transform-origin:top}
-.loginShelfLeft{transform:perspective(160px) rotateY(22deg)}.loginShelfRight{transform:perspective(160px) rotateY(-22deg)}
-.loginWarehouseAisle{flex:1;background:linear-gradient(180deg,#d5dfe0,#f6f2e9)}
-@media(max-width:1100px){.loginScene{grid-template-columns:minmax(320px,52%) minmax(0,48%);padding:24px}.loginWarehouse{width:48%;height:35vh}.loginMascotStand{width:70%}}
-@media(max-width:760px){.loginExperience{overflow:visible}.loginScene{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100svh;padding:20px 16px 30px}.loginBrand{min-height:0;max-width:320px;margin:0 auto 8px}.loginBrand img{max-height:110px;width:min(100%,300px)}.loginCompactCard{width:min(100%,440px);padding:22px;border-radius:18px}.loginCompactCard h1{font-size:30px}.loginCompactCard .formStack input,.loginCompactCard .formStack button{min-height:48px}.loginShowcase{display:none}.loginScene:after{height:10%}}
-@media(max-width:380px){.loginScene{padding:12px 10px 20px}.loginCompactCard{padding:16px}.loginCompactCard h1{font-size:27px}.loginBrand img{max-height:88px}}
-@media(prefers-reduced-motion:reduce){.loginExperience *{scroll-behavior:auto}}
-
-
-/* Segunda prueba: proporciones controladas, mascota única y acceso Preview discreto */
-.loginExperience{background:#eaf1f3}
-.loginScene{grid-template-columns:minmax(0,480px) minmax(0,480px);grid-template-rows:auto auto;column-gap:clamp(28px,5vw,100px);align-content:center;justify-content:center;min-height:100svh;padding:clamp(20px,4vh,48px) clamp(18px,4vw,54px);background:radial-gradient(circle at 65% 52%,#ffffff 0%,#eef4f5 38%,#dce9ed 100%)}
-.loginScene:before{background:#16a0a3;box-shadow:0 0 12px #16a0a344;height:3px}
-.loginScene:after{height:9%;background:linear-gradient(#e9eff1,#d9e4e7);border-top:1px solid #cbdde2}
-.loginBrand{max-width:440px;min-height:0;margin-bottom:14px}
-.loginBrand img{width:min(100%,400px);max-height:130px;filter:none}
-.loginCompactCard{max-width:440px;width:100%;padding:clamp(20px,2.2vw,30px);border:1px solid #d0e0e5;border-radius:18px;box-shadow:0 15px 36px #123b4d18;background:#fff}
-.loginCompactCard h1{font-size:clamp(28px,2.5vw,36px)}
-.loginCompactCard .formStack{margin:16px 0;gap:12px}
-.loginCompactCard .formStack input{font-size:15px}
-.loginCompactCard .formStack button{font-size:15px}
-.loginShowcase{align-self:center;justify-content:center;padding:0;min-height:0}
-.loginMascotStand{width:min(100%,410px);min-height:0}
-.loginMascotStand .loginMascot{max-height:min(68vh,560px);width:100%;height:auto}
-.loginMascotStand:after{height:15px;left:10%;width:80%;background:#c8dce0;box-shadow:0 8px 25px #0b3b4d22}
-.loginWarehouse{display:none!important}
-.loginPreviewAccess{margin-top:14px;padding-top:12px;border-top:1px solid #e1e9ec}
-.loginPreviewAccess summary{cursor:pointer;font-size:12px;font-weight:700;color:#345b6b;list-style-position:inside}
-.loginPreviewAccess .formStack{margin:12px 0}
-.loginPreviewAccess p{font-size:12px}
-@media(max-width:900px){.loginScene{grid-template-columns:minmax(0,440px) minmax(0,350px);gap:24px;padding:24px}.loginMascotStand .loginMascot{max-height:55vh}}
-@media(max-width:760px){.loginScene{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;padding:20px 16px 32px}.loginBrand{max-width:320px;margin:0 auto 12px}.loginBrand img{width:min(100%,300px);max-height:100px}.loginCompactCard{width:min(100%,440px);padding:22px}.loginShowcase{display:none}.loginScene:after{height:6%}}
-@media(max-width:380px){.loginScene{padding:12px 12px 24px}.loginCompactCard{padding:18px}.loginBrand img{max-height:85px}}
+/* Acceso ALEMSI: reconstruido desde el diseño original; sin reglas de pruebas anteriores */
+.loginPage.loginRestored{display:grid;grid-template-columns:minmax(0,470px) minmax(0,420px);align-items:center;justify-content:center;gap:clamp(24px,5vw,80px);min-height:100svh;width:100%;padding:clamp(24px,5vh,48px) 24px;background:linear-gradient(125deg,#f8fbfc 0%,#eaf4f4 60%,#dceced 100%)}
+.loginRestoredCard{width:100%;max-width:470px;padding:clamp(26px,3vw,38px);border:1px solid #d6e5e8;border-radius:20px;background:#fff;box-shadow:0 18px 46px rgba(7,59,92,.13)}
+.loginRestoredBrand{display:flex;align-items:center;justify-content:center;width:100%;margin:0 auto 18px}
+.loginRestoredBrand img{display:block;width:min(100%,330px);height:auto;max-height:132px;object-fit:contain}
+.loginRestoredCard .eyebrow{font-size:12px;color:#087f83;letter-spacing:.12em}
+.loginRestoredCard h1{font-size:clamp(30px,3vw,39px);line-height:1.12;margin:8px 0 10px;color:#073b5c}
+.loginRestoredCard p:not(.eyebrow){font-size:14px;line-height:1.5;color:#425b69}
+.loginRestoredCard .formStack{display:grid;gap:14px;margin:20px 0}
+.loginRestoredCard .formStack label{display:block;font-size:14px;font-weight:700;color:#17384c}
+.loginRestoredCard .formStack input{display:block;width:100%;min-height:46px;margin-top:7px;padding:11px 12px;font-size:16px}
+.loginRestoredCard .formStack button{min-height:46px;font-size:15px}
+.loginRestoredCard>a{display:inline-block;margin-top:10px;font-size:13px}
+.loginRestoredCard>small{display:block;margin-top:12px;font-size:12px;line-height:1.5;color:#5c7180}
+.loginRestoredMascot{display:flex;align-items:center;justify-content:center;min-width:0}
+.loginRestoredMascot img{display:block;width:min(100%,390px);height:auto;max-height:min(75svh,590px);object-fit:contain}
+.loginPreviewAccess{margin:16px 0 0;padding:12px 0 0;border-top:1px solid #e1e9ec}
+.loginPreviewAccess summary{cursor:pointer;font-size:13px;font-weight:700;color:#345b6b}
+.loginPreviewAccess .formStack{margin:14px 0}
+.loginPreviewAccess p{font-size:13px}
+@media(max-width:850px){.loginPage.loginRestored{grid-template-columns:minmax(0,470px);padding:24px 16px;gap:0}.loginRestoredMascot{display:none}.loginRestoredCard{margin:auto}}
+@media(max-width:420px){.loginPage.loginRestored{padding:16px 12px}.loginRestoredCard{padding:22px 18px;border-radius:16px}.loginRestoredBrand img{max-height:110px}.loginRestoredCard h1{font-size:31px}}
