@@ -41,7 +41,9 @@ export function evaluarCobertura(requeridos: MaterialRequerido[], maestro: Mater
       materialId: null, materialName: null,
       reason: "Nombre/código encontrado, pero hay ambigüedad o falta respaldo de función/superficie."
     };
-    const functional = req.function ? maestro.filter(m => contains(m.functions, req.function) && (!req.surface || contains(m.surfaces, req.surface))) : [];
+    const requiredFunction = req.function;
+    const requiredSurface = req.surface;
+    const functional = requiredFunction ? maestro.filter(m => contains(m.functions, requiredFunction) && (!requiredSurface || contains(m.surfaces, requiredSurface))) : [];
     return {
       requested: req.requested, source: req.source,
       status: functional.length ? "REVISION" as const : "NO_ATENDIDO" as const,
