@@ -5,7 +5,7 @@ import { login, requestPreviewTestCode, verifyPreviewTestCode } from "./actions"
 
 export default async function Login({ searchParams }:{searchParams:Promise<{error?:string;test_code?:string;email?:string}>}) {
   const { error, test_code, email } = await searchParams;
-  return <main className="loginPage loginExperience"><div className="loginScene"><div className="loginBrand"><Image src="/alemsi-logo.png" width={460} height={210} alt="ALEMSI Servicios de Higiene y Desinfección" priority /></div><section className="loginCard loginCompactCard">
+  return <main className="loginPage loginRestored"><section className="loginCard loginRestoredCard"><div className="loginRestoredBrand"><Image src="/alemsi-logo.png" width={330} height={150} alt="ALEMSI Servicios de Higiene y Desinfección" priority /></div>
     <div><p className="eyebrow">CONTROL OPERACIONAL</p><h1>Materiales</h1><p>Ingreso individualizado y protegido por perfil.</p></div>
     {error && <p className="alert danger">{error}</p>}
     <form action={login} className="formStack"><label>Correo o perfil<input name="identifier" type="text" required autoComplete="username" placeholder="Correo o perfil" autoCapitalize="none" spellCheck={false}/></label><label>Contraseña<input name="password" type="password" required autoComplete="current-password"/></label><LoginSubmitButton/></form>
@@ -22,5 +22,5 @@ export default async function Login({ searchParams }:{searchParams:Promise<{erro
     </details>}
     <Link href="/forgot-password">¿Olvidaste tu contraseña?</Link>
     <small>Puedes ingresar con tu correo o con el nombre de tu perfil cuando exista un único usuario activo en ese perfil.</small>
-  </section><div className="loginShowcase" aria-hidden="true"><div className="loginMascotStand"><Image className="loginMascot" src="/alemsin-maestro.png" width={420} height={610} alt="" /></div></div></div></main>;
+  </section><div className="loginRestoredMascot"><Image src="/alemsin-maestro.png" width={420} height={610} alt="ALEMZÍN, mascota ALEMSI" /></div></main>;
 }
