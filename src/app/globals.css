@@ -49,3 +49,29 @@
 @media(max-width:760px){.loginExperience{overflow:visible}.loginScene{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100svh;padding:20px 16px 30px}.loginBrand{min-height:0;max-width:320px;margin:0 auto 8px}.loginBrand img{max-height:110px;width:min(100%,300px)}.loginCompactCard{width:min(100%,440px);padding:22px;border-radius:18px}.loginCompactCard h1{font-size:30px}.loginCompactCard .formStack input,.loginCompactCard .formStack button{min-height:48px}.loginShowcase{display:none}.loginScene:after{height:10%}}
 @media(max-width:380px){.loginScene{padding:12px 10px 20px}.loginCompactCard{padding:16px}.loginCompactCard h1{font-size:27px}.loginBrand img{max-height:88px}}
 @media(prefers-reduced-motion:reduce){.loginExperience *{scroll-behavior:auto}}
+
+
+/* Segunda prueba: proporciones controladas, mascota única y acceso Preview discreto */
+.loginExperience{background:#eaf1f3}
+.loginScene{grid-template-columns:minmax(0,480px) minmax(0,480px);grid-template-rows:auto auto;column-gap:clamp(28px,5vw,100px);align-content:center;justify-content:center;min-height:100svh;padding:clamp(20px,4vh,48px) clamp(18px,4vw,54px);background:radial-gradient(circle at 65% 52%,#ffffff 0%,#eef4f5 38%,#dce9ed 100%)}
+.loginScene:before{background:#16a0a3;box-shadow:0 0 12px #16a0a344;height:3px}
+.loginScene:after{height:9%;background:linear-gradient(#e9eff1,#d9e4e7);border-top:1px solid #cbdde2}
+.loginBrand{max-width:440px;min-height:0;margin-bottom:14px}
+.loginBrand img{width:min(100%,400px);max-height:130px;filter:none}
+.loginCompactCard{max-width:440px;width:100%;padding:clamp(20px,2.2vw,30px);border:1px solid #d0e0e5;border-radius:18px;box-shadow:0 15px 36px #123b4d18;background:#fff}
+.loginCompactCard h1{font-size:clamp(28px,2.5vw,36px)}
+.loginCompactCard .formStack{margin:16px 0;gap:12px}
+.loginCompactCard .formStack input{font-size:15px}
+.loginCompactCard .formStack button{font-size:15px}
+.loginShowcase{align-self:center;justify-content:center;padding:0;min-height:0}
+.loginMascotStand{width:min(100%,410px);min-height:0}
+.loginMascotStand .loginMascot{max-height:min(68vh,560px);width:100%;height:auto}
+.loginMascotStand:after{height:15px;left:10%;width:80%;background:#c8dce0;box-shadow:0 8px 25px #0b3b4d22}
+.loginWarehouse{display:none!important}
+.loginPreviewAccess{margin-top:14px;padding-top:12px;border-top:1px solid #e1e9ec}
+.loginPreviewAccess summary{cursor:pointer;font-size:12px;font-weight:700;color:#345b6b;list-style-position:inside}
+.loginPreviewAccess .formStack{margin:12px 0}
+.loginPreviewAccess p{font-size:12px}
+@media(max-width:900px){.loginScene{grid-template-columns:minmax(0,440px) minmax(0,350px);gap:24px;padding:24px}.loginMascotStand .loginMascot{max-height:55vh}}
+@media(max-width:760px){.loginScene{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;padding:20px 16px 32px}.loginBrand{max-width:320px;margin:0 auto 12px}.loginBrand img{width:min(100%,300px);max-height:100px}.loginCompactCard{width:min(100%,440px);padding:22px}.loginShowcase{display:none}.loginScene:after{height:6%}}
+@media(max-width:380px){.loginScene{padding:12px 12px 24px}.loginCompactCard{padding:18px}.loginBrand img{max-height:85px}}
