@@ -1,0 +1,35 @@
+/* Procurement UX: responsive product cards, desktop data grid remains intact. */
+@media(max-width:760px){
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]{display:grid!important;gap:12px!important;max-height:none!important;overflow:visible!important;border:0!important;background:transparent!important}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactHeader{display:none!important}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader){
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;
+  padding:16px!important;border:1px solid #d7e4e8!important;border-radius:14px!important;background:#fff!important;
+  box-shadow:0 2px 8px rgba(11,41,66,.05);min-width:0!important
+ }
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span{display:block!important;min-width:0!important;grid-column:auto!important;overflow-wrap:anywhere}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:first-child{grid-column:1/-1!important;padding-bottom:8px;border-bottom:1px solid #e5edef}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:first-child label{display:flex!important;align-items:flex-start!important;gap:12px!important}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:first-child b{font-size:16px;line-height:1.4}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:first-child small{display:block;margin:7px 0 0 32px;color:#526777}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(2):before{content:"Necesidad"}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(3):before{content:"Cubierto"}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(4):before{content:"Pendiente"}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(n+2):nth-child(-n+4){padding:10px 8px;border-radius:8px;background:#f1f6f8;text-align:center;font-size:18px;font-variant-numeric:tabular-nums}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(n+2):nth-child(-n+4):before{display:block;font-size:12px;font-weight:700;color:#526777;margin-bottom:5px}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(4){background:#e8f6f3;color:#075f61}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(5){grid-column:1/-1!important}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(5):before{content:"Cantidad a solicitar"}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(6){grid-column:1/-1!important}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(6):before{content:"Proveedor"}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(7){grid-column:1/-1!important}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(7):before{content:"Valor neto unitario (CLP)"}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span:nth-child(n+5):before{display:block;font-size:13px;font-weight:700;color:#304b5b;margin-bottom:6px}
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span input:not([type="checkbox"]),
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader)>span select{width:100%!important;min-width:0!important;max-width:100%!important;min-height:46px!important}
+ .simpleApp .procureSection .compactFields>button{min-height:44px!important}
+ .simpleApp .procureSection .stickyAction{position:sticky;bottom:0;z-index:8;padding:12px!important;border:1px solid #dbe5ea;border-radius:12px;background:#f7fbfc;box-shadow:0 -4px 18px #0b294214}
+}
+@media(min-width:761px){
+ .simpleApp .procureSection>.compactTable[aria-label="Necesidades de abastecimiento"]>.compactRow:not(.compactHeader){align-items:center}
+}

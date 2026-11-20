@@ -45,7 +45,7 @@ export async function createPurchaseOrderFromConsolidated(formData:FormData){
   const {data:runs}=await supabase.from("supply_runs").select("id,campaign_id,contract_id").eq("campaign_id",campaignId).order("created_at",{ascending:true});
   let run=(runs||[])[0] as any;
   if(!run){
-    if(!campaign.contract_id)throw new Error("La campaña no tiene contrato base para iniciar abastecimiento");
+    // Las campañas multicontrato no tienen contrato base: el costo se imputa por guía de entrega.
     const consolidatedNet=[...required.values()].reduce((sum,item)=>sum+item.qty*item.unit_net_price,0);
     const created=await supabase.from("supply_runs").insert({campaign_id:campaignId,contract_id:campaign.contract_id,status:"En abastecimiento",consolidated_net:consolidatedNet,approved_net:0}).select("id,campaign_id,contract_id").single();
     if(created.error||!created.data)throw created.error||new Error("No se pudo crear el abastecimiento");
@@ -81,6 +81,15 @@ export async function createPurchaseOrderFromConsolidated(formData:FormData){
   for(const [materialId,source] of required){let supplyLine=lineByMaterial.get(materialId);if(!supplyLine){const created=await supabase.from("supply_lines").insert({supply_run_id:run.id,material_id:materialId,required_qty:source.qty,approved_qty:0,estimated_unit_net:source.unit_net_price,approved_net:0}).select("id,material_id,required_qty").single();if(created.error||!created.data)throw created.error||new Error("No se pudo crear línea de abastecimiento");supplyLine=created.data;lineByMaterial.set(materialId,supplyLine)}else{const updated=await supabase.from("supply_lines").update({required_qty:source.qty,estimated_unit_net:source.unit_net_price}).eq("id",supplyLine.id);if(updated.error)throw updated.error}
     const clear=await supabase.from("supply_allocations").delete().eq("supply_line_id",supplyLine.id);if(clear.error)throw clear.error;
     if(source.allocations.length){const alloc=await supabase.from("supply_allocations").insert(source.allocations.map(item=>({supply_line_id:supplyLine.id,survey_line_id:item.survey_line_id,installation_id:item.installation_id,allocated_qty:item.qty})));if(alloc.error)throw alloc.error}
+  }
+
+  // Registrar el proveedor definitivo de las líneas que originan este documento.
+  // Una campaña puede generar órdenes para distintos proveedores.
+  for(const item of chosen){
+    const supplyLine=lineByMaterial.get(item.material_id);
+    if(!supplyLine)throw new Error("Línea de abastecimiento no encontrada");
+    const {error:assignError}=await supabase.from("supply_lines").update({final_supplier_id:supplierId}).eq("id",supplyLine.id);
+    if(assignError)throw assignError;
   }
 
   const t=totals(chosen.reduce((sum,item)=>sum+item.qty*item.unit_net_price,0));

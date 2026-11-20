@@ -1,0 +1,35 @@
+/* UX navigation refinement: single primary navigation per viewport. */
+.simpleApp .mobileMenuToggle{display:none}
+@media(min-width:1001px){
+ .simpleApp .simpleHomeGrid{display:none!important}
+ .simpleApp .simpleSummary{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px!important;align-items:stretch}
+ .simpleApp .simpleSummary>span{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:18px!important;min-width:0;border:1px solid #dbe5ea;border-radius:12px;background:#fff}
+ .simpleApp .simpleSummary b{font-size:28px;color:#0b2942}
+}
+@media(max-width:1000px){
+ .simpleApp .simpleTop{gap:10px}
+ .simpleApp .mobileMenuToggle{display:inline-flex!important;align-items:center;justify-content:center;gap:7px;flex-shrink:0;min-width:44px;min-height:44px;padding:8px 10px;border:1px solid #d3e4e7;border-radius:9px;background:#fff;color:#0b2942;font-weight:700}
+ .simpleApp .simpleSidebar,.simpleApp .simpleSidebar:hover{display:none!important}
+ .simpleApp .simpleSidebar.mobileMenuOpen,.simpleApp .simpleSidebar.mobileMenuOpen:hover{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:8px;width:100%;height:auto;overflow:visible;padding:12px;background:#fff;border-bottom:1px solid #dbe5ea;box-shadow:0 8px 18px #0b294214}
+ .simpleApp .simpleSidebar.mobileMenuOpen .nav{width:100%;white-space:normal;text-align:left;min-height:48px;padding:10px 12px;border:1px solid #dbe5ea;border-radius:9px}
+ .simpleApp .simpleSidebar.mobileMenuOpen .productTitle{display:none}
+ .simpleApp .simpleHomeGrid{display:grid!important}
+ .simpleApp .simpleSummary{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ .simpleApp .simpleSummary>span{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;overflow-wrap:anywhere;background:#fff;border:1px solid #dbe5ea;border-radius:10px;padding:12px!important}
+ .simpleApp .simpleSummary b{font-size:24px;color:#0b2942}
+}
+@media(max-width:600px){
+ .simpleApp .simpleTop{min-height:64px;height:auto;flex-wrap:wrap;padding:8px 12px}
+ .simpleApp .simpleLogoButton img{max-width:125px;height:auto}
+ .simpleApp .simpleTopRight{margin-left:auto;gap:8px}
+ .simpleApp .simpleTopRight a{font-size:13px}
+ .simpleApp .simpleSidebar.mobileMenuOpen{grid-template-columns:1fr}
+ .simpleApp .simpleSummary{grid-template-columns:1fr!important}
+ .simpleApp .simpleSummary>span{flex-direction:row;justify-content:space-between;align-items:center}
+ .simpleApp .simpleHomeTile{min-height:54px!important}
+ .simpleApp .simplePageHead h1{font-size:clamp(23px,6vw,30px)}
+}
+@media(max-width:390px){
+ .simpleApp .mobileMenuToggle span{display:none}
+ .simpleApp .simpleTopRight a{max-width:112px;line-height:1.2;text-align:center}
+}

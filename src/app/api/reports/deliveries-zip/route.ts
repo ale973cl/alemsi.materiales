@@ -12,7 +12,7 @@ export async function GET(request:Request){
  const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)return new Response("Sesión no válida",{status:401});
  const {data:profile}=await supabase.from("user_profiles").select("role,active").eq("id",user.id).single();if(!profile?.active||!["Admin Total","Gerencia","Admin","Finanzas","Bodega"].includes(profile.role))return new Response("No autorizado",{status:403});
  const url=new URL(request.url),month=url.searchParams.get("month")||"",clientId=url.searchParams.get("client_id")||"",installationId=url.searchParams.get("installation_id")||"",campaignId=url.searchParams.get("campaign_id")||"",campaignName=url.searchParams.get("campaign_name")||"",format=url.searchParams.get("format")||"zip",selectedIds=[...new Set((url.searchParams.get("dispatch_ids")||"").split(",").map(x=>x.trim()).filter(Boolean))];
- if(!/^\d{4}-\d{2}$/.test(month))return new Response("Periodo inválido",{status:400});
+ if(month&&!/^\d{4}-\d{2}$/.test(month))return new Response("Periodo inválido",{status:400});
  const range=month?(()=>{const [year,mon]=month.split("-").map(Number);if(mon<1||mon>12)return null;const start=new Date(Date.UTC(year,mon-1,1,3)).toISOString(),next=new Date(Date.UTC(year,mon,1,3)).toISOString();return{start,next};})():null;
  if(month&&!range)return new Response("Periodo inválido",{status:400});
  if(format==="list"){
