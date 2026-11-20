@@ -45,7 +45,7 @@ export async function justifyCampaignInstallation(formData:FormData) {
     status:"Justificada",
     justification:reason,
     supervisor_id:user.id,
-  }).eq("campaign_id",campaignId).eq("installation_id",installationId);
+  }).eq("campaign_id",campaignId).eq("installation_id",installationId).neq("status","Completada");
   if(error) throw error;
 
   await campaignAudit(supabase,user,profile,{action:"Justificar instalación sin levantamiento",entity_id:campaignId,old_data:current,new_data:{installation_id:installationId,status:"Justificada",justification:reason}});
@@ -65,14 +65,26 @@ export async function forceCloseCampaign(formData:FormData) {
   const {data:pending,error:pendingError}=await supabase.from("campaign_installations").select("campaign_id,installation_id,status,justification").eq("campaign_id",campaignId).neq("status","Completada");
   if(pendingError) throw pendingError;
 
+  // El cierre forzado no debe truncar una campaña que ya tenga abastecimiento
+  // o despachos en curso. Esos circuitos requieren su cierre operativo propio.
+  const [{count:supplyCount,error:supplyError},{count:dispatchCount,error:dispatchError}]=await Promise.all([
+    supabase.from("supply_runs").select("id",{count:"exact",head:true}).eq("campaign_id",campaignId),
+    supabase.from("dispatches").select("id",{count:"exact",head:true}).eq("campaign_id",campaignId),
+  ]);
+  if(supplyError) throw supplyError;
+  if(dispatchError) throw dispatchError;
+  if((supplyCount||0)>0||(dispatchCount||0)>0) {
+    throw new Error("La campaña ya tiene abastecimiento o despachos. No se puede aplicar cierre forzado de levantamientos como cierre operativo.");
+  }
+
   for(const item of pending||[]) {
     const justification=String(item.justification||"").trim()||`Cierre forzado: ${reason}`;
-    const {error}=await supabase.from("campaign_installations").update({status:"Justificada",justification,supervisor_id:user.id}).eq("campaign_id",campaignId).eq("installation_id",item.installation_id);
+    const {error}=await supabase.from("campaign_installations").update({status:"Justificada",justification,supervisor_id:user.id}).eq("campaign_id",campaignId).eq("installation_id",item.installation_id).neq("status","Completada");
     if(error) throw error;
   }
 
   const closedAt=new Date().toISOString();
-  const {error:closeError}=await supabase.from("campaigns").update({status:"Cerrada",closed_at:closedAt}).eq("id",campaignId);
+  const {error:closeError}=await supabase.from("campaigns").update({status:"Cerrada",closed_at:closedAt}).eq("id",campaignId).eq("status","Abierta");
   if(closeError) throw closeError;
 
   await campaignAudit(supabase,user,profile,{action:"Cierre forzado",entity_id:campaignId,old_data:{status:campaign.status,pending:pending?.length||0},new_data:{status:"Cerrada",closed_at:closedAt},observation:reason});
