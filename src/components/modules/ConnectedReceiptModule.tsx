@@ -29,14 +29,14 @@ export default function ConnectedReceiptModule({role}:{role:string}){
  const matches=useMemo(()=>{const q=norm(orderSearch);if(!q)return receivable.slice(0,20);return receivable.filter(o=>norm(`${o.order_number} ${o.suppliers?.legal_name} ${o.status}`).includes(q)).slice(0,30)},[receivable,orderSearch]);
  const initialOrderHandled=useRef(false);
  useEffect(()=>{
-  if(initialOrderHandled.current||loading)return;
+  if(initialOrderHandled.current||loading||orders.length===0)return;
   const orderId=new URLSearchParams(window.location.search).get("oc");
   if(!orderId){initialOrderHandled.current=true;return}
   const match=receivable.find(order=>order.id===orderId);
   if(match){setReceiptMode("oc");setSelectedId(match.id);setOrderSearch(match.order_number||"");}
   else setMessage("La OC indicada no está disponible para recepción. Revisa si ya fue recibida o cerrada.");
   initialOrderHandled.current=true;
- },[loading,receivable]);
+ },[loading,orders.length,receivable]);
  const selected=receivable.find(order=>order.id===selectedId)||null;const materialLines=(selected?.purchase_order_lines||[]).filter(line=>line.material_id&&Number(line.pending_qty)>0);
  const history=useMemo(()=>{const q=norm(historySearch);return receipts.filter(r=>{const o=orders.find(x=>x.id===r.purchase_order_id);return !q||norm(`${r.document_type} ${r.document_folio} ${o?.order_number} ${o?.suppliers?.legal_name}`).includes(q)}).slice(0,100)},[receipts,orders,historySearch]);
  useEffect(()=>{if(!selected){setQty({});setPrices({});return}const q:Record<string,number>={},p:Record<string,number>={};for(const line of materialLines){q[line.id]=Number(line.pending_qty||0);p[line.id]=Number(line.unit_net_price||0)}setQty(q);setPrices(p);setDocumentType("Factura");setDocumentFolio("");setDocumentDate(new Date().toISOString().slice(0,10));const remainingNet=materialLines.reduce((sum,line)=>sum+Number(line.pending_qty||0)*Number(line.unit_net_price||0),0);setDocumentNet(Math.round(remainingNet));setDocumentVat(Math.round(remainingNet*.19));setDocumentTotal(Math.round(remainingNet*1.19));setInvoiceFile(null);setGeminiLines([]);setShipping("Incluido");setFreight(0);setObservation("");setMessage("")},[selectedId]);
