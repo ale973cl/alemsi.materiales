@@ -35,6 +35,15 @@ export async function createRegionalCampaign(formData: FormData):Promise<Campaig
 
   if (installationError || !installations?.length || installations.length !== installationIds.length) return {ok:false,message:"Hay instalaciones inactivas o no disponibles. Actualiza la lista e inténtalo nuevamente."};
 
+  // El esquema actual guarda un único contract_id en campaigns. Impedir una
+  // campaña multicontrato hasta que sus consultas y abastecimiento soporten
+  // explícitamente el contrato de cada instalación; guardar el primero
+  // produciría órdenes y consolidaciones vinculadas al contrato equivocado.
+  const contractIds = [...new Set(installations.map((item: any) => String(item.contract_id)))];
+  if (contractIds.length !== 1) {
+    return {ok:false,message:"Las instalaciones seleccionadas pertenecen a distintos contratos. Por ahora crea una campaña por contrato para evitar errores en abastecimiento y órdenes de compra."};
+  }
+
   // La unidad protegida es la instalación: un cliente puede tener varias campañas activas,
   // pero la misma instalación nunca puede estar simultáneamente en dos campañas abiertas.
   const { data: occupied, error: occupiedError } = await supabase
@@ -59,7 +68,7 @@ export async function createRegionalCampaign(formData: FormData):Promise<Campaig
 
   const { data: campaign, error } = await supabase
     .from("campaigns")
-    .insert({ contract_id: installations[0].contract_id, label, status: "Abierta", created_by: user.id })
+    .insert({ contract_id: contractIds[0], label, status: "Abierta", created_by: user.id })
     .select("id")
     .single();
   if (error || !campaign) return {ok:false,message:"No se pudo guardar la campaña. Inténtalo nuevamente."};
