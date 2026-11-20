@@ -8,6 +8,7 @@ import "./operational-compact.css";
 import "./mobile-viewport-corrections.css";
 import "./navigation-ux.css";
 import "./procurement-ux.css";
+import "./purchase-order-document.css";
 
 const appName = "ALEMSI Materiales";
 const appDescription = "ERP de gestión de materiales y abastecimiento. Control operacional, compras, recepción, despacho y trazabilidad por contrato e instalación.";
