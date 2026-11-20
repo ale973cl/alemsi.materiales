@@ -1,0 +1,49 @@
+/* Corporate purchase order: responsive preview and stable A4 print output. */
+.poDoc{width:100%;max-width:100%;overflow-wrap:anywhere}
+.poDoc table{table-layout:fixed}
+.poDoc th:nth-child(1){width:5%}.poDoc th:nth-child(2){width:13%}.poDoc th:nth-child(3){width:32%}.poDoc th:nth-child(4){width:9%}.poDoc th:nth-child(5){width:9%}.poDoc th:nth-child(6){width:16%}.poDoc th:nth-child(7){width:16%}
+.poDoc td,.poDoc th{overflow-wrap:anywhere;vertical-align:top}
+.poDoc thead{display:table-header-group}
+.poDoc tr{break-inside:avoid;page-break-inside:avoid}
+@media screen and (max-width:760px){
+ main:has(>.poControls){padding:12px!important;max-width:100%!important;overflow-x:hidden}
+ .poControls{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px!important}
+ .poControls>form{grid-column:1/-1}.poControls>form button{width:100%;min-height:44px}
+ .poControls>button{min-height:44px}
+ .poDoc{padding:16px!important;border-radius:12px!important;box-shadow:none!important}
+ .poDoc>header{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:12px!important;align-items:start!important}
+ .poDoc>header img{width:100%!important;max-width:150px!important;height:auto!important;object-fit:contain}
+ .poDoc>header>div:nth-child(2){min-width:0}.poDoc>header h1{font-size:18px!important;line-height:1.15!important;overflow-wrap:normal!important}
+ .poDoc>header p{font-size:12px!important}
+ .poDoc>header>div:last-child{grid-column:1/-1;min-width:0}
+ .poDoc>section:first-of-type{grid-template-columns:1fr!important;gap:12px!important;font-size:14px}
+ .poDoc table,.poDoc tbody,.poDoc tr,.poDoc td{display:block!important;width:100%!important}
+ .poDoc thead{display:none!important}
+ .poDoc table{border-collapse:separate!important}
+ .poDoc tbody{display:grid!important;gap:12px!important}
+ .poDoc tr{border:1px solid #c6d1d6!important;border-radius:9px!important;overflow:hidden;padding:10px;background:#fff}
+ .poDoc td{display:flex!important;justify-content:space-between;gap:12px;text-align:right!important;padding:7px 0!important;border:0!important;border-bottom:1px solid #e8eff2!important}
+ .poDoc td:last-child{border-bottom:0!important;font-weight:700}
+ .poDoc td:before{flex:0 0 90px;text-align:left;font-weight:700;color:#476171;font-size:12px}
+ .poDoc td:nth-child(1):before{content:"Ítem"}.poDoc td:nth-child(2):before{content:"Código"}.poDoc td:nth-child(3):before{content:"Descripción"}.poDoc td:nth-child(4):before{content:"Cantidad"}.poDoc td:nth-child(5):before{content:"Unidad"}.poDoc td:nth-child(6):before{content:"Neto unit."}.poDoc td:nth-child(7):before{content:"Neto línea"}
+ .poDoc>section:last-of-type{grid-template-columns:1fr!important;gap:12px!important}
+}
+@media print{
+ @page{size:A4 portrait;margin:12mm}
+ html,body{background:#fff!important;overflow:visible!important;width:auto!important}
+ main:has(>.poControls){max-width:none!important;width:100%!important;padding:0!important;margin:0!important}
+ .poControls{display:none!important}
+ .poDoc{width:100%!important;max-width:none!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:#12314a!important;font-size:10pt}
+ .poDoc>header{display:grid!important;grid-template-columns:145px minmax(0,1fr) 150px!important;gap:10px!important;align-items:center!important;break-inside:avoid}
+ .poDoc>header h1{font-size:19pt!important;line-height:1.15!important}
+ .poDoc>header img{width:135px!important;height:auto!important}
+ .poDoc>section:first-of-type{grid-template-columns:1fr 1fr!important;break-inside:avoid;font-size:9pt}
+ .poDoc table{display:table!important;width:100%!important;table-layout:fixed!important;font-size:8pt!important}
+ .poDoc thead{display:table-header-group!important}
+ .poDoc tbody{display:table-row-group!important}
+ .poDoc tr{display:table-row!important;break-inside:avoid!important}
+ .poDoc th,.poDoc td{display:table-cell!important;padding:5px!important;border:1px solid #c6d1d6!important;overflow-wrap:anywhere}
+ .poDoc td:before{display:none!important;content:none!important}
+ .poDoc>section:last-of-type{display:grid!important;grid-template-columns:minmax(0,1fr) 210px!important;gap:12px!important;break-inside:avoid}
+ .poDoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
