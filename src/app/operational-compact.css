@@ -521,3 +521,36 @@
  animation:navigationPulse .9s ease-in-out infinite alternate;
 }
 @keyframes navigationPulse{from{opacity:.28;transform:scale(.8)}to{opacity:1;transform:scale(1.08)}}
+
+
+/* Compras: listado de documentos en una sola página, sin scroll interior. */
+.procurement .purchaseDocumentList{max-height:none!important;overflow:visible!important;gap:5px}
+.procurement .purchaseDocumentList h3{margin:2px 0 5px!important;font-size:15px}
+.procurement .purchaseCompactOrder{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;border-radius:8px;overflow:visible;min-height:52px}
+.procurement .purchaseCompactOrder header{min-width:0;padding:7px 10px;gap:10px}
+.procurement .purchaseCompactOrder header span{min-width:0;gap:2px}
+.procurement .purchaseCompactOrder header b{font-size:13px;overflow-wrap:anywhere}
+.procurement .purchaseCompactOrder header small{font-size:12px!important;color:#516b79;overflow-wrap:anywhere}
+.procurement .purchaseCompactOrder header strong{font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.procurement .purchaseCompactOrder footer{border:0;background:transparent;padding:5px 8px 5px 0;justify-content:flex-end;gap:5px}
+.procurement .purchaseCompactOrder footer button,.procurement .purchaseCompactOrder footer a{min-height:32px!important;padding:5px 8px!important;font-size:12px!important;white-space:nowrap}
+.procurement .purchaseCompactOrder footer small{display:none}
+@media(max-width:1050px){
+ .procurement .purchaseCompactOrder{grid-template-columns:1fr;gap:0}
+ .procurement .purchaseCompactOrder footer{padding:0 9px 7px;justify-content:flex-start}
+}
+@media(max-width:600px){
+ .procurement{min-width:0;padding:10px!important}
+ .procurement .procureHead{gap:8px}
+ .procurement .compactTabs{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible}
+ .procurement .compactTabs button{white-space:normal;min-width:0;font-size:12px!important;padding:7px 4px!important;line-height:1.2}
+ .procurement .purchaseCompactOrder{min-height:0}
+ .procurement .purchaseCompactOrder header{padding:9px;align-items:flex-start}
+ .procurement .purchaseCompactOrder header b{font-size:12px}
+ .procurement .purchaseCompactOrder header strong{font-size:13px}
+ .procurement .purchaseCompactOrder footer{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .procurement .purchaseCompactOrder footer button,.procurement .purchaseCompactOrder footer a{width:100%;white-space:normal;text-align:center;min-height:38px!important}
+ .procurement .nextAction{display:grid;grid-template-columns:1fr 1fr}
+ .procurement .nextAction span{grid-column:1/-1}
+ .procurement .nextAction .btn,.procurement .nextAction button{min-width:0}
+}
