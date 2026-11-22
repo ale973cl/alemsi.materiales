@@ -71,7 +71,7 @@ Estructura exacta:
 No calcules ni completes valores que no estén impresos claramente. Si el documento contiene descuentos, flete u otros cargos, inclúyelos en notes.`;
 
 
-  let model=process.env.GEMINI_RECEIPT_MODEL?.trim().replace(/^models\\//,"")||"";
+  let model=process.env.GEMINI_RECEIPT_MODEL?.trim().replace("models/","")||"";
   try{
     if(!model||model==="auto"){
       const catalog=await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=100",{
@@ -81,7 +81,7 @@ No calcules ni completes valores que no estén impresos claramente. Si el docume
       const listing=await catalog.json();
       const names=(listing.models||[])
         .filter((m:any)=>m.supportedGenerationMethods?.includes("generateContent"))
-        .map((m:any)=>String(m.name||"").replace(/^models\\/,""))
+        .map((m:any)=>String(m.name||"").replace("models/",""))
         .filter((n:string)=>/^gemini-[a-z0-9.-]+$/.test(n)&&n.includes("flash")&&!/preview|experimental|exp-|image|audio|live|tts/.test(n));
       if(!names.length)throw Error("No hay modelos Gemini Flash disponibles.");
       model=names.sort((a:string,b:string)=>Number(a.includes("lite"))-Number(b.includes("lite"))||b.localeCompare(a,undefined,{numeric:true}))[0];
