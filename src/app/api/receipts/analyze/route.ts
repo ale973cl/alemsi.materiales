@@ -15,7 +15,7 @@ async function availableModels(key:string):Promise<string[]>{
  const data=await response.json();
  const models=(Array.isArray(data.models)?data.models:[] as GeminiModel[])
   .filter((m:GeminiModel)=>m.supportedGenerationMethods?.includes("generateContent"))
-  .map((m:GeminiModel)=>String(m.name||"").replace(/^models\\/,""))
+  .map((m:GeminiModel)=>String(m.name||"").replace("models/",""))
   .filter((name:string)=>/^gemini-[a-z0-9.-]+$/i.test(name)&&/flash/i.test(name)&&!/image|audio|tts|live|preview|exp(?:erimental)?/i.test(name))
   .sort((a:string,b:string)=>Number(a.includes("lite"))-Number(b.includes("lite"))||b.localeCompare(a,undefined,{numeric:true}));
  if(!models.length)throw new Error("La clave Gemini no tiene modelos Flash compatibles.");
@@ -40,7 +40,7 @@ export async function POST(request:NextRequest){
 Formato de fecha YYYY-MM-DD si es legible; montos CLP sin separadores. line_net debe ser el NETO TOTAL de esa línea, sin IVA. unit_net solo si aparece explícito; si no aparece, déjalo null porque el sistema calculará line_net / quantity. En warnings explica textos o cifras ilegibles, datos ausentes y discrepancias de suma. Las líneas no son productos del maestro ALEMSI; NO hagas equivalencia automática.`;
  try{
   const models=await availableModels(key);
-  const preferred=process.env.GEMINI_RECEIPT_MODEL?.trim().replace(/^models\\/,"");
+  const preferred=process.env.GEMINI_RECEIPT_MODEL?.trim().replace("models/","");
   const candidates=preferred&&preferred!=="auto"&&models.includes(preferred)
    ?[preferred,...models.filter(m=>m!==preferred)]:models;
   let res:Response|null=null;
