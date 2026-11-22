@@ -71,27 +71,19 @@ Estructura exacta:
 No calcules ni completes valores que no estén impresos claramente. Si el documento contiene descuentos, flete u otros cargos, inclúyelos en notes.`;
 
 
-  let model=process.env.GEMINI_RECEIPT_MODEL?.trim().replace("models/","")||"";
+  const model="gemini-2.5-flash-lite";
   try{
-    if(!model||model==="auto"){
-      const catalog=await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=100",{
-        headers:{"x-goog-api-key":apiKey},cache:"no-store",signal:AbortSignal.timeout(10000)
-      });
-      if(!catalog.ok)throw Error("Catálogo Gemini HTTP "+catalog.status);
-      const listing=await catalog.json();
-      const names=(listing.models||[])
-        .filter((m:any)=>m.supportedGenerationMethods?.includes("generateContent"))
-        .map((m:any)=>String(m.name||"").replace("models/",""))
-        .filter((n:string)=>/^gemini-[a-z0-9.-]+$/.test(n)&&n.includes("flash")&&!/preview|experimental|exp-|image|audio|live|tts/.test(n));
-      if(!names.length)throw Error("No hay modelos Gemini Flash disponibles.");
-      model=names.sort((a:string,b:string)=>Number(a.includes("lite"))-Number(b.includes("lite"))||b.localeCompare(a,undefined,{numeric:true}))[0];
-    }
-    if(!/^gemini-[a-zA-Z0-9.-]+$/.test(model))throw Error("Modelo Gemini inválido.");
-    const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
+    let response:Response|null=null;
+    for(let attempt=0;attempt<2;attempt++){
+    response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
       method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},
       body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt},{inline_data:{mime_type:file.type,data:bytes.toString("base64")}}]}],generationConfig:{responseMimeType:"application/json",temperature:0}}),
       cache:"no-store",signal:AbortSignal.timeout(45000)
     });
+    if(response.status===429&&attempt===0){await new Promise(resolve=>setTimeout(resolve,20000));continue;}
+    break;
+    }
+    if(!response)throw Error("Gemini no respondió");
     if(!response.ok){
       console.error("invoice_gemini_failure",{httpStatus:response.status,model});
       const explanation=response.status===404?"Modelo Gemini no disponible; revisa GEMINI_RECEIPT_MODEL.":response.status===429?"Cuota Gemini agotada.":response.status===401||response.status===403?"Clave Gemini no autorizada.":"Gemini rechazó la lectura (HTTP "+response.status+").";
