@@ -29,10 +29,8 @@ export async function POST(request:Request){
     return NextResponse.json({error:"Tu perfil no puede ejecutar reconocimiento de facturas"},{status:403});
   }
 
-  const apiKey=process.env.OPENAI_API_KEY;
-  if(!apiKey){
-    return NextResponse.json({error:"El reconocimiento está instalado, pero falta configurar OPENAI_API_KEY en el entorno Preview."},{status:503});
-  }
+  const apiKey=process.env.GEMINI_API_KEY;
+  if(!apiKey)return NextResponse.json({error:"Falta GEMINI_API_KEY en el despliegue."},{status:503});
 
   const formData=await request.formData();
   const file=formData.get("file");
@@ -41,11 +39,6 @@ export async function POST(request:Request){
   if(file.size<=0||file.size>MAX_BYTES)return NextResponse.json({error:"El archivo debe pesar entre 1 byte y 10 MB."},{status:400});
 
   const bytes=Buffer.from(await file.arrayBuffer());
-  const dataUrl=`data:${file.type};base64,${bytes.toString("base64")}`;
-  const documentInput=file.type==="application/pdf"
-    ? {type:"input_file",filename:file.name,file_data:dataUrl}
-    : {type:"input_image",image_url:dataUrl,detail:"high"};
-
   const prompt=`Analiza este documento de compra chileno. Devuelve EXCLUSIVAMENTE JSON válido, sin markdown ni explicaciones.
 Extrae lo visible sin inventar datos. Si un dato no aparece, usa null. Los montos deben ser números sin puntos de miles ni símbolos.
 Estructura exacta:
@@ -77,35 +70,42 @@ Estructura exacta:
 }
 No calcules ni completes valores que no estén impresos claramente. Si el documento contiene descuentos, flete u otros cargos, inclúyelos en notes.`;
 
-  let aiResponse:Response;
+
+  let model=process.env.GEMINI_RECEIPT_MODEL?.trim().replace(/^models\\//,"")||"";
   try{
-    aiResponse=await fetch("https://api.openai.com/v1/responses",{
-      method:"POST",
-      headers:{"Authorization":`Bearer ${apiKey}`,"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:process.env.OPENAI_INVOICE_MODEL||"gpt-5.6-luna",
-        reasoning:{effort:"low"},
-        input:[{role:"user",content:[{type:"input_text",text:prompt},documentInput]}],
-        max_output_tokens:5000,
-      }),
+    if(!model||model==="auto"){
+      const catalog=await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=100",{
+        headers:{"x-goog-api-key":apiKey},cache:"no-store",signal:AbortSignal.timeout(10000)
+      });
+      if(!catalog.ok)throw Error("Catálogo Gemini HTTP "+catalog.status);
+      const listing=await catalog.json();
+      const names=(listing.models||[])
+        .filter((m:any)=>m.supportedGenerationMethods?.includes("generateContent"))
+        .map((m:any)=>String(m.name||"").replace(/^models\\/,""))
+        .filter((n:string)=>/^gemini-[a-z0-9.-]+$/.test(n)&&n.includes("flash")&&!/preview|experimental|exp-|image|audio|live|tts/.test(n));
+      if(!names.length)throw Error("No hay modelos Gemini Flash disponibles.");
+      model=names.sort((a:string,b:string)=>Number(a.includes("lite"))-Number(b.includes("lite"))||b.localeCompare(a,undefined,{numeric:true}))[0];
+    }
+    if(!/^gemini-[a-zA-Z0-9.-]+$/.test(model))throw Error("Modelo Gemini inválido.");
+    const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
+      method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt},{inline_data:{mime_type:file.type,data:bytes.toString("base64")}}]}],generationConfig:{responseMimeType:"application/json",temperature:0}}),
+      cache:"no-store",signal:AbortSignal.timeout(45000)
     });
-  }catch{
-    return NextResponse.json({error:"No se pudo conectar con el servicio de reconocimiento"},{status:502});
-  }
-
-  const payload=await aiResponse.json().catch(()=>null);
-  if(!aiResponse.ok){
-    const detail=payload?.error?.message||"Error del servicio de reconocimiento";
-    return NextResponse.json({error:detail},{status:502});
-  }
-
-  const text=extractText(payload);
-  if(!text)return NextResponse.json({error:"El modelo no devolvió contenido utilizable"},{status:502});
-
-  try{
+    if(!response.ok){
+      console.error("invoice_gemini_failure",{httpStatus:response.status,model});
+      const explanation=response.status===404?"Modelo Gemini no disponible; revisa GEMINI_RECEIPT_MODEL.":response.status===429?"Cuota Gemini agotada.":response.status===401||response.status===403?"Clave Gemini no autorizada.":"Gemini rechazó la lectura (HTTP "+response.status+").";
+      return NextResponse.json({error:explanation},{status:502});
+    }
+    const payload=await response.json();
+    const text=(payload?.candidates?.[0]?.content?.parts||[]).map((p:any)=>p.text||"").join("").trim();
+    if(!text)return NextResponse.json({error:"Gemini no devolvió contenido."},{status:502});
     const data=parseJson(text);
-    return NextResponse.json({ok:true,data,model:payload?.model||process.env.OPENAI_INVOICE_MODEL||"gpt-5.6-luna"});
-  }catch{
-    return NextResponse.json({error:"El documento fue leído, pero la respuesta no llegó en formato estructurado.",raw:text.slice(0,2000)},{status:502});
+    if(!data||typeof data!=="object"||Array.isArray(data)||!Array.isArray(data.lines))throw Error("Respuesta sin líneas de factura");
+    return NextResponse.json({ok:true,data,model},{headers:{"Cache-Control":"no-store"}});
+  }catch(error){
+    const timedOut=error instanceof Error&&error.name==="TimeoutError";
+    console.error("invoice_gemini_exception",{kind:timedOut?"timeout":"upstream_or_format",model});
+    return NextResponse.json({error:timedOut?"Lectura excedió 45 segundos.":"No se pudo completar la lectura con Gemini."},{status:timedOut?504:502});
   }
 }
