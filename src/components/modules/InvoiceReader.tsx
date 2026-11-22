@@ -20,6 +20,7 @@ export default function InvoiceReader({onExtract,onFile}:{onExtract:(value:Extra
   <p style={{fontSize:12,marginTop:0}}>Adjunta el PDF o imagen. Gemini propone los datos, pero debes verificar proveedor, productos y montos. No genera movimientos de inventario.</p>
   <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
    <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={e=>{const f=e.target.files?.[0]||null;setFile(f);onFile(f);setExtracted(null);setError("");if(f)void analyze(f)}} aria-label="Adjuntar factura original"/>
+   <label style={{display:"inline-flex",alignItems:"center",gap:6,cursor:"pointer",padding:"8px 10px",border:"1px solid #c9dce4",borderRadius:8,fontSize:13}}>Tomar fotografía<input type="file" accept="image/*" capture="environment" style={{maxWidth:160}} onChange={e=>{const f=e.target.files?.[0]||null;setFile(f);onFile(f);setExtracted(null);setError("");if(f)void analyze(f)}} aria-label="Fotografiar factura con cámara"/></label>
    <button type="button" disabled={!file||analyzing} onClick={()=>void analyze()}>{analyzing?"Analizando factura…":extracted?"Releer factura":"Leer factura"}</button>
    {file&&<span style={{fontSize:12}}>{file.name}</span>}
   </div>
