@@ -1,9 +1,8 @@
 import {NextRequest,NextResponse} from "next/server";
 import {createClient} from "@/lib/supabase/server";
+import {inspectReceiptFile} from "@/lib/receipt-file";
 
 export const runtime="nodejs";
-const MAX_BYTES=8*1024*1024;
-const MIME=["application/pdf","image/jpeg","image/png","image/webp"] as const;
 export async function POST(request:NextRequest){
  const supabase=await createClient();
  const {data:{user}}=await supabase.auth.getUser();
@@ -15,7 +14,8 @@ export async function POST(request:NextRequest){
  const form=await request.formData();
  const file=form.get("file");
  if(!(file instanceof File))return NextResponse.json({error:"Adjunta la factura"},{status:400});
- if(!MIME.includes(file.type as typeof MIME[number])||!file.size||file.size>MAX_BYTES)return NextResponse.json({error:"Factura inválida: PDF/JPG/PNG/WebP, máximo 8 MB"},{status:400});
+ let detectedMime:string;
+ try{detectedMime=await inspectReceiptFile(file)}catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Factura inválida"},{status:400})}
  const base64=Buffer.from(await file.arrayBuffer()).toString("base64");
  const instruction=`Extrae los datos visibles de esta factura chilena. No estimes ni inventes. Devuelve SOLO JSON válido con:
  { "supplier_name":string|null,"supplier_rut":string|null,"document_type":string|null,"folio":string|null,"date":string|null,"net":number|null,"vat":number|null,"total":number|null,"payment_condition":string|null,"payment_days":number|null,"lines":[{"description":string,"supplier_code":string|null,"quantity":number|null,"unit":string|null,"unit_net":number|null,"line_net":number|null}],"warnings":string[] }
@@ -36,7 +36,7 @@ Formato de fecha YYYY-MM-DD si es legible; montos CLP sin separadores. line_net 
     const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
      method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
      signal:AbortSignal.timeout(45000),
-     body:JSON.stringify({contents:[{parts:[{text:instruction},{inline_data:{mime_type:file.type,data:base64}}]}],generationConfig:{temperature:0,responseMimeType:"application/json"}})
+     body:JSON.stringify({contents:[{parts:[{text:instruction},{inline_data:{mime_type:detectedMime,data:base64}}]}],generationConfig:{temperature:0,responseMimeType:"application/json"}})
     });
     if(response.ok){res=response;chosen=model;break;}
     lastStatus=response.status;
