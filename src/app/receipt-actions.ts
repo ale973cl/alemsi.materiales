@@ -1,14 +1,14 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
-import {receiptTransactionsEnabled,receiptSingleStepEnabled} from "@/lib/receipt-transactions";
+import {receiptSingleStepEnabled} from "@/lib/receipt-transactions";
 import {isClosedPurchaseOrder,isCancelledPurchaseOrder} from "@/lib/purchase-order-balance";
 import {parseReceiptLines,validateReceiptDraft} from "@/lib/receipt-validation";
 
 async function ctx(roles:string[]){const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)throw new Error("Sesión no válida");const {data:profile}=await supabase.from("user_profiles").select("role,active,full_name,email").eq("id",user.id).single();if(!profile?.active||!roles.includes(profile.role))throw new Error("No autorizado para esta operación");return{supabase,user,profile};}
 
 export async function registerPurchaseOrderReceipt(formData:FormData){
- const {supabase,user,profile}=await ctx(["Admin Total","Admin","Bodega"]);
+ const {supabase}=await ctx(["Admin Total","Admin","Bodega"]);
  const purchaseOrderId=String(formData.get("purchase_order_id")||"").trim();
  const documentType=String(formData.get("document_type")||"").trim();
  const documentFolio=String(formData.get("document_folio")||"").trim();
@@ -19,6 +19,7 @@ export async function registerPurchaseOrderReceipt(formData:FormData){
  const shippingCondition=String(formData.get("shipping_condition")||"Incluido").trim();
  const freightNet=Number(formData.get("freight_net")||0);
  const observation=String(formData.get("observation")||"").trim()||null;
+ const pendingResolution=JSON.parse(String(formData.get("pending_resolution")||"[]"));
  const lines=validateReceiptDraft({documentType,folio:documentFolio,date:documentDate,net:documentNet,vat:documentVat,total:documentTotal,lines:parseReceiptLines(formData.get("lines")),withOrder:true,shipping:shippingCondition,freight:freightNet});
  if(!purchaseOrderId)throw new Error("Selecciona una orden de compra");
  if(!["Factura","Boleta","Guía de despacho","Otro"].includes(documentType))throw new Error("Selecciona el tipo de documento");
@@ -31,48 +32,12 @@ export async function registerPurchaseOrderReceipt(formData:FormData){
  const supplierRut=String(formData.get("supplier_rut")||"").trim();
  if(!supplierRut)throw new Error("Confirma el RUT del emisor que figura en la factura antes de guardar.");
  const {data:confirmed,error:confirmedError}=await supabase.rpc("confirm_receipt_once_v3",{
-  p_document:{purchase_order_id:purchaseOrderId,supplier_rut:supplierRut,document_type:documentType,document_folio:documentFolio,document_date:documentDate,document_net:documentNet,vat_amount:documentVat,document_total:documentTotal,shipping_condition:shippingCondition,freight_net:shippingCondition==="Por pagar"?freightNet:0,observation},
+  p_document:{purchase_order_id:purchaseOrderId,supplier_rut:supplierRut,document_type:documentType,document_folio:documentFolio,document_date:documentDate,document_net:documentNet,vat_amount:documentVat,document_total:documentTotal,shipping_condition:shippingCondition,freight_net:shippingCondition==="Por pagar"?freightNet:0,observation,pending_resolution:pendingResolution},
   p_lines:lines
  });
  if(confirmedError||!confirmed?.id)throw new Error(confirmedError?.message||"No se pudo confirmar recepción e inventario. La operación se ha revertido.");
  revalidatePath("/");return{ok:true,id:String(confirmed.id),inventory_posted:true,status:String(confirmed.status||"Conforme"),outstanding:Number(confirmed.outstanding||0)};
- 
- const {data:po,error:poError}=await supabase.from("purchase_orders").select("id,supplier_id,status").eq("id",purchaseOrderId).single();if(poError||!po)throw new Error("OC no encontrada");
- if(isClosedPurchaseOrder(po.status)||isCancelledPurchaseOrder(po.status))throw new Error("Esta orden de compra está cerrada o anulada y no admite más recepciones");
- if(!Array.isArray(lines)||lines.length>500)throw new Error("Detalle de recepción inválido");
- const seen=new Set<string>();
- for(const item of lines){
-   const key=String(item.purchase_order_line_id||"");
-   if(!key||seen.has(key)||!Number.isFinite(Number(item.received_qty))||Number(item.received_qty)<=0||!Number.isFinite(Number(item.actual_unit_net))||Number(item.actual_unit_net)<0)throw new Error("Líneas duplicadas o cantidades/precios inválidos");
-   seen.add(key);
- }
- // Validación en servidor: el cliente no puede exceder la OC ni recibir productos ajenos.
- const {data:poLines,error:polError}=await supabase.from("purchase_order_lines").select("id,material_id,ordered_qty").eq("purchase_order_id",purchaseOrderId);
- if(polError)throw new Error(polError.message);
- const masterLines=new Map((poLines||[]).map((l:any)=>[String(l.id),l]));
- const {data:previousReceipts,error:previousError}=await supabase.from("receipts").select("id,supplier_id,document_type,document_folio,receipt_lines(purchase_order_line_id,received_qty)").eq("purchase_order_id",purchaseOrderId);
- if(previousError)throw new Error(previousError.message);
- if(!receiptTransactionsEnabled()&&(previousReceipts||[]).length)throw new Error("Esta OC ya tiene un documento registrado. Coteja ese documento; los faltantes se tramitan en una nueva OC.");
- if((previousReceipts||[]).some((r:any)=>String(r.document_type||"")===documentType&&String(r.document_folio||"").trim().toLowerCase()===documentFolio.toLowerCase()))throw new Error("Este folio ya está vinculado a la OC");
- const previous=new Map<string,number>();
- for(const r of previousReceipts||[])for(const l of (r as any).receipt_lines||[]){const key=String(l.purchase_order_line_id||"");previous.set(key,(previous.get(key)||0)+Number(l.received_qty||0))}
- for(const item of lines){
-   const record:any=masterLines.get(String(item.purchase_order_line_id));
-   if(!record||!record.material_id||String(record.material_id)!==String(item.material_id))throw new Error("La recepción contiene un material no vinculado a esta OC");
-   const remaining=Math.max(0,Number(record.ordered_qty||0)-(previous.get(String(record.id))||0));
-   if(Number(item.received_qty)>remaining)throw new Error("Se intentó recibir más cantidad que el saldo vigente de la OC");
- }
- const {data:duplicateDocument,error:duplicateError}=await supabase.from("receipts").select("id").eq("supplier_id",po.supplier_id).eq("document_type",documentType).eq("document_folio",documentFolio).limit(1);
- if(duplicateError)throw new Error(duplicateError.message);
- if(!receiptTransactionsEnabled()&&(duplicateDocument||[]).length)throw new Error("Este folio ya fue registrado para el mismo proveedor");
 
-
- const {data:receipt,error}=await supabase.from("receipts").insert({purchase_order_id:purchaseOrderId,supplier_id:po.supplier_id,invoice_number:documentType==="Factura"?documentFolio:null,invoice_date:documentDate,invoice_net:documentNet,vat_amount:documentVat,status:"Pendiente cotejo",received_by:user.id,received_at:new Date().toISOString(),shipping_condition:shippingCondition,freight_net:shippingCondition==="Por pagar"?freightNet:0,document_type:documentType,document_folio:documentFolio,document_date:documentDate,document_net:documentNet,document_total:documentTotal,reconciliation_status:"Pendiente cotejo",inventory_posted:false}).select("id").single();
- if(error||!receipt)throw new Error(error?.message||"No se pudo registrar el documento");
- const lineRows=lines.filter((l:any)=>Number(l.received_qty)>0).map((l:any)=>({receipt_id:receipt.id,purchase_order_line_id:l.purchase_order_line_id,material_id:l.material_id,received_qty:Number(l.received_qty),actual_unit_net:Number(l.actual_unit_net||0),line_net:Number(l.received_qty)*Number(l.actual_unit_net||0),difference_note:null}));
- const {error:lineError}=await supabase.from("receipt_lines").insert(lineRows);if(lineError){await supabase.from("receipts").delete().eq("id",receipt.id);throw new Error(lineError.message);}
- await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Recepción",action:"Registrar documento para cotejo",entity_table:"receipts",entity_id:receipt.id,new_data:{purchase_order_id:purchaseOrderId,document_type:documentType,document_folio:documentFolio,document_date:documentDate,document_net:documentNet,document_total:documentTotal},observation});
- revalidatePath("/");return{ok:true,id:receipt.id};
 }
 
 export async function closePurchaseOrderReceipt(purchaseOrderId:string){
