@@ -9,9 +9,11 @@ import InvoiceReader,{type ExtractedInvoice} from "./InvoiceReader";
 import {invoiceUnitNet,matchInvoiceLine} from "@/lib/invoice-reconciliation";
 type Line={id:string;line_type?:string|null;material_id:string|null;description?:string|null;unit?:string|null;supplier_code?:string|null;ordered_qty:number;unit_net_price:number;already_received:number;pending_qty:number;materials?:{name?:string|null;presentation?:string|null;unit?:string|null;supplier_code?:string|null}|null};
 type Order={id:string;order_number?:string|null;status:string;total_net:number;payment_terms?:string|null;order_type?:string|null;suppliers?:{legal_name?:string|null;rut?:string|null}|null;purchase_order_lines:Line[]};
+type ExtraLine={description:string;target:string;received_qty:number;actual_unit_net:number};
 type Receipt={id:string;has_document?:boolean;supplier_id?:string|null;commercial?:{payment_condition?:string;payment_days?:number;payment_due?:string;payment_status?:string;observation?:string}|null;purchase_order_id?:string|null;status:string;received_at?:string|null;shipping_condition?:string|null;freight_net?:number|null;document_type?:string|null;document_folio?:string|null;document_date?:string|null;document_net?:number|null;document_total?:number|null;reconciliation_status?:string|null;inventory_posted?:boolean|null;receipt_lines?:{purchase_order_line_id?:string|null;material_id?:string|null;received_qty?:number|null;actual_unit_net?:number|null;line_net?:number|null}[]};
 const money=(n:number)=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n||0);
 const norm=(v?:string|null)=>(v||"").toLocaleLowerCase("es-CL").trim();
+const rut=(v?:string|null)=>(v||"").toUpperCase().replace(/[^0-9K]/g,"");
 export default function ConnectedReceiptModule({role}:{role:string}){
  const [receiptMode,setReceiptMode]=useState<"oc"|"sin-oc"|"recibidas">("oc"),[suppliers,setSuppliers]=useState<{id:string;legal_name:string;rut?:string|null}[]>([]),[materials,setMaterials]=useState<{id:string;name:string;unit?:string|null;presentation?:string|null}[]>([]),[invoiceFile,setInvoiceFile]=useState<File|null>(null);
  const [orders,setOrders]=useState<Order[]>([]),[receipts,setReceipts]=useState<Receipt[]>([]),[selectedId,setSelectedId]=useState(""),[orderSearch,setOrderSearch]=useState(""),[historySearch,setHistorySearch]=useState("");
@@ -20,6 +22,7 @@ export default function ConnectedReceiptModule({role}:{role:string}){
  const [shipping,setShipping]=useState("Incluido"),[freight,setFreight]=useState(0),[observation,setObservation]=useState(""),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[message,setMessage]=useState("");
  const [expandedReceipt,setExpandedReceipt]=useState<string>("");
  const [geminiLines,setGeminiLines]=useState<ExtractedInvoice["lines"]>([]);
+ const [invoiceRut,setInvoiceRut]=useState(""),[extraLines,setExtraLines]=useState<ExtraLine[]>([]),[pendingDecision,setPendingDecision]=useState<Record<string,string>>({});
  const [reconcileId,setReconcileId]=useState(""),[reconcileText,setReconcileText]=useState(""),[reconciling,setReconciling]=useState(false);
  const canReceive=["Admin Total","Admin","Bodega"].includes(role);
  const canReconcile=["Admin Total","Gerencia","Finanzas"].includes(role);
@@ -39,10 +42,10 @@ export default function ConnectedReceiptModule({role}:{role:string}){
  },[loading,orders.length,receivable]);
  const selected=receivable.find(order=>order.id===selectedId)||null;const materialLines=(selected?.purchase_order_lines||[]).filter(line=>line.material_id&&Number(line.pending_qty)>0);
  const history=useMemo(()=>{const q=norm(historySearch);return receipts.filter(r=>{const o=orders.find(x=>x.id===r.purchase_order_id);return !q||norm(`${r.document_type} ${r.document_folio} ${o?.order_number} ${o?.suppliers?.legal_name}`).includes(q)}).slice(0,100)},[receipts,orders,historySearch]);
- useEffect(()=>{if(!selected){setQty({});setPrices({});return}const q:Record<string,number>={},p:Record<string,number>={};for(const line of materialLines){q[line.id]=Number(line.pending_qty||0);p[line.id]=Number(line.unit_net_price||0)}setQty(q);setPrices(p);setDocumentType("Factura");setDocumentFolio("");setDocumentDate(new Date().toISOString().slice(0,10));const remainingNet=materialLines.reduce((sum,line)=>sum+Number(line.pending_qty||0)*Number(line.unit_net_price||0),0);setDocumentNet(Math.round(remainingNet));setDocumentVat(Math.round(remainingNet*.19));setDocumentTotal(Math.round(remainingNet*1.19));setInvoiceFile(null);setGeminiLines([]);setShipping("Incluido");setFreight(0);setObservation("");setMessage("")},[selectedId]);
+ useEffect(()=>{if(!selected){setQty({});setPrices({});return}const q:Record<string,number>={},p:Record<string,number>={};for(const line of materialLines){q[line.id]=0;p[line.id]=Number(line.unit_net_price||0)}setQty(q);setPrices(p);setDocumentType("Factura");setDocumentFolio("");setDocumentDate(new Date().toISOString().slice(0,10));const remainingNet=materialLines.reduce((sum,line)=>sum+Number(line.pending_qty||0)*Number(line.unit_net_price||0),0);setDocumentNet(Math.round(remainingNet));setDocumentVat(Math.round(remainingNet*.19));setDocumentTotal(Math.round(remainingNet*1.19));setInvoiceFile(null);setGeminiLines([]);setInvoiceRut("");setExtraLines([]);setPendingDecision({});setShipping("Incluido");setFreight(0);setObservation("");setMessage("")},[selectedId]);
  const applyGemini=(data:ExtractedInvoice)=>{
   const invoiceLines=data.lines||[];
-  setGeminiLines(invoiceLines);
+  setGeminiLines(invoiceLines);setInvoiceRut(data.supplier_rut||"");
   if(data.folio)setDocumentFolio(data.folio);
   if(data.date&&/^\d{4}-\d{2}-\d{2}$/.test(data.date))setDocumentDate(data.date);
   if(data.net!=null)setDocumentNet(Number(data.net));
@@ -50,7 +53,8 @@ export default function ConnectedReceiptModule({role}:{role:string}){
   if(data.total!=null)setDocumentTotal(Number(data.total));
   if(data.document_type&&["Factura","Boleta","Guía de despacho","Otro"].includes(data.document_type))setDocumentType(data.document_type);
 
-  const nextQty={...qty},nextPrices={...prices};
+  const nextQty:Record<string,number>=Object.fromEntries(materialLines.map(l=>[l.id,0])),nextPrices={...prices};
+  const extras:ExtraLine[]=[];
   const candidates=materialLines.map(line=>({
    id:line.id,
    supplier_code:line.supplier_code||line.materials?.supplier_code||null,
@@ -61,16 +65,16 @@ export default function ConnectedReceiptModule({role}:{role:string}){
   let matched=0,unmatched=0,over=0;
   for(const invoiceLine of invoiceLines){
    const found=matchInvoiceLine(invoiceLine,candidates.filter(c=>!used.has(c.id)));
-   if(!found.item){unmatched++;continue}
+   if(!found.item){unmatched++;extras.push({description:invoiceLine.description||"Producto adicional",target:"",received_qty:Number(invoiceLine.quantity||0),actual_unit_net:invoiceUnitNet(invoiceLine)});continue}
    const quantity=Number(invoiceLine.quantity||0);
    if(quantity>0){
     if(quantity>found.item.pending_qty)over++;
-    nextQty[found.item.id]=Math.min(quantity,found.item.pending_qty);
+    nextQty[found.item.id]=quantity;
    }
    nextPrices[found.item.id]=invoiceUnitNet(invoiceLine);
    used.add(found.item.id);matched++;
   }
-  if(matched){setQty(nextQty);setPrices(nextPrices)}
+  setQty(nextQty);setPrices(nextPrices);setExtraLines(extras);
   const parts=[`Factura leída: ${matched} línea(s) asociada(s) automáticamente.`];
   if(unmatched)parts.push(`${unmatched} línea(s) requieren asociación manual.`);
   if(over)parts.push(`${over} línea(s) superan la cantidad pendiente de la OC; revisa la diferencia.`);
@@ -79,7 +83,36 @@ export default function ConnectedReceiptModule({role}:{role:string}){
  };
  const closeOrder=async(id:string)=>{if(!window.confirm("¿Cerrar esta OC con las cantidades efectivamente recibidas? Los faltantes quedarán disponibles para una nueva orden."))return;setSaving(true);setMessage("");try{const r=await closePurchaseOrderReceipt(id);setMessage(`OC ${r.status}. Recibido: ${r.totalReceived}. No entregado: ${r.outstanding}.`);await load()}catch(e:any){setMessage(e?.message||"No se pudo cerrar la OC")}finally{setSaving(false)}};
  const reconcileReceipt=async(id:string)=>{if(reconcileText.trim().toUpperCase()!=="CONFIRMAR"){setMessage("Escribe CONFIRMAR para validar el cotejo");return}setReconciling(true);setMessage("");try{const formData=new FormData();formData.set("receipt_id",id);formData.set("confirmation","CONFIRMAR");const r=await reconcilePurchaseDocument(formData);setMessage(`Cotejo ${r.status}. Inventario actualizado.`);setReconcileId("");setReconcileText("");await load()}catch(e:any){setMessage(e?.message||"No se pudo cotejar el documento")}finally{setReconciling(false)}};
- const submit=async()=>{if(!selected)return;const lines=materialLines.map(line=>({purchase_order_line_id:line.id,material_id:line.material_id,received_qty:Number(qty[line.id]||0),actual_unit_net:Number(prices[line.id]||0)})).filter(line=>line.received_qty>0);if(!documentFolio.trim()){setMessage("Ingresa el folio del documento");return}if(!documentDate){setMessage("Ingresa la fecha del documento");return}if(!lines.length){setMessage("Ingresa al menos una cantidad recibida");return}if(lines.some(line=>!Number.isFinite(line.received_qty)||line.received_qty<=0||line.received_qty>Number(materialLines.find(m=>m.id===line.purchase_order_line_id)?.pending_qty||0)||!Number.isFinite(line.actual_unit_net)||line.actual_unit_net<0)){setMessage("Revisa las cantidades y precios: no puedes recibir más que el saldo pendiente de la OC.");return}if(![documentNet,documentVat,documentTotal].every(value=>Number.isFinite(value)&&value>=0)||Math.abs(documentNet+documentVat-documentTotal)>1){setMessage("El neto más IVA debe coincidir con el total del documento.");return}if(shipping==="Por pagar"&&freight<=0){setMessage("Ingresa el valor neto del flete por pagar");return}const formData=new FormData();formData.set("purchase_order_id",selected.id);formData.set("lines",JSON.stringify(lines));formData.set("document_type",documentType);formData.set("document_folio",documentFolio);formData.set("document_date",documentDate);formData.set("document_net",String(documentNet));formData.set("document_vat",String(documentVat));formData.set("document_total",String(documentTotal));formData.set("shipping_condition",shipping);formData.set("freight_net",String(shipping==="Por pagar"?freight:0));formData.set("observation",observation);setSaving(true);setMessage("");try{const result=await registerPurchaseOrderReceipt(formData);let uploadMessage="";if(invoiceFile){const upload=new FormData();upload.set("receipt_id",result.id);upload.set("file",invoiceFile);try{const response=await fetch("/api/receipts/document",{method:"POST",body:upload});const body=await response.json();uploadMessage=response.ok?" Factura original guardada.":` Archivo sin guardar: ${body.error||"fallo de almacenamiento"}.`;}catch{uploadMessage=" Archivo original sin guardar."}}setMessage("Documento registrado y asociado a la OC; queda pendiente de cotejo."+uploadMessage);setSelectedId("");setOrderSearch("");setReceiptMode("recibidas");await load()}catch(error:any){setMessage(error?.message||"No se pudo registrar la recepción")}finally{setSaving(false)}};
+ const submit=async()=>{
+  if(!selected||saving)return;
+  const lines:{purchase_order_line_id:string|null;material_id:string;received_qty:number;actual_unit_net:number;difference_note?:string}[]=materialLines.map(l=>({purchase_order_line_id:l.id,material_id:String(l.material_id),received_qty:Number(qty[l.id]||0),actual_unit_net:Number(prices[l.id]||0)})).filter(l=>l.received_qty>0);
+  for(const e of extraLines){
+   if(!e.target){setMessage("Identifica todos los productos de la factura.");return}
+   if(e.target.startsWith("oc:")){
+    const source=materialLines.find(l=>l.id===e.target.slice(3));
+    if(!source?.material_id||lines.some(l=>l.purchase_order_line_id===source.id)){setMessage("Línea de OC duplicada: revisa la asociación.");return}
+    lines.push({purchase_order_line_id:source.id,material_id:source.material_id,received_qty:Number(e.received_qty),actual_unit_net:Number(e.actual_unit_net)});
+   }else{
+    const id=e.target.slice(4);if(!materials.some(m=>m.id===id)||lines.some(l=>l.purchase_order_line_id===null&&l.material_id===id)){setMessage("Material adicional inválido o duplicado.");return}
+    lines.push({purchase_order_line_id:null,material_id:id,received_qty:Number(e.received_qty),actual_unit_net:Number(e.actual_unit_net),difference_note:"Adicional facturado: "+e.description});
+   }
+  }
+  if(!documentFolio.trim()||!documentDate){setMessage("Ingresa folio y fecha de factura.");return}
+  if(!invoiceRut.trim()||rut(invoiceRut)!==rut(selected.suppliers?.rut)){setMessage("El RUT del emisor no corresponde al proveedor de la OC.");return}
+  if(!lines.length||lines.some(l=>!Number.isFinite(l.received_qty)||l.received_qty<=0||!Number.isFinite(l.actual_unit_net)||l.actual_unit_net<0)){setMessage("Revisa cantidades y precios facturados.");return}
+  if(![documentNet,documentVat,documentTotal].every(v=>Number.isFinite(v)&&v>=0)||Math.abs(documentNet+documentVat-documentTotal)>1){setMessage("Neto + IVA no coincide con total.");return}
+  const sum=lines.reduce((n,l)=>n+l.received_qty*l.actual_unit_net,0);
+  if(Math.abs(sum-documentNet)>1){setMessage(`Neto de líneas (${money(sum)}) distinto al neto factura (${money(documentNet)}).`);return}
+  if(shipping==="Por pagar"&&freight<=0){setMessage("Ingresa flete neto.");return}
+  const decisions=materialLines.filter(l=>Number(qty[l.id]||0)<Number(l.pending_qty||0)).map(l=>({purchase_order_line_id:l.id,missing_qty:Number(l.pending_qty||0)-Number(qty[l.id]||0),decision:pendingDecision[l.id]||"acumular"}));
+  const form=new FormData();for(const [k,v] of Object.entries({purchase_order_id:selected.id,supplier_rut:invoiceRut,lines:JSON.stringify(lines),pending_resolution:JSON.stringify(decisions),document_type:documentType,document_folio:documentFolio,document_date:documentDate,document_net:String(documentNet),document_vat:String(documentVat),document_total:String(documentTotal),shipping_condition:shipping,freight_net:String(shipping==="Por pagar"?freight:0),observation}))form.set(k,v);
+  setSaving(true);setMessage("");
+  try{
+   const result=await registerPurchaseOrderReceipt(form);let uploadMessage="";
+   if(invoiceFile){const upload=new FormData();upload.set("receipt_id",result.id);upload.set("file",invoiceFile);try{const response=await fetch("/api/receipts/document",{method:"POST",body:upload});const body=await response.json();uploadMessage=response.ok?" Factura original guardada.":` Archivo original sin guardar: ${body.error||"error"}.`;}catch{uploadMessage=" Archivo original sin guardar."}}
+   setMessage(`Recepción confirmada, inventario ingresado. Estado ${result.status}, faltante ${result.outstanding}.`+uploadMessage);setSelectedId("");setOrderSearch("");setReceiptMode("recibidas");await load();
+  }catch(error:any){setMessage(error?.message||"No se pudo confirmar la recepción.")}finally{setSaving(false)}
+ };
 
  const focusedReceiptId=reconcileId||expandedReceipt;
  const focusedReceipt=focusedReceiptId?receipts.find(r=>r.id===focusedReceiptId)||null:null;
@@ -87,16 +120,18 @@ export default function ConnectedReceiptModule({role}:{role:string}){
 
  if(selected){
   return <section className="panel receiptModule receiptDedicatedPage">
-   <div className="receiptDedicatedHead"><div><button type="button" className="simpleBack" onClick={()=>{setSelectedId("");setOrderSearch("");setMessage("")}}>← Órdenes pendientes</button><h2>Registrar recepción</h2><p>{selected.order_number||"OC sin folio"} · {selected.suppliers?.legal_name||"Proveedor"}</p></div><span className="catalogCount">{selected.status}</span></div>
+   <div className="receiptDedicatedHead"><div><button type="button" className="simpleBack" onClick={()=>{setSelectedId("");setOrderSearch("");setMessage("")}}>← Órdenes pendientes</button><h2>Validar factura y confirmar recepción</h2><p>{selected.order_number||"OC sin folio"} · {selected.suppliers?.legal_name||"Proveedor"}</p></div><span className="catalogCount">{selected.status}</span></div>
    <div className="receiptSummary"><span><small>OC</small><b>{selected.order_number||"Sin folio"}</b></span><span><small>Proveedor / RUT</small><b>{selected.suppliers?.legal_name||"Proveedor"}</b><small>{selected.suppliers?.rut||"RUT pendiente"}</small></span><span><small>Estado</small><b>{selected.status}</b></span><span><small>Neto OC</small><b>{money(Number(selected.total_net||0))}</b><small>Pago: {selected.payment_terms||"No informado"}</small></span></div>
    <ReceiptUncataloguedMaterials lines={(selected.purchase_order_lines||[]).filter(line=>line.line_type!=="Servicio"&&!line.material_id&&Number(line.pending_qty)>0)} onDone={load}/>
-   <InvoiceReader onExtract={applyGemini} onFile={setInvoiceFile}/>
+   <InvoiceReader onExtract={applyGemini} onFile={setInvoiceFile}/><label style={{display:"block",margin:"8px 0"}}>RUT del emisor<input value={invoiceRut} onChange={e=>setInvoiceRut(e.target.value)} placeholder="RUT de la factura"/></label>{invoiceRut&&rut(invoiceRut)!==rut(selected.suppliers?.rut)&&<p className="warning">La factura corresponde a otro proveedor: no se permite confirmar.</p>}
    <div className="receiptDocument"><label>Tipo de documento<select value={documentType} onChange={e=>setDocumentType(e.target.value)}><option>Factura</option><option>Boleta</option><option>Guía de despacho</option><option>Otro</option></select></label><label>Folio documento<input value={documentFolio} onChange={e=>setDocumentFolio(e.target.value)} placeholder="Folio obligatorio"/></label><label>Fecha documento<input type="date" value={documentDate} onChange={e=>setDocumentDate(e.target.value)}/></label><label>Neto documento<input type="number" min="0" value={documentNet} onChange={e=>setDocumentNet(Number(e.target.value))}/></label><label>IVA<input type="number" min="0" value={documentVat} onChange={e=>setDocumentVat(Number(e.target.value))}/></label><label>Total documento<input type="number" min="0" value={documentTotal} onChange={e=>setDocumentTotal(Number(e.target.value))}/></label></div>
    {!!geminiLines?.length&&<section className="receiptExtracted"><h4>Comparar factura leída con materiales solicitados</h4><p>Las coincidencias seguras completan cantidad y neto unitario. Revisa únicamente asociaciones y diferencias antes de registrar.</p><div className="receiptRecordedTable"><table><thead><tr><th>Descripción factura</th><th>Cantidad</th><th>Neto línea</th><th>Neto unitario calculado</th><th>Revisión</th></tr></thead><tbody>{geminiLines.map((l,i)=><tr key={i}><td>{l.description}</td><td>{l.quantity??"—"}</td><td>{l.line_net??"—"}</td><td>{invoiceUnitNet(l)||"—"}</td><td>{materialLines.some(m=>String(m.materials?.name||m.description||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es-CL").trim()===String(l.description||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es-CL").trim())?"Coincidencia de nombre; verificar código y cantidad":"Revisar correspondencia manual"}</td></tr>)}</tbody></table></div></section>}
-   <div className="receiptTable"><div className="receiptRow receiptHeader"><span>Material</span><span>Pedido</span><span>Recibido</span><span>Pendiente</span><span>Ingreso ahora</span><span>Valor neto unit.</span></div>{materialLines.map(line=>{const name=line.materials?.name||line.description||"Material";return <div className="receiptRow" key={line.id}><span><b>{name}</b><small>{line.materials?.presentation||line.materials?.unit||line.unit||""}</small></span><span>{Number(line.ordered_qty||0)}</span><span>{Number(line.already_received||0)}</span><span><b>{Number(line.pending_qty||0)}</b></span><span><input type="number" min="0" max={Number(line.pending_qty||0)} step="any" value={qty[line.id]??0} onChange={e=>setQty(current=>({...current,[line.id]:Number(e.target.value)}))}/></span><span><input type="number" min="0" step="any" value={prices[line.id]??0} onChange={e=>setPrices(current=>({...current,[line.id]:Number(e.target.value)}))}/></span></div>})}</div>
+   {!!extraLines.length&&<section className="receiptExtracted"><h4>Productos de factura por asociar</h4>{extraLines.map((e,i)=><div key={i} style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}><label>{e.description}<select value={e.target} onChange={ev=>setExtraLines(old=>old.map((x,n)=>n===i?{...x,target:ev.target.value}:x))}><option value="">Selecciona producto</option><optgroup label="Línea de OC">{materialLines.map(l=><option key={l.id} value={"oc:"+l.id}>{l.materials?.name||l.description}</option>)}</optgroup><optgroup label="Material adicional">{materials.map(m=><option key={m.id} value={"mat:"+m.id}>{m.name}</option>)}</optgroup></select></label><label>Cantidad<input type="number" min="0" step="any" value={e.received_qty} onChange={ev=>setExtraLines(old=>old.map((x,n)=>n===i?{...x,received_qty:Number(ev.target.value)}:x))}/></label><label>Neto unitario<input type="number" min="0" step="any" value={e.actual_unit_net} onChange={ev=>setExtraLines(old=>old.map((x,n)=>n===i?{...x,actual_unit_net:Number(ev.target.value)}:x))}/></label></div>)}</section>}
+   <div className="receiptTable"><div className="receiptRow receiptHeader"><span>Material</span><span>Pedido</span><span>Recibido</span><span>Pendiente</span><span>Ingreso ahora</span><span>Valor neto unit.</span></div>{materialLines.map(line=>{const name=line.materials?.name||line.description||"Material";return <div className="receiptRow" key={line.id}><span><b>{name}</b><small>{line.materials?.presentation||line.materials?.unit||line.unit||""}</small></span><span>{Number(line.ordered_qty||0)}</span><span>{Number(line.already_received||0)}</span><span><b>{Number(line.pending_qty||0)}</b></span><span><input type="number" min="0" step="any" value={qty[line.id]??0} onChange={e=>setQty(current=>({...current,[line.id]:Number(e.target.value)}))}/><small>{Number(qty[line.id]||0)>Number(line.pending_qty||0)?`Excedente +${Number(qty[line.id]||0)-Number(line.pending_qty||0)}`:Number(qty[line.id]||0)<Number(line.pending_qty||0)?`Faltante ${Number(line.pending_qty||0)-Number(qty[line.id]||0)}`:"Conforme"}</small></span><span><input type="number" min="0" step="any" value={prices[line.id]??0} onChange={e=>setPrices(current=>({...current,[line.id]:Number(e.target.value)}))}/></span></div>})}</div>
+   {materialLines.some(l=>Number(qty[l.id]||0)<Number(l.pending_qty||0))&&<section className="receiptExtracted"><h4>Qué hacer con los faltantes</h4>{materialLines.filter(l=>Number(qty[l.id]||0)<Number(l.pending_qty||0)).map(l=><label key={l.id} style={{display:"block",margin:"8px 0"}}>{l.materials?.name||l.description}: faltan {Number(l.pending_qty||0)-Number(qty[l.id]||0)}<select value={pendingDecision[l.id]||"acumular"} onChange={e=>setPendingDecision(prev=>({...prev,[l.id]:e.target.value}))}><option value="acumular">Acumular próxima compra</option><option value="mismo">Nueva OC mismo proveedor</option><option value="otro">Nueva OC otro proveedor</option></select></label>)}<p>La elección no crea una OC automáticamente.</p></section>}
    <div className="receiptShipping"><label>Condición de envío<select value={shipping} onChange={e=>{setShipping(e.target.value);if(e.target.value!=="Por pagar")setFreight(0)}}><option>Incluido</option><option>Por pagar</option><option>Retiro</option></select></label><label>Flete neto<input type="number" min="0" step="1" value={freight} disabled={shipping!=="Por pagar"} onChange={e=>setFreight(Number(e.target.value))}/></label><label className="receiptObservation">Observación<textarea rows={3} value={observation} onChange={e=>setObservation(e.target.value)} placeholder="Diferencias, estado de bultos, referencia de transporte, etc."/></label></div>
    {message&&<p className="note"><b>{message}</b></p>}
-   <div className="receiptDedicatedActions"><button type="button" className="secondary" disabled={saving} onClick={()=>setSelectedId("")}>Cancelar</button><button type="button" onClick={submit} disabled={saving}>{saving?"Registrando…":"Registrar recepción y enviar a cotejo"}</button></div>
+   <div className="receiptDedicatedActions"><button type="button" className="secondary" disabled={saving} onClick={()=>setSelectedId("")}>Cancelar</button><button type="button" onClick={submit} disabled={saving}>{saving?"Confirmando inventario…":"Confirmar recepción e ingresar a inventario"}</button></div>
   </section>;
  }
 
