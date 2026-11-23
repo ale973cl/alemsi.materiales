@@ -12,14 +12,14 @@ const normalizeRut=(s:string)=>s.toUpperCase().replace(/[^0-9K]/g,"");
 export default function ReceiptNoOcPanel({suppliers,materials,onDone,role}:{suppliers:Supplier[];materials:Material[];onDone:()=>Promise<void>;role:string}){
  const [localSuppliers,setLocalSuppliers]=useState<Supplier[]>(suppliers),[addingSupplier,setAddingSupplier]=useState(false),[supplierName,setSupplierName]=useState(""),[supplierRut,setSupplierRut]=useState(""),[supplierSaving,setSupplierSaving]=useState(false);
  useEffect(()=>setLocalSuppliers(suppliers),[suppliers]);
- const [supplierId,setSupplierId]=useState(""),[type,setType]=useState("Factura"),[folio,setFolio]=useState(""),[date,setDate]=useState(""),[net,setNet]=useState(0),[vat,setVat]=useState(0),[total,setTotal]=useState(0);
+ const [supplierId,setSupplierId]=useState(""),[invoiceRut,setInvoiceRut]=useState(""),[type,setType]=useState("Factura"),[folio,setFolio]=useState(""),[date,setDate]=useState(""),[net,setNet]=useState(0),[vat,setVat]=useState(0),[total,setTotal]=useState(0);
  const [reason,setReason]=useState(""),[shipping,setShipping]=useState("Incluido"),[freight,setFreight]=useState(0),[notes,setNotes]=useState("");
  const [payment,setPayment]=useState("Sin confirmar"),[days,setDays]=useState(0),[due,setDue]=useState("");
  const [lines,setLines]=useState<Line[]>([{material_id:"",received_qty:1,actual_unit_net:0}]),[file,setFile]=useState<File|null>(null),[busy,setBusy]=useState(false),[status,setStatus]=useState("");
  const supplier=localSuppliers.find(s=>s.id===supplierId);
  const linesNet=useMemo(()=>lines.reduce((sum,l)=>sum+Math.max(0,l.received_qty)*Math.max(0,l.actual_unit_net),0),[lines]);
  const onExtract=(v:ExtractedInvoice)=>{
-  if(v.supplier_rut){const match=localSuppliers.find(s=>normalizeRut(s.rut||"")===normalizeRut(v.supplier_rut||""));if(match)setSupplierId(match.id)}
+  if(v.supplier_rut){setInvoiceRut(v.supplier_rut);const match=localSuppliers.find(s=>normalizeRut(s.rut||"")===normalizeRut(v.supplier_rut||""));if(match)setSupplierId(match.id)}
   if(v.document_type&&["Factura","Boleta","Guía de despacho","Otro"].includes(v.document_type))setType(v.document_type);
   if(v.folio)setFolio(v.folio);
   if(v.date&&/^\d{4}-\d{2}-\d{2}$/.test(v.date))setDate(v.date);
@@ -45,25 +45,27 @@ export default function ReceiptNoOcPanel({suppliers,materials,onDone,role}:{supp
  const submit=async()=>{
   setStatus("");
   if(!supplierId){setStatus("Selecciona un proveedor. Si falta, regístralo primero en el Maestro de Proveedores.");return}
+  if(!invoiceRut.trim()||normalizeRut(invoiceRut)!==normalizeRut(supplier?.rut||"")){setStatus("El RUT de la factura debe corresponder al proveedor seleccionado.");return}
   if(lines.some(l=>!l.material_id)||!lines.length){setStatus("Vincula todos los productos recibidos con el Maestro ALEMSI.");return}
   if(Math.abs(linesNet-net)>1){setStatus(`Neto de productos (${currency(linesNet)}) distinto del neto documento (${currency(net)}). Revisa cantidades y valores.`);return}
   const fd=new FormData();
-  const data:Record<string,string>={supplier_id:supplierId,document_type:type,document_folio:folio,document_date:date,document_net:String(net),document_vat:String(vat),document_total:String(total),shipping_condition:shipping,freight_net:String(freight),no_oc_reason:reason,payment_condition:payment,payment_days:String(days),payment_due:due,observation:notes,lines:JSON.stringify(lines)};
+  const data:Record<string,string>={supplier_id:supplierId,supplier_rut:invoiceRut,document_type:type,document_folio:folio,document_date:date,document_net:String(net),document_vat:String(vat),document_total:String(total),shipping_condition:shipping,freight_net:String(freight),no_oc_reason:reason,payment_condition:payment,payment_days:String(days),payment_due:due,observation:notes,lines:JSON.stringify(lines)};
   for(const [k,v] of Object.entries(data))fd.set(k,v);
   setBusy(true);
   try{
    const result=await registerReceiptWithoutOrder(fd);
    let documentMsg=file?"":"No se adjuntó documento original.";
    if(file){const upload=new FormData();upload.set("receipt_id",result.id);upload.set("file",file);try{const response=await fetch("/api/receipts/document",{method:"POST",body:upload});const body=await response.json();documentMsg=response.ok?"Factura original guardada.":`Documento no guardado: ${body.error||"Error de almacenamiento"}`;}catch{documentMsg="No se pudo cargar el documento original."}}
-   setStatus(`Recepción ${folio} registrada PENDIENTE DE COTEJO. Inventario sin cambios. ${documentMsg}`);
+   setStatus(`Recepción ${folio} confirmada, inventario actualizado. ${documentMsg}`);
    await onDone();
   }catch(e:any){setStatus(e?.message||"No se pudo registrar la recepción");}
   finally{setBusy(false);}
  };
  return <section className="receiptNoOc" style={{border:"1px solid #c8dce8",borderRadius:12,padding:16,background:"#fff"}}>
   <h3>Recepción sin orden de compra</h3>
-  <p>Registra un documento recibido sin OC previa. La compra debe justificarse y quedará pendiente de cotejo. No marca pagos ni carga stock automáticamente.</p>
+  <p>Registra un documento recibido sin OC previa. La compra debe justificarse. Tras validar la factura y recepción física, una sola confirmación ingresa inventario. No registra pagos.</p>
   <InvoiceReader onExtract={onExtract} onFile={setFile}/>
+  <label style={{display:"block",margin:"8px 0"}}>RUT del emisor de la factura<input value={invoiceRut} onChange={e=>setInvoiceRut(e.target.value)} placeholder="RUT obligatorio"/></label>{invoiceRut&&supplier&&normalizeRut(invoiceRut)!==normalizeRut(supplier.rut||"")&&<p className="warning">Factura de proveedor diferente al seleccionado. No se puede confirmar.</p>}
   {["Admin Total","Admin","Gerencia"].includes(role)&&<div style={{margin:"10px 0"}}>
    <button type="button" onClick={()=>setAddingSupplier(v=>!v)}>{addingSupplier?"Cancelar alta proveedor":"+ Registrar proveedor nuevo"}</button>
    {addingSupplier&&<div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"end",padding:12,border:"1px solid #d7e5e9",borderRadius:10,marginTop:8}}>
@@ -101,7 +103,7 @@ export default function ReceiptNoOcPanel({suppliers,materials,onDone,role}:{supp
   <label className="receiptNoOcFull">Motivo de compra sin OC<textarea required minLength={8} value={reason} onChange={e=>setReason(e.target.value)} rows={2} placeholder="Justificación obligatoria"/></label>
   <label className="receiptNoOcFull">Observaciones<textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={2}/></label>
   {status&&<p className="note" role="status">{status}</p>}
-  <button type="button" disabled={busy} onClick={()=>void submit()}>{busy?"Registrando…":"Registrar recepción pendiente de cotejo"}</button>
+  <button type="button" disabled={busy} onClick={()=>void submit()}>{busy?"Confirmando inventario…":"Confirmar recepción e ingresar a inventario"}</button>
   <style jsx>{`.receiptNoOcGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.receiptNoOcGrid label,.receiptNoOcLine label,.receiptNoOcFull{display:grid;gap:5px;font-weight:700;font-size:12px}.receiptNoOcGrid input,.receiptNoOcGrid select,.receiptNoOcLine input,.receiptNoOcLine select,.receiptNoOcFull textarea{width:100%;min-width:0}.receiptNoOcLine{display:grid;grid-template-columns:minmax(210px,2fr) 110px 125px auto auto;gap:9px;align-items:end;padding:10px 0;border-bottom:1px solid #dce8ef}.receiptNoOcFull{margin:12px 0}@media(max-width:850px){.receiptNoOcGrid{grid-template-columns:1fr 1fr}.receiptNoOcLine{grid-template-columns:1fr 1fr}.receiptNoOcLine label:first-child{grid-column:1/-1}}@media(max-width:550px){.receiptNoOcGrid{grid-template-columns:1fr}}`}</style>
  </section>;
 }
