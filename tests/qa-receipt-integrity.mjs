@@ -110,3 +110,64 @@ test('PostgreSQL: registro, RUT único, cotejo, reintento, permisos y rollback',
  });
  }finally{await db.close();}
 });
+
+
+test('V3: factura manda, una confirmación atómica, diferencias y duplicados',async t=>{
+ const db=new PGlite();
+ try{
+  await db.exec(await readFile(new URL('./fixtures/receipt-schema.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261118011206_receipt_integrity_v2.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261123120000_confirm_receipt_once_v3.sql',import.meta.url),'utf8'));
+  await db.query("insert into user_profiles values ($1,'Admin Total',true,'Administrador','admin@ejemplo.test'),($2,'Bodega',true,'Operador','bodega@ejemplo.test')",[id(8),id(9)]);
+  await db.query("insert into suppliers values ($1,'Proveedor ficticio','76.123.456-0',true)",[id(20)]);
+  await db.query('insert into materials(id) values ($1),($2)',[id(10),id(11)]);
+  const login=async n=>{await db.exec('reset role');await db.query("select set_config('test.uid',$1,false)",[id(n)]);await db.exec('set role authenticated')};
+  const count=async table=>Number((await db.query('select count(*) n from '+table)).rows[0].n);
+  const po=async n=>{await db.exec('reset role');await db.query("insert into purchase_orders values ($1,$2,'Emitida',400)",[id(n),id(20)]);await db.query('insert into purchase_order_lines values ($1,$2,$3,4,100)',[id(n+1),id(n),id(10)]);await login(8);return id(n+1)};
+  const confirm=async(doc,lines)=>(await db.query('select public.confirm_receipt_once_v3($1::jsonb,$2::jsonb) result',[JSON.stringify(doc),JSON.stringify(lines)])).rows[0].result;
+  const document=(poId,folio,net,resolution=[])=>({purchase_order_id:poId,supplier_rut:'76123456-0',document_type:'Factura',document_folio:folio,document_date:'2026-11-23',document_net:net,vat_amount:Math.round(net*.19),document_total:net+Math.round(net*.19),pending_resolution:resolution});
+  await t.test('excedente: factura 6 vs OC 4, entra 6 sin tope',async()=>{
+   const pol=await po(40),d=document(id(40),'V3-EXCEDENTE',600),lines=[{purchase_order_line_id:pol,material_id:id(10),received_qty:6,actual_unit_net:100}];
+   const result=await confirm(d,lines);assert.equal(result.status,'Con diferencia');assert.equal(Number(result.outstanding),0);
+   assert.equal(Number((await db.query('select sum(quantity) qty from inventory_movements')).rows[0].qty),6);
+   const retry=await confirm(d,lines);assert.equal(retry.id,result.id);assert.equal(retry.alreadyPosted,true);assert.equal(await count('inventory_movements'),1);
+  });
+  await t.test('faltante: factura 2 vs OC 4, conserva destino del saldo',async()=>{
+   const pol=await po(50),resolution=[{purchase_order_line_id:pol,missing_qty:2,decision:'otro'}],result=await confirm(document(id(50),'V3-FALTANTE',200,resolution),[{purchase_order_line_id:pol,material_id:id(10),received_qty:2,actual_unit_net:100}]);
+   assert.equal(result.orderStatus,'Cerrada incompleta');assert.equal(Number(result.outstanding),2);
+   assert.equal(Number((await db.query("select count(*) n from activity_log where action='Destino de faltantes de factura'")).rows[0].n),1);
+  });
+  await t.test('conforme: factura 4 vs OC 4 registra directamente',async()=>{
+   const pol=await po(60),result=await confirm(document(id(60),'V3-CONFORME',400),[{purchase_order_line_id:pol,material_id:id(10),received_qty:4,actual_unit_net:100}]);
+   assert.equal(result.status,'Conforme');assert.equal(result.orderStatus,'Cerrada');
+  });
+  await t.test('producto extra de factura identificado en maestro ingresa a inventario',async()=>{
+   const pol=await po(70),result=await confirm(document(id(70),'V3-EXTRA',500),[
+    {purchase_order_line_id:pol,material_id:id(10),received_qty:4,actual_unit_net:100},
+    {purchase_order_line_id:null,material_id:id(11),received_qty:1,actual_unit_net:100,difference_note:'Producto adicional facturado identificado'}]);
+   assert.equal(result.status,'Con diferencia');assert.equal(Number((await db.query('select count(*) n from receipt_lines where receipt_id=$1',[result.id])).rows[0].n),2);
+  });
+  await t.test('proveedor ajeno, material no identificado y folio repetido no duplican stock',async()=>{
+   const pol=await po(80),d=document(id(80),'V3-DUP',400),lines=[{purchase_order_line_id:pol,material_id:id(10),received_qty:4,actual_unit_net:100}];
+   const before=await count('inventory_movements');
+   await assert.rejects(confirm({...d,supplier_rut:'99.999.999-9'},lines),/RUT del emisor/);
+   await assert.rejects(confirm(d,[{purchase_order_line_id:null,material_id:id(11),received_qty:4,actual_unit_net:100}]),/explicación/);
+   assert.equal(await count('inventory_movements'),before);
+   await confirm(d,lines);
+   await assert.rejects(confirm({...d,document_net:500,vat_amount:95,document_total:595},lines),/contenido diferente/);
+  });
+  await t.test('perfil Bodega no puede ejecutar confirmación financiera sin permiso',async()=>{
+   const pol=await po(90);await login(9);
+   await assert.rejects(confirm(document(id(90),'V3-BODEGA',400),[{purchase_order_line_id:pol,material_id:id(10),received_qty:4,actual_unit_net:100}]),/exclusivamente para Admin Total/);
+   await login(8);
+  });
+  await t.test('fallo transaccional revierte factura, stock, precio y OC',async()=>{
+   const pol=await po(100);await db.exec('reset role');await db.exec("create function test_v3_abort() returns trigger language plpgsql as $$ begin raise exception 'fallo final simulado'; end $$; create trigger test_v3_abort before insert on inventory_movements for each row execute function test_v3_abort();");await login(8);
+   const before=await count('receipts'),stock=await count('inventory_movements');
+   await assert.rejects(confirm(document(id(100),'V3-ROLLBACK',400),[{purchase_order_line_id:pol,material_id:id(10),received_qty:4,actual_unit_net:100}]),/fallo final simulado/);
+   assert.equal(await count('receipts'),before);assert.equal(await count('inventory_movements'),stock);
+   assert.equal((await db.query('select status from purchase_orders where id=$1',[id(100)])).rows[0].status,'Emitida');
+   await db.exec('reset role');await db.exec('drop trigger test_v3_abort on inventory_movements');
+  });
+ }finally{await db.close()}
+});
