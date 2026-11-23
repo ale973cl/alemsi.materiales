@@ -1,12 +1,15 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
-import {receiptSingleStepEnabled} from "@/lib/receipt-transactions";
+import {receiptConfirmationStatus} from "@/lib/receipt-transactions";
 import {validateReceiptDraft} from "@/lib/receipt-validation";
 
 type MaterialLine={material_id:string;received_qty:number;actual_unit_net:number};
 const number=(x:unknown)=>Number(x);
 export async function registerReceiptWithoutOrder(formData:FormData){
+ const readiness=receiptConfirmationStatus();
+ if(!readiness.enabled)return{ok:false as const,error:readiness.reason};
+ try{
  const supabase=await createClient();
  const {data:{user}}=await supabase.auth.getUser();
  if(!user)throw new Error("Sesión no válida");
@@ -50,14 +53,19 @@ export async function registerReceiptWithoutOrder(formData:FormData){
  const rows=lines.map(l=>({material_id:l.material_id,received_qty:l.received_qty,actual_unit_net:l.actual_unit_net,line_net:l.received_qty*l.actual_unit_net,purchase_order_line_id:null as null}));
  const linesNet=rows.reduce((sum,l)=>sum+l.line_net,0);
  if(Math.abs(linesNet-net)>1)throw new Error("El neto de las líneas no coincide con el neto de la factura. Corrige antes de guardar");
- if(!receiptSingleStepEnabled())throw new Error("Confirmación única sin OC deshabilitada hasta contar con base de Preview aislada. No se registró inventario.");
+
  const invoiceRut=String(formData.get("supplier_rut")||"").trim();
  const cleanRut=(x:string)=>x.toUpperCase().replace(/[^0-9K]/g,"");
  if(!invoiceRut||cleanRut(invoiceRut)!==cleanRut(supplier.rut||""))throw new Error("RUT del emisor de factura distinto del proveedor seleccionado.");
  const {data:result,error}=await supabase.rpc("confirm_receipt_once_v3",{p_document:{supplier_id:supplierId,supplier_rut:invoiceRut,document_type:documentType,document_folio:folio,document_date:date,document_net:net,vat_amount:vat,document_total:total,no_oc_reason:reason,shipping_condition:shipping,freight_net:shipping==="Por pagar"?freight:0,observation:notes,payment_condition:paymentCondition,payment_days:paymentDays,payment_due:paymentDue||null},p_lines:lines});
  if(error||!result?.id)throw new Error(error?.message||"No se pudo confirmar compra sin OC ni ingresar inventario.");
- revalidatePath("/");return{ok:true,id:String(result.id),inventory_updated:true,status:String(result.status||"Confirmada sin OC")};
-
+ revalidatePath("/");return{ok:true as const,id:String(result.id),inventory_updated:true,status:String(result.status||"Confirmada sin OC")};
+ }catch(error){
+  const detail=error instanceof Error?error.message:"Error inesperado";
+  console.error("receipt_no_oc_confirm_failed",{message:detail.slice(0,240)});
+  const known=/^(Sesión|No autorizado|Selecciona|Confirma|Ingresa|Revisa|El |La |Los |Las |Folio|Fecha|Neto|Tipo|Proveedor|Producto|Cantidad|Importes|Flete|Documento|Material|OC |No se pudo)/i.test(detail);
+  return{ok:false as const,error:known?detail.slice(0,240):"No se pudo confirmar la factura ni actualizar inventario. Revisa los datos y vuelve a intentarlo."};
+ }
 }
 
 export async function createSupplierForReceipt(legalName:string,rutRaw:string){
