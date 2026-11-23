@@ -23,10 +23,11 @@ export default function ConnectedReceiptModule({role}:{role:string}){
  const [expandedReceipt,setExpandedReceipt]=useState<string>("");
  const [geminiLines,setGeminiLines]=useState<ExtractedInvoice["lines"]>([]);
  const [invoiceRut,setInvoiceRut]=useState(""),[extraLines,setExtraLines]=useState<ExtraLine[]>([]),[pendingDecision,setPendingDecision]=useState<Record<string,string>>({});
+ const [receiptConfirmation,setReceiptConfirmation]=useState<{enabled:boolean;reason:string}>({enabled:false,reason:"Comprobando disponibilidad de la confirmación en Preview..."});
  const [reconcileId,setReconcileId]=useState(""),[reconcileText,setReconcileText]=useState(""),[reconciling,setReconciling]=useState(false);
  const canReceive=["Admin Total","Admin","Bodega"].includes(role);
  const canReconcile=["Admin Total","Gerencia","Finanzas"].includes(role);
- const load=async()=>{setLoading(true);try{const response=await fetch("/api/receipts/context",{cache:"no-store"});const body=await response.json();if(!response.ok)throw new Error(body.error||"No se pudo cargar Recepción");setOrders(body.orders||[]);setReceipts(body.receipts||[]);setSuppliers(body.suppliers||[]);setMaterials(body.materials||[])}catch(error:any){setMessage(error?.message||"No se pudo cargar Recepción")}finally{setLoading(false)}};
+ const load=async()=>{setLoading(true);try{const response=await fetch("/api/receipts/context",{cache:"no-store"});const body=await response.json();if(!response.ok)throw new Error(body.error||"No se pudo cargar Recepción");setOrders(body.orders||[]);setReceipts(body.receipts||[]);setSuppliers(body.suppliers||[]);setMaterials(body.materials||[]);setReceiptConfirmation(body.receipt_confirmation||{enabled:false,reason:"No se pudo comprobar que la base de pruebas sea segura para confirmar inventario."})}catch(error:any){setMessage(error?.message||"No se pudo cargar Recepción")}finally{setLoading(false)}};
  useEffect(()=>{void load()},[]);
  const receivable=useMemo(()=>orders.filter(order=>order.order_type!=="Cotización"&&!isClosedPurchaseOrder(order.status)&&!isCancelledPurchaseOrder(order.status)&&(order.purchase_order_lines||[]).some(line=>line.line_type!=="Servicio"&&Number(line.pending_qty)>0)),[orders]);
  const matches=useMemo(()=>{const q=norm(orderSearch);if(!q)return receivable.slice(0,6);return receivable.filter(o=>norm(`${o.order_number} ${o.suppliers?.legal_name} ${o.status}`).includes(q)).slice(0,30)},[receivable,orderSearch]);
@@ -86,6 +87,7 @@ export default function ConnectedReceiptModule({role}:{role:string}){
  const reconcileReceipt=async(id:string)=>{if(reconcileText.trim().toUpperCase()!=="CONFIRMAR"){setMessage("Escribe CONFIRMAR para validar el cotejo");return}setReconciling(true);setMessage("");try{const formData=new FormData();formData.set("receipt_id",id);formData.set("confirmation","CONFIRMAR");const r=await reconcilePurchaseDocument(formData);setMessage(`Cotejo ${r.status}. Inventario actualizado.`);setReconcileId("");setReconcileText("");await load()}catch(e:any){setMessage(e?.message||"No se pudo cotejar el documento")}finally{setReconciling(false)}};
  const submit=async()=>{
   if(!selected||saving)return;
+  if(!receiptConfirmation.enabled){setMessage(receiptConfirmation.reason);return;}
   const lines:{purchase_order_line_id:string|null;material_id:string;received_qty:number;actual_unit_net:number;difference_note?:string}[]=materialLines.map(l=>({purchase_order_line_id:l.id,material_id:String(l.material_id),received_qty:Number(qty[l.id]||0),actual_unit_net:Number(prices[l.id]||0)})).filter(l=>l.received_qty>0);
   for(const e of extraLines){
    if(!e.target){setMessage("Identifica todos los productos de la factura.");return}
@@ -111,7 +113,9 @@ export default function ConnectedReceiptModule({role}:{role:string}){
   const form=new FormData();for(const [k,v] of Object.entries({purchase_order_id:selected.id,supplier_rut:invoiceRut,lines:JSON.stringify(lines),pending_resolution:JSON.stringify(decisions),document_type:documentType,document_folio:documentFolio,document_date:documentDate,document_net:String(documentNet),document_vat:String(documentVat),document_total:String(documentTotal),shipping_condition:shipping,freight_net:String(shipping==="Por pagar"?freight:0),observation}))form.set(k,v);
   setSaving(true);setMessage("");
   try{
-   const result=await registerPurchaseOrderReceipt(form);let uploadMessage="";
+   const result=await registerPurchaseOrderReceipt(form);
+   if(!result.ok){setMessage(result.error);return;}
+   let uploadMessage="";
    if(invoiceFile){const upload=new FormData();upload.set("receipt_id",result.id);upload.set("file",invoiceFile);try{const response=await fetch("/api/receipts/document",{method:"POST",body:upload});const body=await response.json();uploadMessage=response.ok?" Factura original guardada.":` Archivo original sin guardar: ${body.error||"error"}.`;}catch{uploadMessage=" Archivo original sin guardar."}}
    setMessage(`Recepción confirmada, inventario ingresado. Estado ${result.status}, faltante ${result.outstanding}.`+uploadMessage);setSelectedId("");setOrderSearch("");setReceiptMode("recibidas");await load();
   }catch(error:any){setMessage(error?.message||"No se pudo confirmar la recepción.")}finally{setSaving(false)}
@@ -133,8 +137,9 @@ export default function ConnectedReceiptModule({role}:{role:string}){
    <div className="receiptTable"><div className="receiptRow receiptHeader"><span>Material</span><span>Pedido</span><span>Recibido</span><span>Pendiente</span><span>Ingreso ahora</span><span>Valor neto unit.</span></div>{materialLines.map(line=>{const name=line.materials?.name||line.description||"Material";return <div className="receiptRow" key={line.id}><span><b>{name}</b><small>{line.materials?.presentation||line.materials?.unit||line.unit||""}</small></span><span>{Number(line.ordered_qty||0)}</span><span>{Number(line.already_received||0)}</span><span><b>{Number(line.pending_qty||0)}</b></span><span><input type="number" min="0" step="any" value={qty[line.id]??0} onChange={e=>setQty(current=>({...current,[line.id]:Number(e.target.value)}))}/><small>{receivedForLine(line.id)>Number(line.pending_qty||0)?`Excedente +${receivedForLine(line.id)-Number(line.pending_qty||0)}`:receivedForLine(line.id)<Number(line.pending_qty||0)?`Faltante ${Number(line.pending_qty||0)-receivedForLine(line.id)}`:"Conforme"}</small></span><span><input type="number" min="0" step="any" value={prices[line.id]??0} onChange={e=>setPrices(current=>({...current,[line.id]:Number(e.target.value)}))}/></span></div>})}</div>
    {materialLines.some(l=>receivedForLine(l.id)<Number(l.pending_qty||0))&&<section className="receiptExtracted"><h4>Qué hacer con los faltantes</h4>{materialLines.filter(l=>receivedForLine(l.id)<Number(l.pending_qty||0)).map(l=><label key={l.id} style={{display:"block",margin:"8px 0"}}>{l.materials?.name||l.description}: faltan {Number(l.pending_qty||0)-receivedForLine(l.id)}<select value={pendingDecision[l.id]||"acumular"} onChange={e=>setPendingDecision(prev=>({...prev,[l.id]:e.target.value}))}><option value="acumular">Acumular próxima compra</option><option value="mismo">Nueva OC mismo proveedor</option><option value="otro">Nueva OC otro proveedor</option></select></label>)}<p>La elección no crea una OC automáticamente.</p></section>}
    <div className="receiptShipping"><label>Condición de envío<select value={shipping} onChange={e=>{setShipping(e.target.value);if(e.target.value!=="Por pagar")setFreight(0)}}><option>Incluido</option><option>Por pagar</option><option>Retiro</option></select></label><label>Flete neto<input type="number" min="0" step="1" value={freight} disabled={shipping!=="Por pagar"} onChange={e=>setFreight(Number(e.target.value))}/></label><label className="receiptObservation">Observación<textarea rows={3} value={observation} onChange={e=>setObservation(e.target.value)} placeholder="Diferencias, estado de bultos, referencia de transporte, etc."/></label></div>
-   {message&&<p className="note"><b>{message}</b></p>}
-   <div className="receiptDedicatedActions"><button type="button" className="secondary" disabled={saving} onClick={()=>setSelectedId("")}>Cancelar</button><button type="button" onClick={submit} disabled={saving}>{saving?"Confirmando inventario…":"Confirmar recepción e ingresar a inventario"}</button></div>
+   {!receiptConfirmation.enabled&&<p className="warning" role="status"><b>Confirmación de inventario deshabilitada.</b> {receiptConfirmation.reason} Puedes seguir revisando las diferencias sin guardar.</p>}
+   {message&&<p className="note" role="alert"><b>{message}</b></p>}
+   <div className="receiptDedicatedActions"><button type="button" className="secondary" disabled={saving} onClick={()=>setSelectedId("")}>Cancelar</button><button type="button" onClick={submit} disabled={saving||!receiptConfirmation.enabled}>{saving?"Confirmando inventario…":receiptConfirmation.enabled?"Confirmar recepción e ingresar a inventario":"Confirmación no disponible en este Preview"}</button></div>
   </section>;
  }
 
@@ -157,7 +162,7 @@ export default function ConnectedReceiptModule({role}:{role:string}){
   return <section className="panel receiptModule receiptDedicatedPage">
    <div className="receiptDedicatedHead"><div><button type="button" className="simpleBack" onClick={()=>{setReceiptMode("oc");setMessage("")}}>← Recepción con OC</button><h2>Recepción sin OC</h2><p>Registra una compra excepcional sin orden de compra y deja la justificación trazada.</p></div></div>
    {message&&<p className="note"><b>{message}</b></p>}
-   {canReceive?<ReceiptNoOcPanel suppliers={suppliers} materials={materials} role={role} onDone={async()=>{await load();setReceiptMode("recibidas")}}/>:<p className="note">Sin permisos para recepción.</p>}
+   {canReceive?<ReceiptNoOcPanel suppliers={suppliers} materials={materials} role={role} receiptConfirmation={receiptConfirmation} onDone={async()=>{await load();setReceiptMode("recibidas")}}/>:<p className="note">Sin permisos para recepción.</p>}
   </section>;
  }
 
