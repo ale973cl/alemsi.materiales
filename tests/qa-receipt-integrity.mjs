@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {validateReceiptDraft} from '../src/lib/receipt-validation.ts';
 import {receiptTransactionsEnabled} from '../src/lib/receipt-transactions.ts';
+import {detectReceiptMime,inspectReceiptFile,MAX_RECEIPT_FILE_BYTES} from '../src/lib/receipt-file.ts';
 const id=n=>`00000000-0000-0000-0000-${String(n).padStart(12,'0')}`;
 const line={material_id:id(10),received_qty:2,actual_unit_net:100};
 const draft={documentType:'Factura',folio:'123',date:'2026-11-17',net:200,vat:38,total:238,lines:[line],withOrder:false,reason:'Compra urgente'};
@@ -172,4 +173,16 @@ test('V3: factura manda, una confirmación atómica, diferencias y duplicados',a
    await db.exec('reset role');await db.exec('drop trigger test_v3_abort on inventory_movements');
   });
  }finally{await db.close()}
+});
+
+test('archivo real: PDF con MIME vacío/binario se acepta, HTML renombrado se rechaza',async()=>{
+ const pdf=new Blob(['%PDF-1.4\\n1 0 obj\\n<<>>\\nendobj'],{type:'application/octet-stream'});
+ assert.equal(await inspectReceiptFile(pdf),'application/pdf');
+ assert.equal(detectReceiptMime(Uint8Array.from([255,216,255,224,0,16])),'image/jpeg');
+ assert.equal(detectReceiptMime(Uint8Array.from([137,80,78,71,13,10,26,10])),'image/png');
+ assert.equal(detectReceiptMime(Uint8Array.from([82,73,70,70,4,0,0,0,87,69,66,80])),'image/webp');
+ assert.equal(detectReceiptMime(Uint8Array.from([0,1,2,3,4,5])),null);
+ await assert.rejects(inspectReceiptFile(new Blob(['<html>no es PDF</html>'],{type:'application/pdf'})),/contenido no corresponde/i);
+ await assert.rejects(inspectReceiptFile(new Blob([],{type:'application/pdf'})),/vacío/i);
+ await assert.rejects(inspectReceiptFile(new Blob([new Uint8Array(MAX_RECEIPT_FILE_BYTES+1)],{type:'application/pdf'})),/8 MB/);
 });
