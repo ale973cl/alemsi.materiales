@@ -1,9 +1,9 @@
 import {NextRequest,NextResponse} from "next/server";
 import {createClient} from "@/lib/supabase/server";
+import {inspectReceiptFile} from "@/lib/receipt-file";
 
 export const runtime="nodejs";
 const BUCKET="receipt-documents";
-const allowedTypes=["application/pdf","image/jpeg","image/png","image/webp"];
 async function context(){
  const supabase=await createClient();
  const {data:{user}}=await supabase.auth.getUser();
@@ -19,13 +19,19 @@ export async function POST(request:NextRequest){
  const id=String(form.get("receipt_id")||"");
  const file=form.get("file");
  if(!/^[0-9a-f-]{36}$/i.test(id)||!(file instanceof File))return NextResponse.json({error:"Documento o recepción inválidos"},{status:400});
- if(!allowedTypes.includes(file.type)||file.size===0||file.size>8*1024*1024)return NextResponse.json({error:"PDF o imagen de hasta 8 MB"},{status:400});
- const {data:receipt}=await ctx.supabase!.from("receipts").select("id,inventory_posted").eq("id",id).single();
- if(!receipt||receipt.inventory_posted)return NextResponse.json({error:"Recepción inexistente o ya cotejada"},{status:409});
- const {error}=await ctx.supabase!.storage.from(BUCKET).upload(`${id}/original`,Buffer.from(await file.arrayBuffer()),{contentType:file.type,upsert:false,cacheControl:"3600"});
+ let detectedMime:string;
+ try{detectedMime=await inspectReceiptFile(file)}catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Archivo inválido"},{status:400})}
+ const {data:receipt}=await ctx.supabase!.from("receipts").select("id,inventory_posted,received_by,received_at").eq("id",id).single();
+ if(!receipt)return NextResponse.json({error:"Recepción inexistente"},{status:404});
+ // V3 confirms stock before uploading the original; accept only the same user, soon after confirmation.
+ if(String(receipt.received_by)!==String(ctx.userId))return NextResponse.json({error:"Solo quien registró esta recepción puede adjuntar su factura."},{status:403});
+ const registeredAt=receipt.received_at?Date.parse(receipt.received_at):NaN;
+ if(receipt.inventory_posted&&(!Number.isFinite(registeredAt)||Date.now()-registeredAt>30*60*1000||registeredAt>Date.now()+60*1000))
+  return NextResponse.json({error:"La recepción ya está confirmada. Solo es posible adjuntar su factura durante los 30 minutos siguientes al registro."},{status:409});
+ const {error}=await ctx.supabase!.storage.from(BUCKET).upload(`${id}/original`,Buffer.from(await file.arrayBuffer()),{contentType:detectedMime,upsert:false,cacheControl:"3600"});
  if(error)return NextResponse.json({error:"No se pudo almacenar la factura. Verifica que el depósito privado receipt-documents esté configurado."},{status:503});
- await ctx.supabase!.from("activity_log").insert({actor_id:ctx.userId,module:"Recepción",action:"Adjuntar factura original",entity_table:"receipts",entity_id:id,new_data:{content_type:file.type,size:file.size}});
- return NextResponse.json({ok:true,stored:true,inventory_updated:false});
+ await ctx.supabase!.from("activity_log").insert({actor_id:ctx.userId,module:"Recepción",action:"Adjuntar factura original",entity_table:"receipts",entity_id:id,new_data:{content_type:detectedMime,size:file.size}});
+ return NextResponse.json({ok:true,stored:true,inventory_updated:Boolean(receipt.inventory_posted)});
 }
 export async function GET(request:NextRequest){
  const ctx=await context();if(ctx.error)return ctx.error;
