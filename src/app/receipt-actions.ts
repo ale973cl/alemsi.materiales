@@ -1,7 +1,7 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
-import {receiptTransactionsEnabled} from "@/lib/receipt-transactions";
+import {receiptTransactionsEnabled,receiptSingleStepEnabled} from "@/lib/receipt-transactions";
 import {isClosedPurchaseOrder,isCancelledPurchaseOrder} from "@/lib/purchase-order-balance";
 import {parseReceiptLines,validateReceiptDraft} from "@/lib/receipt-validation";
 
@@ -26,11 +26,17 @@ export async function registerPurchaseOrderReceipt(formData:FormData){
  if(!documentDate)throw new Error("La fecha del documento es obligatoria");
  if(!Array.isArray(lines)||!lines.some((l:any)=>Number(l.received_qty)>0))throw new Error("Ingresa al menos una cantidad recibida mayor a cero");
  if(shippingCondition==="Por pagar"&&freightNet<=0)throw new Error("Ingresa el valor neto del flete por pagar");
- if(receiptTransactionsEnabled()){
-  const {data:id,error}=await supabase.rpc("register_receipt_v2",{p_document:{purchase_order_id:purchaseOrderId,document_type:documentType,document_folio:documentFolio,document_date:documentDate,document_net:documentNet,vat_amount:documentVat,document_total:documentTotal,shipping_condition:shippingCondition,freight_net:shippingCondition==="Por pagar"?freightNet:0,observation},p_lines:lines});
-  if(error||!id)throw new Error(error?.message||"No se pudo registrar la recepción transaccional");
-  revalidatePath("/");return{ok:true,id:String(id)};
- }
+ // No legacy two-stage writes from this one-confirmation interface.
+ if(!receiptSingleStepEnabled())throw new Error("Recepción única no habilitada: falta activar el circuito V3 en una base aislada de Preview. No se registró nada.");
+ const supplierRut=String(formData.get("supplier_rut")||"").trim();
+ if(!supplierRut)throw new Error("Confirma el RUT del emisor que figura en la factura antes de guardar.");
+ const {data:confirmed,error:confirmedError}=await supabase.rpc("confirm_receipt_once_v3",{
+  p_document:{purchase_order_id:purchaseOrderId,supplier_rut:supplierRut,document_type:documentType,document_folio:documentFolio,document_date:documentDate,document_net:documentNet,vat_amount:documentVat,document_total:documentTotal,shipping_condition:shippingCondition,freight_net:shippingCondition==="Por pagar"?freightNet:0,observation},
+  p_lines:lines
+ });
+ if(confirmedError||!confirmed?.id)throw new Error(confirmedError?.message||"No se pudo confirmar recepción e inventario. La operación se ha revertido.");
+ revalidatePath("/");return{ok:true,id:String(confirmed.id),inventory_posted:true,status:String(confirmed.status||"Conforme"),outstanding:Number(confirmed.outstanding||0)};
+ 
  const {data:po,error:poError}=await supabase.from("purchase_orders").select("id,supplier_id,status").eq("id",purchaseOrderId).single();if(poError||!po)throw new Error("OC no encontrada");
  if(isClosedPurchaseOrder(po.status)||isCancelledPurchaseOrder(po.status))throw new Error("Esta orden de compra está cerrada o anulada y no admite más recepciones");
  if(!Array.isArray(lines)||lines.length>500)throw new Error("Detalle de recepción inválido");
