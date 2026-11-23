@@ -162,12 +162,7 @@ begin
  end if;
  if exists(select 1 from jsonb_array_elements(coalesce(p_document->'pending_resolution','[]'::jsonb)) x
   where coalesce(x->>'decision','') not in ('acumular','mismo','otro')
-     or coalesce(x->>'purchase_order_line_id','') !~ '^[0-9a-fA-F-]{36}
-end $$;
-revoke all on function public.confirm_receipt_once_v3(jsonb,jsonb) from public,anon;
-grant execute on function public.confirm_receipt_once_v3(jsonb,jsonb) to authenticated;
-commit;
-) then
+     or coalesce(x->>'purchase_order_line_id','') !~ '^[0-9a-fA-F-]{36}$') then
   raise exception 'El destino de los faltantes es inválido';
  end if;
  v_id:=public.register_receipt_v2(p_document,p_lines);
