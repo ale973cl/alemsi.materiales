@@ -46,7 +46,7 @@ export async function registerReceiptWithoutOrder(formData:FormData){
  ]);
  if(supplierError||!supplier)throw new Error("Proveedor no válido");
  if(materialError||(materials||[]).length!==ids.size)throw new Error("Selecciona productos activos del Maestro ALEMSI");
- if(dupError||(!receiptTransactionsEnabled()&&(duplicates||[]).length))throw new Error("Este proveedor ya tiene registrado el folio indicado");
+ if(dupError)throw new Error("Este proveedor ya tiene registrado el folio indicado");
  const rows=lines.map(l=>({material_id:l.material_id,received_qty:l.received_qty,actual_unit_net:l.actual_unit_net,line_net:l.received_qty*l.actual_unit_net,purchase_order_line_id:null as null}));
  const linesNet=rows.reduce((sum,l)=>sum+l.line_net,0);
  if(Math.abs(linesNet-net)>1)throw new Error("El neto de las líneas no coincide con el neto de la factura. Corrige antes de guardar");
