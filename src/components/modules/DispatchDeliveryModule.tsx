@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {createPortal} from "react-dom";
 import {useRouter} from "next/navigation";
 import {useEffect,useMemo,useState,useTransition} from "react";
 import {createDispatchV1,transitionDispatchV1} from "@/app/actions";
@@ -129,23 +130,23 @@ function BatchPreparationModal({suggestions,busy,close,confirm}:{suggestions:Sug
  const allChecked=suggestions.every(s=>checked[s.survey_id]);
  const sameCampaign=new Set(suggestions.map(s=>s.campaign_id)).size===1,sameClient=new Set(suggestions.map(s=>s.client_id)).size===1;
  const audit=suggestions.flatMap(s=>s.lines.filter(l=>qty(s,l.material_id)!==baseline(s,l.material_id)).map(l=>s.installation_name+" / "+l.name+": "+baseline(s,l.material_id)+" → "+qty(s,l.material_id)+(reasons[s.survey_id+":"+l.material_id]?" ("+reasons[s.survey_id+":"+l.material_id]+")":""))).join("; ");
- return <div className="modalBg" role="dialog" aria-modal="true" aria-label="Preparar tanda"><div className="modal" style={{maxWidth:1200,width:"96vw",maxHeight:"92vh",overflow:"auto"}}>
+ return typeof document==="undefined"?null:createPortal(<div className="modalBg" role="dialog" aria-modal="true" aria-label="Preparar tanda" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",justifyContent:"center",alignItems:"center",padding:"clamp(8px,2vw,24px)",boxSizing:"border-box",overflow:"hidden"}}><div className="modal" style={{boxSizing:"border-box",position:"relative",margin:0,maxWidth:1200,width:"100%",minWidth:0,maxHeight:"calc(100dvh - 24px)",overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain"}}>
  <div className="modalHead"><div><h2>Preparar materiales</h2><p>{suggestions.length} instalaciones · {suggestions.filter(s=>checked[s.survey_id]).length} confirmadas</p></div><button type="button" disabled={busy} onClick={close}>Cerrar</button></div>
  {(!sameCampaign||!sameClient)&&<p className="warning">Por ahora prepara una tanda por cliente y campaña.</p>}
  <button type="button" disabled={busy} onClick={()=>{if(!printPreparationConsolidated(suggestions,proposed))alert("Habilita las ventanas emergentes para imprimir.");}}>Imprimir consolidado para bodega</button>
  <p>Prepara los materiales con el consolidado. Confirma cada instalación o abre su pedido para corregir cantidades.</p>
- <div style={{overflow:"auto",maxHeight:"42vh",border:"1px solid #c8dce8",borderRadius:10}}><table style={{borderCollapse:"collapse",width:"100%",minWidth:600,fontSize:12}}><thead><tr><th>Material</th>{suggestions.map(s=><th key={s.survey_id}>{s.installation_name}</th>)}<th>Total preparado</th></tr></thead><tbody>{catalog.map(m=><tr key={m.id}><td style={{padding:8,borderBottom:"1px solid #dde8ec"}}>{m.name} · {m.unit}</td>{suggestions.map(s=><td key={s.survey_id} style={{textAlign:"center",borderBottom:"1px solid #dde8ec"}}>{qty(s,m.id)||"—"}</td>)}<td style={{textAlign:"center",fontWeight:700}}>{totals.get(m.id)||0}</td></tr>)}</tbody></table></div>
+ <div style={{overflowX:"auto",overflowY:"auto",maxHeight:"min(38dvh,380px)",maxWidth:"100%",border:"1px solid #c8dce8",borderRadius:10}}><table style={{borderCollapse:"collapse",width:"100%",minWidth:600,fontSize:12}}><thead><tr><th>Material</th>{suggestions.map(s=><th key={s.survey_id}>{s.installation_name}</th>)}<th>Total preparado</th></tr></thead><tbody>{catalog.map(m=><tr key={m.id}><td style={{padding:8,borderBottom:"1px solid #dde8ec"}}>{m.name} · {m.unit}</td>{suggestions.map(s=><td key={s.survey_id} style={{textAlign:"center",borderBottom:"1px solid #dde8ec"}}>{qty(s,m.id)||"—"}</td>)}<td style={{textAlign:"center",fontWeight:700}}>{totals.get(m.id)||0}</td></tr>)}</tbody></table></div>
  <h3 style={{marginTop:18}}>Confirmar instalaciones</h3>
  {suggestions.map(s=><section key={s.survey_id} style={{border:"1px solid #c8dce8",padding:12,borderRadius:10,marginBottom:8}}>
- <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}><div><b>{s.installation_name}</b><small style={{display:"block"}}>{checked[s.survey_id]?"Confirmada":"Pendiente de preparación"}</small></div>
+ <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}><div style={{flex:"1 1 180px",minWidth:0,overflowWrap:"anywhere"}}><b>{s.installation_name}</b><small style={{display:"block"}}>{checked[s.survey_id]?"Confirmada":"Pendiente de preparación"}</small></div>
  <button type="button" disabled={busy} onClick={()=>{setChecked(c=>({...c,[s.survey_id]:true}));setEditing("");}}> {checked[s.survey_id]?"Confirmada ✓":"Preparación correcta"}</button>
  <button type="button" disabled={busy} onClick={()=>{setEditing(editing===s.survey_id?"":s.survey_id);setChecked(c=>({...c,[s.survey_id]:false}));}}> {editing===s.survey_id?"Cerrar pedido":"Registrar diferencia"}</button></div>
  {editing===s.survey_id&&<div style={{marginTop:12}}>{s.lines.map(l=><div key={l.material_id} style={{display:"grid",gridTemplateColumns:"minmax(130px,2fr) 1fr 1fr",gap:8,alignItems:"center",padding:8,borderBottom:"1px solid #dde8ec"}}><span><b>{l.name}</b><small style={{display:"block"}}>Necesidad: {l.pending} · A preparar: {baseline(s,l.material_id)}</small></span><label>Preparado<input type="number" min="0" max={baseline(s,l.material_id)} step="any" disabled={busy} value={qty(s,l.material_id)} onChange={e=>{setAdjustments(a=>({...a,[s.survey_id+":"+l.material_id]:Math.max(0,Math.min(baseline(s,l.material_id),Number(e.target.value)||0))}));setChecked(c=>({...c,[s.survey_id]:false}));}}/></label><span>Faltan: {Math.max(0,l.pending-qty(s,l.material_id))}</span>{qty(s,l.material_id)!==baseline(s,l.material_id)&&<label style={{gridColumn:"1 / -1"}}>Motivo (opcional)<input value={reasons[s.survey_id+":"+l.material_id]||""} onChange={e=>setReasons(r=>({...r,[s.survey_id+":"+l.material_id]:e.target.value}))}/></label>}</div>)}
  <button type="button" disabled={busy} onClick={()=>{setChecked(c=>({...c,[s.survey_id]:true}));setEditing("");}}>Confirmar cantidades reales</button></div>}
  </section>)}
  {overStock&&<p className="warning">Las cantidades superan las existencias disponibles.</p>}
- <div style={{display:"flex",justifyContent:"flex-end",gap:8,flexWrap:"wrap"}}><button type="button" disabled={busy} onClick={close}>Volver</button><button type="button" disabled={busy||!allChecked||!sameCampaign||!sameClient||!total||overStock} onClick={()=>confirm(prepared,audit)}>{busy?"Generando guías…":"Confirmar tanda y generar guías"}</button></div>
- </div></div>;
+ <div style={{display:"flex",justifyContent:"flex-end",gap:8,flexWrap:"wrap",position:"sticky",bottom:0,background:"#fff",padding:"12px 0 4px",borderTop:"1px solid #dce8ef"}}><button type="button" disabled={busy} onClick={close}>Volver</button><button type="button" disabled={busy||!allChecked||!sameCampaign||!sameClient||!total||overStock} onClick={()=>confirm(prepared,audit)}>{busy?"Generando guías…":"Confirmar tanda y generar guías"}</button></div>
+ </div></div>,document.body);
 }
 
 
