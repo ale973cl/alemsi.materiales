@@ -1,13 +1,16 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
-import {receiptSingleStepEnabled} from "@/lib/receipt-transactions";
+import {receiptConfirmationStatus} from "@/lib/receipt-transactions";
 import {isClosedPurchaseOrder,isCancelledPurchaseOrder} from "@/lib/purchase-order-balance";
 import {parseReceiptLines,validateReceiptDraft} from "@/lib/receipt-validation";
 
 async function ctx(roles:string[]){const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)throw new Error("Sesión no válida");const {data:profile}=await supabase.from("user_profiles").select("role,active,full_name,email").eq("id",user.id).single();if(!profile?.active||!roles.includes(profile.role))throw new Error("No autorizado para esta operación");return{supabase,user,profile};}
 
 export async function registerPurchaseOrderReceipt(formData:FormData){
+ const readiness=receiptConfirmationStatus();
+ if(!readiness.enabled)return{ok:false as const,error:readiness.reason};
+ try{
  const {supabase}=await ctx(["Admin Total","Admin","Bodega"]);
  const purchaseOrderId=String(formData.get("purchase_order_id")||"").trim();
  const documentType=String(formData.get("document_type")||"").trim();
@@ -28,7 +31,7 @@ export async function registerPurchaseOrderReceipt(formData:FormData){
  if(!Array.isArray(lines)||!lines.some((l:any)=>Number(l.received_qty)>0))throw new Error("Ingresa al menos una cantidad recibida mayor a cero");
  if(shippingCondition==="Por pagar"&&freightNet<=0)throw new Error("Ingresa el valor neto del flete por pagar");
  // No legacy two-stage writes from this one-confirmation interface.
- if(!receiptSingleStepEnabled())throw new Error("Recepción única no habilitada: falta activar el circuito V3 en una base aislada de Preview. No se registró nada.");
+
  const supplierRut=String(formData.get("supplier_rut")||"").trim();
  if(!supplierRut)throw new Error("Confirma el RUT del emisor que figura en la factura antes de guardar.");
  const {data:confirmed,error:confirmedError}=await supabase.rpc("confirm_receipt_once_v3",{
@@ -36,7 +39,13 @@ export async function registerPurchaseOrderReceipt(formData:FormData){
   p_lines:lines
  });
  if(confirmedError||!confirmed?.id)throw new Error(confirmedError?.message||"No se pudo confirmar recepción e inventario. La operación se ha revertido.");
- revalidatePath("/");return{ok:true,id:String(confirmed.id),inventory_posted:true,status:String(confirmed.status||"Conforme"),outstanding:Number(confirmed.outstanding||0)};
+ revalidatePath("/");return{ok:true as const,id:String(confirmed.id),inventory_posted:true,status:String(confirmed.status||"Conforme"),outstanding:Number(confirmed.outstanding||0)};
+ }catch(error){
+  const detail=error instanceof Error?error.message:"Error inesperado";
+  console.error("receipt_confirm_failed",{message:detail.slice(0,240)});
+  const known=/^(Sesión|No autorizado|Selecciona|Confirma|Ingresa|Revisa|El |La |Los |Las |Folio|Fecha|Neto|Tipo|Proveedor|Producto|Cantidad|Importes|Flete|Documento|Material|OC |No se pudo)/i.test(detail);
+  return{ok:false as const,error:known?detail.slice(0,240):"No se pudo confirmar la recepción. No se registraron movimientos; revisa el estado del documento e inténtalo nuevamente."};
+ }
 
 }
 
