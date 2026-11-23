@@ -29,7 +29,7 @@ export default function ConnectedReceiptModule({role}:{role:string}){
  const load=async()=>{setLoading(true);try{const response=await fetch("/api/receipts/context",{cache:"no-store"});const body=await response.json();if(!response.ok)throw new Error(body.error||"No se pudo cargar Recepción");setOrders(body.orders||[]);setReceipts(body.receipts||[]);setSuppliers(body.suppliers||[]);setMaterials(body.materials||[])}catch(error:any){setMessage(error?.message||"No se pudo cargar Recepción")}finally{setLoading(false)}};
  useEffect(()=>{void load()},[]);
  const receivable=useMemo(()=>orders.filter(order=>order.order_type!=="Cotización"&&!isClosedPurchaseOrder(order.status)&&!isCancelledPurchaseOrder(order.status)&&(order.purchase_order_lines||[]).some(line=>line.line_type!=="Servicio"&&Number(line.pending_qty)>0)),[orders]);
- const matches=useMemo(()=>{const q=norm(orderSearch);if(!q)return receivable.slice(0,20);return receivable.filter(o=>norm(`${o.order_number} ${o.suppliers?.legal_name} ${o.status}`).includes(q)).slice(0,30)},[receivable,orderSearch]);
+ const matches=useMemo(()=>{const q=norm(orderSearch);if(!q)return receivable.slice(0,6);return receivable.filter(o=>norm(`${o.order_number} ${o.suppliers?.legal_name} ${o.status}`).includes(q)).slice(0,30)},[receivable,orderSearch]);
  const initialOrderHandled=useRef(false);
  useEffect(()=>{
   if(initialOrderHandled.current||loading||orders.length===0)return;
@@ -37,7 +37,7 @@ export default function ConnectedReceiptModule({role}:{role:string}){
   if(!orderId){initialOrderHandled.current=true;return}
   const match=receivable.find(order=>order.id===orderId);
   if(match){setReceiptMode("oc");setSelectedId(match.id);setOrderSearch(match.order_number||"");}
-  else setMessage("La OC indicada no está disponible para recepción. Revisa si ya fue recibida o cerrada.");
+  else {const requested=orders.find(o=>o.id===orderId);if(requested){setMessage(`La OC ${requested.order_number||"seleccionada"} está en estado "${requested.status}" y no admite otra recepción. Revisa su factura en "Facturas recepcionadas" o selecciona una OC abierta de la lista.`);setHistorySearch(requested.order_number||"");}else setMessage("No se encontró la OC del enlace. Selecciona una OC disponible o búscala por proveedor.");}
   initialOrderHandled.current=true;
  },[loading,orders.length,receivable]);
  const selected=receivable.find(order=>order.id===selectedId)||null;const materialLines=(selected?.purchase_order_lines||[]).filter(line=>line.material_id&&Number(line.pending_qty)>0);
@@ -179,8 +179,8 @@ export default function ConnectedReceiptModule({role}:{role:string}){
   {loading?<div className="empty"><b>Cargando recepción…</b></div>:<>
    <div className="receiptSelector">
     <label>Buscar orden de compra<input value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} placeholder="N° de OC, proveedor o estado" disabled={!canReceive}/></label>
-    {canReceive&&orderSearch.trim()&&<div className="receiptMatches">{matches.length?matches.map(order=><button type="button" key={order.id} onClick={()=>{setSelectedId(order.id);setOrderSearch(order.order_number||"")}}><b>{order.order_number||"OC sin folio"}</b><span>{order.suppliers?.legal_name||"Proveedor"}</span><small>{order.status} · {money(Number(order.total_net||0))}</small><strong>Abrir →</strong></button>):<span className="receiptNoMatch">No se encontraron OC con materiales pendientes.</span>}</div>}
-    {!orderSearch.trim()&&canReceive&&<small className="receiptHelp">Escribe la OC impresa en la factura o busca por proveedor.</small>}
+    {canReceive&&<div className="receiptMatches">{matches.length?matches.map(order=><button type="button" key={order.id} onClick={()=>{setSelectedId(order.id);setOrderSearch(order.order_number||"");setMessage("")}}><b>{order.order_number||"OC sin folio"}</b><span>{order.suppliers?.legal_name||"Proveedor"}</span><small>{order.status} · {money(Number(order.total_net||0))}</small><strong>Abrir →</strong></button>):<span className="receiptNoMatch">No existen OC abiertas con materiales pendientes para esa búsqueda.</span>}</div>}
+    {!orderSearch.trim()&&canReceive&&<small className="receiptHelp">Selecciona una OC disponible arriba o busca por número y proveedor. Las órdenes cerradas son solo de consulta.</small>}
    </div>
   </>}
  </section>;
