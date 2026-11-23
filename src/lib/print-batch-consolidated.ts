@@ -14,17 +14,19 @@ export function printPreparationConsolidated(
  const total=(id:string)=>installations.reduce((sum,s)=>sum+value(s.survey_id,id),0);
  const groups=Array.from({length:Math.ceil(installations.length/8)},(_,i)=>installations.slice(i*8,(i+1)*8));
  const materialGroups=Array.from({length:Math.ceil(materials.length/24)},(_,i)=>materials.slice(i*24,(i+1)*24));
+ const clients=[...new Set(installations.map(s=>s.client_name))];
+ const campaigns=[...new Set(installations.map(s=>s.campaign_name))];
  const sections:string[]=[];
  for(const group of groups)for(const segment of materialGroups){
   sections.push(`<section class="page"><header><h1>ALEMSI · CONSOLIDADO PARA PREPARACIÓN FÍSICA</h1>
-   <p><b>Cliente:</b> ${safe(installations[0].client_name)} &nbsp; <b>Campaña:</b> ${safe(installations[0].campaign_name)}</p>
+   <p><b>Cliente:</b> ${clients.length===1?safe(clients[0]):clients.length+" clientes"} &nbsp; <b>Campaña:</b> ${campaigns.length===1?safe(campaigns[0]):campaigns.length+" campañas"}</p>
    <p><b>Instalaciones seleccionadas:</b> ${installations.length} &nbsp; <b>Productos:</b> ${materials.length} &nbsp; <b>Bloque:</b> ${groups.indexOf(group)+1}/${groups.length}</p>
    <p>Instrucción a bodega: retirar las cantidades indicadas y revisar físicamente antes de generar guías.</p></header>
-   <table><thead><tr><th>Material</th>${group.map(s=>`<th>${safe(s.installation_name)}</th>`).join("")}<th>Total bloque</th></tr></thead><tbody>
+   <table><thead><tr><th>Material</th>${group.map(s=>`<th>${safe(s.installation_name)}<small>${safe(s.client_name)} · ${safe(s.campaign_name)}</small></th>`).join("")}<th>Total bloque</th></tr></thead><tbody>
    ${segment.map(([id,m])=>`<tr><td><strong>${safe(m.name)}</strong><small>${safe(m.unit)}</small></td>${group.map(s=>`<td>${value(s.survey_id,id)||"—"}</td>`).join("")}<td><b>${group.reduce((n,s)=>n+value(s.survey_id,id),0)||"—"}</b></td></tr>`).join("")}
    </tbody></table></section>`);
  }
- sections.push(`<section class="page"><h1>RESUMEN GENERAL DE CARGA</h1><p>${safe(installations[0].campaign_name)} · ${installations.length} instalaciones</p>
+ sections.push(`<section class="page"><h1>RESUMEN GENERAL DE CARGA</h1><p>${campaigns.length===1?safe(campaigns[0]):campaigns.length+" campañas"} · ${clients.length} cliente(s) · ${installations.length} instalaciones</p>
  <table><thead><tr><th>Material</th><th>Total de la tanda</th></tr></thead><tbody>${materials.map(([id,m])=>`<tr><td><b>${safe(m.name)}</b><small>${safe(m.unit)}</small></td><td><b>${total(id)}</b></td></tr>`).join("")}</tbody></table>
  <p><b>Total de unidades:</b> ${materials.reduce((a,[id])=>a+total(id),0)}</p><p>Revisión de bodega: ______________________ &nbsp; Fecha: ______________</p></section>`);
  const w=window.open("","_blank");if(!w)return false;
