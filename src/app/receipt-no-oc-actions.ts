@@ -1,7 +1,7 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
-import {receiptTransactionsEnabled} from "@/lib/receipt-transactions";
+import {receiptSingleStepEnabled} from "@/lib/receipt-transactions";
 import {validateReceiptDraft} from "@/lib/receipt-validation";
 
 type MaterialLine={material_id:string;received_qty:number;actual_unit_net:number};
@@ -50,25 +50,14 @@ export async function registerReceiptWithoutOrder(formData:FormData){
  const rows=lines.map(l=>({material_id:l.material_id,received_qty:l.received_qty,actual_unit_net:l.actual_unit_net,line_net:l.received_qty*l.actual_unit_net,purchase_order_line_id:null as null}));
  const linesNet=rows.reduce((sum,l)=>sum+l.line_net,0);
  if(Math.abs(linesNet-net)>1)throw new Error("El neto de las líneas no coincide con el neto de la factura. Corrige antes de guardar");
- if(receiptTransactionsEnabled()){
-  const {data:id,error}=await supabase.rpc("register_receipt_v2",{p_document:{supplier_id:supplierId,document_type:documentType,document_folio:folio,document_date:date,document_net:net,vat_amount:vat,document_total:total,no_oc_reason:reason,shipping_condition:shipping,freight_net:shipping==="Por pagar"?freight:0,observation:notes,payment_condition:paymentCondition,payment_days:paymentDays,payment_due:paymentDue||null},p_lines:lines});
-  if(error||!id)throw new Error(error?.message||"No se pudo registrar la recepción transaccional");
-  revalidatePath("/");return{ok:true,id:String(id),inventory_updated:false};
- }
- const {data:receipt,error}=await supabase.from("receipts").insert({
-  purchase_order_id:null,supplier_id:supplierId,invoice_number:documentType==="Factura"?folio:null,invoice_date:date,invoice_net:net,vat_amount:vat,
-  document_type:documentType,document_folio:folio,document_date:date,document_net:net,document_total:total,
-  status:"Pendiente cotejo",reconciliation_status:"Pendiente cotejo",inventory_posted:false,received_by:user.id,received_at:new Date().toISOString(),
-  no_oc_reason:reason,shipping_condition:shipping,freight_net:shipping==="Por pagar"?freight:0,
- }).select("id").single();
- if(error||!receipt)throw new Error(error?.message||"No se pudo registrar la recepción");
- const {error:lineError}=await supabase.from("receipt_lines").insert(rows.map(({purchase_order_line_id,...line})=>({...line,receipt_id:receipt.id,purchase_order_line_id})));
- if(lineError){await supabase.from("receipts").delete().eq("id",receipt.id);throw new Error(lineError.message);}
- await supabase.from("activity_log").insert({actor_id:user.id,actor_name:profile.full_name||profile.email,module:"Recepción",action:"Recepción sin OC pendiente de cotejo",entity_table:"receipts",entity_id:receipt.id,new_data:{
-  supplier:supplier.legal_name,rut:supplier.rut,document_type:documentType,document_folio:folio,payment_condition:paymentCondition,payment_days:paymentDays,payment_due:paymentDue||null,payment_status:"Sin confirmar",observation:notes,lines:rows.length
- }});
- revalidatePath("/");
- return{ok:true,id:receipt.id,inventory_updated:false};
+ if(!receiptSingleStepEnabled())throw new Error("Confirmación única sin OC deshabilitada hasta contar con base de Preview aislada. No se registró inventario.");
+ const invoiceRut=String(formData.get("supplier_rut")||"").trim();
+ const cleanRut=(x:string)=>x.toUpperCase().replace(/[^0-9K]/g,"");
+ if(!invoiceRut||cleanRut(invoiceRut)!==cleanRut(supplier.rut||""))throw new Error("RUT del emisor de factura distinto del proveedor seleccionado.");
+ const {data:result,error}=await supabase.rpc("confirm_receipt_once_v3",{p_document:{supplier_id:supplierId,supplier_rut:invoiceRut,document_type:documentType,document_folio:folio,document_date:date,document_net:net,vat_amount:vat,document_total:total,no_oc_reason:reason,shipping_condition:shipping,freight_net:shipping==="Por pagar"?freight:0,observation:notes,payment_condition:paymentCondition,payment_days:paymentDays,payment_due:paymentDue||null},p_lines:lines});
+ if(error||!result?.id)throw new Error(error?.message||"No se pudo confirmar compra sin OC ni ingresar inventario.");
+ revalidatePath("/");return{ok:true,id:String(result.id),inventory_updated:true,status:String(result.status||"Confirmada sin OC")};
+
 }
 
 export async function createSupplierForReceipt(legalName:string,rutRaw:string){
