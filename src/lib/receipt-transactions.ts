@@ -17,9 +17,10 @@ export function receiptConfirmationStatus(env:Record<string,string|undefined>=pr
   return locked("Recepción en modo revisión: la confirmación única y el ingreso a inventario aún no están habilitados para este Preview. Ningún movimiento se registró.");
  let currentRef="";
  try{currentRef=new URL(env.NEXT_PUBLIC_SUPABASE_URL||"").hostname.split(".")[0]}catch{}
+ // ALEMSI currently uses its existing disposable test project; require an explicit matching ref in Preview.
  const testRef=String(env.ALEMSI_RECEIPT_TEST_SUPABASE_REF||"").trim();
- if(!currentRef||!testRef||currentRef!==testRef||currentRef==="vxqxbjkttymgvyskzheu")
-  return locked("No hay una base Supabase de pruebas aislada y verificada para confirmar esta factura. Se bloqueó el guardado para proteger los registros existentes.");
+ if(!currentRef||!testRef||currentRef!==testRef)
+  return locked("El Supabase configurado no coincide con el proyecto declarado para las pruebas de recepción. Se bloqueó el guardado para evitar registrar en otro proyecto.");
  return {enabled:true,reason:"Recepción de pruebas habilitada: al confirmar se registrará el documento y su inventario en una transacción."};
 }
 export function receiptSingleStepEnabled(env:Record<string,string|undefined>=process.env):boolean {
