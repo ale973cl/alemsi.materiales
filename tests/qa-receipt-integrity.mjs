@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {validateReceiptDraft} from '../src/lib/receipt-validation.ts';
-import {receiptTransactionsEnabled} from '../src/lib/receipt-transactions.ts';
+import {receiptTransactionsEnabled,receiptConfirmationStatus} from '../src/lib/receipt-transactions.ts';
 import {detectReceiptMime,inspectReceiptFile,MAX_RECEIPT_FILE_BYTES} from '../src/lib/receipt-file.ts';
 const id=n=>`00000000-0000-0000-0000-${String(n).padStart(12,'0')}`;
 const line={material_id:id(10),received_qty:2,actual_unit_net:100};
@@ -185,4 +185,13 @@ test('archivo real: PDF con MIME vacío/binario se acepta, HTML renombrado se re
  await assert.rejects(inspectReceiptFile(new Blob(['<html>no es PDF</html>'],{type:'application/pdf'})),/contenido no corresponde/i);
  await assert.rejects(inspectReceiptFile(new Blob([],{type:'application/pdf'})),/vacío/i);
  await assert.rejects(inspectReceiptFile(new Blob([new Uint8Array(MAX_RECEIPT_FILE_BYTES+1)],{type:'application/pdf'})),/8 MB/);
+});
+
+test('V3 se habilita solo en Preview con identidad de Supabase de pruebas',()=>{
+ const match={ALEMSI_RECEIPT_V2:'1',ALEMSI_RECEIPT_V3:'1',VERCEL_ENV:'preview',NEXT_PUBLIC_SUPABASE_URL:'https://vxqxbjkttymgvyskzheu.supabase.co',ALEMSI_RECEIPT_TEST_SUPABASE_REF:'vxqxbjkttymgvyskzheu'};
+ assert.equal(receiptConfirmationStatus(match).enabled,true);
+ assert.equal(receiptConfirmationStatus({...match,VERCEL_ENV:'production'}).enabled,false);
+ assert.equal(receiptConfirmationStatus({...match,ALEMSI_RECEIPT_TEST_SUPABASE_REF:'otra-base'}).enabled,false);
+ assert.equal(receiptConfirmationStatus({...match,ALEMSI_RECEIPT_V3:'0'}).enabled,false);
+ assert.equal(receiptConfirmationStatus({...match,NEXT_PUBLIC_SUPABASE_URL:'invalid'}).enabled,false);
 });
