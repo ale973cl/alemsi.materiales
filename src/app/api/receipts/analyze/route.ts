@@ -21,20 +21,32 @@ export async function POST(request:NextRequest){
  { "supplier_name":string|null,"supplier_rut":string|null,"document_type":string|null,"folio":string|null,"date":string|null,"net":number|null,"vat":number|null,"total":number|null,"payment_condition":string|null,"payment_days":number|null,"lines":[{"description":string,"supplier_code":string|null,"quantity":number|null,"unit":string|null,"unit_net":number|null,"line_net":number|null}],"warnings":string[] }
 Formato de fecha YYYY-MM-DD si es legible; montos CLP sin separadores. line_net debe ser el NETO TOTAL de esa línea, sin IVA. unit_net solo si aparece explícito; si no aparece, déjalo null porque el sistema calculará line_net / quantity. En warnings explica textos o cifras ilegibles, datos ausentes y discrepancias de suma. Las líneas no son productos del maestro ALEMSI; NO hagas equivalencia automática.`;
  try{
-  const chosen="gemini-2.5-flash-lite";
+  const catalog=await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=100",{headers:{"x-goog-api-key":key},cache:"no-store",signal:AbortSignal.timeout(12000)});
+  if(!catalog.ok){console.error("receipt_gemini_catalog",{status:catalog.status});return NextResponse.json({error:"No se pudo consultar el catálogo de modelos de esta clave (HTTP "+catalog.status+")."},{status:502});}
+  const listing=await catalog.json();
+  const supported=(listing.models||[]).filter((m:{name?:string;supportedGenerationMethods?:string[]})=>m.supportedGenerationMethods?.includes("generateContent")&&/^models\\/gemini-(?:[3-9](?:\\.\\d+)?)-(?:flash|flash-lite)(?:-[\\w-]+)?$/.test(m.name||"")).map((m:{name:string})=>m.name.replace("models/","")) as string[];
+  const priority=(m:string)=>/flash-lite$/.test(m)?0:/flash$/.test(m)?1:2;
+  supported.sort((a,b)=>priority(a)-priority(b)||b.localeCompare(a));
+  if(!supported.length)return NextResponse.json({error:"La clave no ofrece modelos Gemini Flash compatibles con generateContent. Revisa el proyecto en Google AI Studio."},{status:502});
   let res:Response|null=null;
-  for(let attempt=0;attempt<2;attempt++){
-   const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+chosen+":generateContent",{
-    method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
-    signal:AbortSignal.timeout(45000),
-    body:JSON.stringify({contents:[{parts:[{text:instruction},{inline_data:{mime_type:file.type,data:base64}}]}],generationConfig:{temperature:0,responseMimeType:"application/json"}})
-   });
-   if(response.ok){res=response;break;}
-   console.error("receipt_gemini_http",{status:response.status,model:chosen,attempt:attempt+1});
-   if(response.status===429&&attempt===0){await new Promise(resolve=>setTimeout(resolve,20000));continue;}
-   return NextResponse.json({error:response.status===429?"Gemini devolvió HTTP 429. Comprueba la cuota gratuita de gemini-2.5-flash-lite.":response.status===404?"El modelo gemini-2.5-flash-lite no está disponible para esta clave.":"Gemini rechazó la lectura (HTTP "+response.status+")."},{status:502});
+  let chosen="";
+  let lastStatus=0;
+  for(const model of supported.slice(0,6)){
+   for(let attempt=0;attempt<2;attempt++){
+    const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
+     method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
+     signal:AbortSignal.timeout(45000),
+     body:JSON.stringify({contents:[{parts:[{text:instruction},{inline_data:{mime_type:file.type,data:base64}}]}],generationConfig:{temperature:0,responseMimeType:"application/json"}})
+    });
+    if(response.ok){res=response;chosen=model;break;}
+    lastStatus=response.status;
+    console.error("receipt_gemini_http",{status:response.status,model,attempt:attempt+1});
+    if(response.status===429&&attempt===0){await new Promise(resolve=>setTimeout(resolve,20000));continue;}
+    break;
+   }
+   if(res||lastStatus!==404)break;
   }
-  if(!res)throw new Error("Sin respuesta de Gemini");
+  if(!res)return NextResponse.json({error:lastStatus===429?"Gemini devolvió HTTP 429: límite de cuota del proyecto.":lastStatus===404?"Ninguno de los modelos Flash anunciados para esta clave aceptó la solicitud (404).":"Gemini rechazó la lectura (HTTP "+lastStatus+")."},{status:502});
   const data=await res.json();
   const raw=(data?.candidates?.[0]?.content?.parts||[]).map((p:{text?:string})=>p.text||"").join("");
   const parsed=JSON.parse(raw);
