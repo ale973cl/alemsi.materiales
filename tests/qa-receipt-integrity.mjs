@@ -135,7 +135,9 @@ test('V3: factura manda, una confirmación atómica, diferencias y duplicados',a
   await t.test('faltante: factura 2 vs OC 4, conserva destino del saldo',async()=>{
    const pol=await po(50),resolution=[{purchase_order_line_id:pol,missing_qty:2,decision:'otro'}],result=await confirm(document(id(50),'V3-FALTANTE',200,resolution),[{purchase_order_line_id:pol,material_id:id(10),received_qty:2,actual_unit_net:100}]);
    assert.equal(result.orderStatus,'Cerrada incompleta');assert.equal(Number(result.outstanding),2);
+   await db.exec('reset role'); // Fixture grants INSERT but no SELECT on activity_log to authenticated.
    assert.equal(Number((await db.query("select count(*) n from activity_log where action='Destino de faltantes de factura'")).rows[0].n),1);
+   await login(8);
   });
   await t.test('conforme: factura 4 vs OC 4 registra directamente',async()=>{
    const pol=await po(60),result=await confirm(document(id(60),'V3-CONFORME',400),[{purchase_order_line_id:pol,material_id:id(10),received_qty:4,actual_unit_net:100}]);
