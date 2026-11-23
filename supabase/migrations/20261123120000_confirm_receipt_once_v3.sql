@@ -107,7 +107,7 @@ begin
   if not found or po.status in ('Anulada','Cancelada','Cerrada','Cerrada incompleta','Finalizada','Recepcionada') then raise exception 'OC cerrada o inexistente'; end if;
   if exists(select 1 from public.receipts other where other.purchase_order_id=po.id and other.id<>r.id) then raise exception 'OC con múltiples documentos: requiere revisión'; end if;
   if exists(select 1 from public.receipt_lines rl left join public.purchase_order_lines pol on pol.id=rl.purchase_order_line_id
-    where rl.receipt_id=r.id and (pol.id is null or pol.purchase_order_id<>po.id or pol.material_id is distinct from rl.material_id or (rl.purchase_order_line_id is not null and pol.id is null))) then raise exception 'Material o cantidad ajena a OC'; end if;
+    where rl.receipt_id=r.id and rl.purchase_order_line_id is not null and (pol.id is null or pol.purchase_order_id<>po.id or pol.material_id is distinct from rl.material_id)) then raise exception 'Material o cantidad ajena a OC'; end if;
   if exists(select 1 from public.receipt_lines where receipt_id=r.id and purchase_order_line_id is null) then v_diff:=true; end if;
   select v_diff or exists(select 1 from public.purchase_order_lines pol left join public.receipt_lines rl on rl.purchase_order_line_id=pol.id and rl.receipt_id=r.id
    where pol.purchase_order_id=po.id and (rl.id is null or rl.received_qty<>pol.ordered_qty or rl.actual_unit_net<>pol.unit_net_price)) or po.total_net<>r.document_net into v_diff;
@@ -157,8 +157,34 @@ begin
   raise exception 'Confirmación única habilitada exclusivamente para Admin Total en el piloto aislado';
  end if;
  -- Both operations execute in the same transaction. Any failure rolls back receipt, movements, prices and PO state.
+ if p_document ? 'pending_resolution' and jsonb_typeof(p_document->'pending_resolution')<>'array' then
+  raise exception 'Decisiones de saldo inválidas';
+ end if;
+ if exists(select 1 from jsonb_array_elements(coalesce(p_document->'pending_resolution','[]'::jsonb)) x
+  where coalesce(x->>'decision','') not in ('acumular','mismo','otro')
+     or coalesce(x->>'purchase_order_line_id','') !~ '^[0-9a-fA-F-]{36}
+end $$;
+revoke all on function public.confirm_receipt_once_v3(jsonb,jsonb) from public,anon;
+grant execute on function public.confirm_receipt_once_v3(jsonb,jsonb) to authenticated;
+commit;
+) then
+  raise exception 'El destino de los faltantes es inválido';
+ end if;
  v_id:=public.register_receipt_v2(p_document,p_lines);
  v_result:=public.reconcile_receipt_v2(v_id);
+ if not coalesce((v_result->>'alreadyPosted')::boolean,false) and
+    jsonb_array_length(coalesce(p_document->'pending_resolution','[]'::jsonb))>0 then
+   if exists(select 1 from jsonb_array_elements(p_document->'pending_resolution') x
+    where not exists(select 1 from public.purchase_order_lines pol
+      join public.receipts r on pol.purchase_order_id=r.purchase_order_id
+      where r.id=v_id and pol.id=(x->>'purchase_order_line_id')::uuid)) then
+    raise exception 'Saldo ajeno a la OC';
+   end if;
+   insert into public.activity_log(actor_id,actor_name,module,action,entity_table,entity_id,new_data)
+   select v_user,coalesce(full_name,email),'Recepción','Destino de faltantes de factura','receipts',v_id,
+     jsonb_build_object('pending_resolution',p_document->'pending_resolution')
+   from public.user_profiles where id=v_user;
+ end if;
  return v_result||jsonb_build_object('id',v_id);
 end $$;
 revoke all on function public.confirm_receipt_once_v3(jsonb,jsonb) from public,anon;
