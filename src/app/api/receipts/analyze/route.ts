@@ -24,7 +24,7 @@ Formato de fecha YYYY-MM-DD si es legible; montos CLP sin separadores. line_net 
   const catalog=await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=100",{headers:{"x-goog-api-key":key},cache:"no-store",signal:AbortSignal.timeout(12000)});
   if(!catalog.ok){console.error("receipt_gemini_catalog",{status:catalog.status});return NextResponse.json({error:"No se pudo consultar el catálogo de modelos de esta clave (HTTP "+catalog.status+")."},{status:502});}
   const listing=await catalog.json();
-  const supported=(listing.models||[]).filter((m:{name?:string;supportedGenerationMethods?:string[]})=>m.supportedGenerationMethods?.includes("generateContent")&&/^models\\/gemini-(?:[3-9](?:\\.\\d+)?)-(?:flash|flash-lite)(?:-[\\w-]+)?$/.test(m.name||"")).map((m:{name:string})=>m.name.replace("models/","")) as string[];
+  const supported=(listing.models||[]).filter((m:{name?:string;supportedGenerationMethods?:string[]})=>m.supportedGenerationMethods?.includes("generateContent")&&m.name?.startsWith("models/gemini-")&&m.name.includes("flash")&&!m.name.includes("preview")&&!m.name.includes("experimental")&&!m.name.includes("image")&&!m.name.includes("audio")).map((m:{name:string})=>m.name.replace("models/","")) as string[];
   const priority=(m:string)=>/flash-lite$/.test(m)?0:/flash$/.test(m)?1:2;
   supported.sort((a,b)=>priority(a)-priority(b)||b.localeCompare(a));
   if(!supported.length)return NextResponse.json({error:"La clave no ofrece modelos Gemini Flash compatibles con generateContent. Revisa el proyecto en Google AI Studio."},{status:502});
