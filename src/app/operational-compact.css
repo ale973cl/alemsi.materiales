@@ -554,3 +554,12 @@
  .procurement .nextAction span{grid-column:1/-1}
  .procurement .nextAction .btn,.procurement .nextAction button{min-width:0}
 }
+
+/* UX audit 2026-11-25: touch targets for dense operational tabs, mobile and tablet. */
+@media (pointer:coarse){
+ .simpleApp .compactTabs button,.simpleApp .simpleSubnav button,.simpleApp .dispatchBuckets button,.simpleApp .dispatchSuggestionRow button{min-height:44px!important;min-width:44px}
+ .simpleApp .dispatchSuggestionRow input[type=checkbox]{width:24px;height:24px}
+}
+@media (max-width:600px){
+ .simpleApp .compactTabs button,.simpleApp .dispatchSuggestionRow button{min-height:44px!important}
+}

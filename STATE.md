@@ -1,4 +1,11 @@
 # STATE — ALEMSI Materiales
+
+## Revisión CRO + Stitch — 2026-11-25
+- Rama aislada: `fix/qa-cro-ui-stitch-20261125` desde Preview `21f0da2`. Production y Supabase sin cambios.
+- Auditoría estática de contrato UX en `tests/qa-ux-contract.mjs`: selección y confirmación por tanda multicliente, metadatos de guías, formato de OC en móvil/impresión y objetivos táctiles. Integrada a `prebuild` como `test:ux`.
+- `operational-compact.css`: tamaño táctil mínimo de 44 px en pestañas, acciones de preparación y selección para pantallas pequeñas y dispositivos táctiles, sin alterar la identidad corporativa.
+- Pendiente de comprobar en Preview: flujos reales autenticados de tanda/guías, OCR/documento leído, 320/360 px, teclado/foco y Core Web Vitals; pasar el build no los acredita.
+
 <!-- Este archivo se actualiza en el MISMO commit que el cambio. Si el código avanzó y este archivo no, el commit está incompleto. -->
 
 ## Estado actual — 2026-11-17
