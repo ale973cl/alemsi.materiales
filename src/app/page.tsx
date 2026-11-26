@@ -94,7 +94,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{vista?:
  }
  if(!profile?.active)return <main className="blocked"><h1>Acceso pendiente</h1><p>Tu usuario existe, pero todavía no está habilitado por Administración.</p></main>;
 
- let summary={clients:0,installations:0,materials:0,openCampaigns:0,pendingSurveys:0,openPOs:0,partialReceipts:0,openDispatches:0,financePending:0,emailPending:0};
+ let summary:Record<"clients"|"installations"|"materials"|"openCampaigns"|"pendingSurveys"|"openPOs"|"partialReceipts"|"openDispatches"|"financePending"|"emailPending",number|null>={clients:0,installations:0,materials:0,openCampaigns:0,pendingSurveys:0,openPOs:0,partialReceipts:0,openDispatches:0,financePending:0,emailPending:0};
  let campaigns:any[]=[];
  let activeCampaigns:any[]=[];
  let consolidatedSurveys:any[]=[];

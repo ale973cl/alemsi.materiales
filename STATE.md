@@ -1,6 +1,7 @@
 # STATE — ALEMSI Materiales
 
 ## Panel Inicio — 2026-11-25
+- Corrección de tipo estricto: resumen acepta `null` para diferenciar fallos de lectura de cero confirmado; detectado por el primer build de Preview.
 - Nuevo cockpit operacional con 6 KPI de proceso, gráfico comparativo de barras, 6 accesos y 3 métricas de maestros activos. No se calculan ni inventan datos de demo: conteos Supabase reales de la sesión.
 - Una consulta de conteo fallida retorna `null` y se visualiza «—» con aviso; cero solo cuando el servidor confirma cero.
 - Guías en proceso cuentan cinco estados operativos, no solo «Pendiente». Los gráficos aclaran que las escalas son relativas y no porcentajes de conversión.
