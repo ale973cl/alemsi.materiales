@@ -1,5 +1,7 @@
 "use client";
 import {useRouter} from "next/navigation";
+import {useState} from "react";
+import {sumMaterialBudgets,type GroupKey,type HomeInsights} from "@/lib/home-insights";
 type SummaryKey="clients"|"installations"|"materials"|"openCampaigns"|"pendingSurveys"|"openPOs"|"partialReceipts"|"openDispatches"|"financePending"|"emailPending";
 type Summary=Record<SummaryKey,number|null>;
 type Metric={key:SummaryKey;title:string;hint:string;destination:string};
@@ -17,8 +19,13 @@ const catalog:Metric[]=[
  {key:"materials",title:"Materiales activos",hint:"Productos del maestro",destination:"inventario"},
 ];
 const actions=[["campañas","Planificar campaña","Abrir planificación"],["consolidado","Revisar necesidades","Ver consolidado"],["compras","Órdenes de compra","Ver documentos"],["recepcion","Registrar recepción","Abrir recepción"],["entregas","Preparar y entregar","Abrir guías"],["inventario","Consultar existencias","Abrir inventario"]] as const;
+const money=(value:number)=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(value);
 const display=(value:number|null)=>value===null?"—":new Intl.NumberFormat("es-CL").format(value);
-export default function OperationsHome({summary,navigate}:{summary:Summary;navigate:(next:string)=>void}){
+export default function OperationsHome({summary,insights,navigate}:{summary:Summary;insights:HomeInsights;navigate:(next:string)=>void}){
+ const [group,setGroup]=useState<GroupKey>("client");
+ const [showAllContracts,setShowAllContracts]=useState(false);
+ const budgetTotals=insights.budgets===null?null:sumMaterialBudgets(insights.budgets);
+ const rows=insights.deliveries?.groups[group]||[];
  const router=useRouter();
  const max=Math.max(1,...workload.map(item=>summary[item.key]??0));
  const incomplete=Object.values(summary).some(value=>value===null);
@@ -35,6 +42,29 @@ export default function OperationsHome({summary,navigate}:{summary:Summary;navig
    </section>
    <section className="operationsActions" aria-labelledby="operations-actions-title"><div className="operationsSectionHeading"><h3 id="operations-actions-title">Accesos de trabajo</h3><span>Operación diaria</span></div><div className="operationsActionsGrid">{actions.map(([id,title,hint])=><button type="button" key={id} onClick={()=>navigate(id)}><b>{title}</b><small>{hint}</small><span aria-hidden="true">→</span></button>)}</div></section>
   </div>
+
+  <section className="operationsTracking" aria-labelledby="operations-delivery-title">
+   <div className="operationsSectionHeading"><h3 id="operations-delivery-title">Seguimiento de entregas</h3><span>Guías registradas</span></div>
+   <p>Consulta las guías por cliente, campaña o mes de movimiento. Los estados muestran entregas conformes, operaciones en curso e incidencias.</p>
+   {insights.deliveries===null?<p role="status">Sin datos de entregas disponibles para esta sesión.</p>:<>
+    {insights.deliveries.truncated&&<p className="operationsDataWarning" role="status">Se muestran los 1.000 movimientos más recientes; los totales no incluyen registros anteriores.</p>}
+    <div className="operationsDeliveryTotals">
+     <span>Guías <b>{insights.deliveries.total}</b></span><span>Conformes <b>{insights.deliveries.delivered}</b></span><span>En proceso <b>{insights.deliveries.inProgress}</b></span><span>Con incidencias <b>{insights.deliveries.incident}</b></span>
+    </div>
+    <div className="operationsGroupControl"><label htmlFor="operations-group">Agrupar por</label><select id="operations-group" value={group} onChange={e=>setGroup(e.target.value as GroupKey)}><option value="client">Cliente</option><option value="campaign">Campaña</option><option value="period">Mes de movimiento</option></select><button type="button" onClick={()=>navigate("entregas")}>Abrir entregas →</button></div>
+    <div className="operationsGroupRows">{rows.length===0?<p>No existen guías registradas en esta vista.</p>:rows.map(row=><div className="operationsGroupRow" key={row.id}><div className="operationsGroupName"><b>{row.label}</b><span>{row.total} guía(s) · {row.delivered} conformes · {row.inProgress} en proceso · {row.incident} con incidencias</span></div><div className="operationsSegments" role="img" aria-label={row.label+": "+row.delivered+" conformes, "+row.inProgress+" en proceso, "+row.incident+" con incidencias"}>{row.delivered>0&&<span className="segmentsDone" style={{width:row.delivered/row.total*100+"%"}}/>}{row.inProgress>0&&<span className="segmentsPending" style={{width:row.inProgress/row.total*100+"%"}}/>}{row.incident>0&&<span className="segmentsIncident" style={{width:row.incident/row.total*100+"%"}}/>}</div></div>)}</div>
+   </>}
+  </section>
+  <section className="operationsTracking" aria-labelledby="operations-budgets-title">
+   <div className="operationsSectionHeading"><h3 id="operations-budgets-title">Presupuesto neto de materiales por contrato</h3><span>CLP · sin IVA</span></div>
+   <p>Solo presupuesto configurado para compra de materiales. No corresponde al valor del servicio ni se interpreta automáticamente como mensual o anual.</p>
+   {budgetTotals===null?<p role="status">Sin acceso a presupuestos de materiales para esta sesión.</p>:<>
+    <div className="operationsBudgetSummary"><div><span>Presupuesto de materiales configurado</span><strong>{money(budgetTotals.total)}</strong></div><small>{budgetTotals.configured} contrato(s) con presupuesto · {budgetTotals.missing} sin configurar</small></div>
+    <div className="operationsBudgetRows">{(showAllContracts?insights.budgets||[]:(insights.budgets||[]).slice(0,6)).map(contract=><div key={contract.id} className="operationsBudgetRow"><div><b>{contract.client}</b><small>{contract.contract}</small></div><strong>{contract.netBudget===null?"Sin configurar":money(contract.netBudget)}</strong></div>)}</div>
+    {(insights.budgets||[]).length>6&&<button type="button" className="operationsSeeAll" onClick={()=>setShowAllContracts(!showAllContracts)}>{showAllContracts?"Mostrar menos":"Ver todos los contratos"}</button>}
+    <p className="operationsBudgetNote">El saldo utilizado y disponible requiere vincular de forma verificable los movimientos valorizados al contrato y período. No se calcula con cifras estimadas.</p>
+   </>}
+  </section>
   <section className="operationsMasterSection" aria-label="Maestros activos"><h3>Base operacional</h3><div className="operationsMasterGrid">{catalog.map(item=><button type="button" key={item.key} onClick={()=>navigate(item.destination)}><span>{item.title}</span><strong>{display(summary[item.key])}</strong><small>{item.hint} →</small></button>)}</div></section>
  </div>;
 }

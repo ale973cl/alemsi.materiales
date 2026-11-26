@@ -1,5 +1,12 @@
 # STATE — ALEMSI Materiales
 
+## Seguimiento de entregas y presupuesto neto de materiales — 2026-11-26
+- La medición económica del producto es **solo presupuesto de materiales**: `contracts.net_budget`. No representa el monto mensual/anual del servicio ni se multiplica por períodos sin una periodicidad contractual registrada.
+- Inicio incorpora guías agrupadas por cliente, campaña o mes del movimiento, desglosadas en entregas conformes, en proceso e incidencias. Si hay más de 1.000 movimientos, informa el límite de los más recientes.
+- Se muestran presupuestos netos configurados por contrato y sumatoria sin IVA; NO se inventa presupuesto utilizado/saldo cuando no existe vinculación valorizada y auditada.
+- Los cálculos son de lectura para el perfil autenticado, sin mutaciones de Supabase, reglas de negocio ni Production. Pendiente validación visual móvil y prueba autenticada en Preview.
+
+
 ## Panel Inicio — 2026-11-25
 - Corrección de tipo estricto: resumen acepta `null` para diferenciar fallos de lectura de cero confirmado; detectado por el primer build de Preview.
 - Nuevo cockpit operacional con 6 KPI de proceso, gráfico comparativo de barras, 6 accesos y 3 métricas de maestros activos. No se calculan ni inventan datos de demo: conteos Supabase reales de la sesión.

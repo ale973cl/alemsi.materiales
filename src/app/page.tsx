@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import OperationalApp from "@/components/OperationalApp";
+import {summarizeDeliveries,type HomeInsights} from "@/lib/home-insights";
 
 const MATERIAL_CATALOG_VIEWS=["material_master_catalog"] as const;
 const first=(row:any,keys:string[])=>keys.map(key=>row?.[key]).find(value=>value!==undefined&&value!==null);
@@ -94,6 +95,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{vista?:
  }
  if(!profile?.active)return <main className="blocked"><h1>Acceso pendiente</h1><p>Tu usuario existe, pero todavía no está habilitado por Administración.</p></main>;
 
+ let homeInsights:HomeInsights={deliveries:null,budgets:null};
  let summary:Record<"clients"|"installations"|"materials"|"openCampaigns"|"pendingSurveys"|"openPOs"|"partialReceipts"|"openDispatches"|"financePending"|"emailPending",number|null>={clients:0,installations:0,materials:0,openCampaigns:0,pendingSurveys:0,openPOs:0,partialReceipts:0,openDispatches:0,financePending:0,emailPending:0};
  let campaigns:any[]=[];
  let activeCampaigns:any[]=[];
@@ -115,6 +117,17 @@ export default async function Page({searchParams}:{searchParams:Promise<{vista?:
    countStatuses(supabase,"dispatches",["Borrador","Pendiente","En preparación","Listo para despacho","En tránsito"]),count(supabase,"finance_movements",["status","Pendiente"]),count(supabase,"email_queue",["status","Pendiente"])
   ]);
   summary={clients:values[0],installations:values[1],materials:values[2],openCampaigns:values[3],pendingSurveys:values[4],openPOs:values[5],partialReceipts:values[6],openDispatches:values[7],financePending:values[8],emailPending:values[9]};
+  const [contractResult,campaignResult,deliveriesResult]=await Promise.all([
+   supabase.from("contracts").select("id,name,net_budget,clients(id,legal_name)").eq("active",true).limit(500),
+   supabase.from("campaigns").select("id,label").limit(1000),
+   supabase.from("dispatches").select("id,campaign_id,status,created_at,delivered_at,observations,installations(id,contracts(id,clients(id,legal_name)))").order("created_at",{ascending:false}).limit(1001)
+  ]);
+  if(!contractResult.error)homeInsights.budgets=(contractResult.data||[]).map((row:any)=>{const client=Array.isArray(row.clients)?row.clients[0]:row.clients;return {id:String(row.id),contract:String(row.name||"Contrato sin nombre"),client:String(client?.legal_name||"Sin cliente"),netBudget:row.net_budget===null?null:Number(row.net_budget)}}).sort((a:any,b:any)=>a.client.localeCompare(b.client,"es"));
+  if(!campaignResult.error&&!deliveriesResult.error){
+   const visible=(deliveriesResult.data||[]).slice(0,1000);
+   homeInsights.deliveries=summarizeDeliveries(visible,campaignResult.data||[],(deliveriesResult.data||[]).length>1000);
+  }
+
  }
 
  if(view==="campañas"){
@@ -163,7 +176,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{vista?:
   masterClientInstallations=clientsResult.data||[];campaigns=campaignResult.data||[];users=usersResult.data||[];
  }
 
- return <OperationalApp initialTab={view} profile={profile} summary={summary}
+ return <OperationalApp initialTab={view} profile={profile} summary={summary} homeInsights={homeInsights}
   campaigns={campaigns} activeCampaigns={activeCampaigns} consolidatedSurveys={consolidatedSurveys}
   orders={[]} dispatches={dispatches} audit={[]}
   materialCatalog={materialCatalog} materialCatalogSourceCount={materialCatalogSourceCount} materialCatalogError={materialCatalogError}
