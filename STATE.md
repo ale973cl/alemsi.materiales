@@ -1,5 +1,13 @@
 # STATE — ALEMSI Materiales
 
+## Panel Inicio — 2026-11-25
+- Nuevo cockpit operacional con 6 KPI de proceso, gráfico comparativo de barras, 6 accesos y 3 métricas de maestros activos. No se calculan ni inventan datos de demo: conteos Supabase reales de la sesión.
+- Una consulta de conteo fallida retorna `null` y se visualiza «—» con aviso; cero solo cuando el servidor confirma cero.
+- Guías en proceso cuentan cinco estados operativos, no solo «Pendiente». Los gráficos aclaran que las escalas son relativas y no porcentajes de conversión.
+- Estilos independientes `operations-dashboard.css` responsive; sin cambios de Production ni escrituras en Supabase.
+- Pendiente QA de navegador: 320/360/desktop, lectura por rol y accesos navegables. Build no prueba la base de datos real.
+
+
 ## Revisión CRO + Stitch — 2026-11-25
 - Rama aislada: `fix/qa-cro-ui-stitch-20261125` desde Preview `21f0da2`. Production y Supabase sin cambios.
 - Auditoría estática de contrato UX en `tests/qa-ux-contract.mjs`: selección y confirmación por tanda multicliente, metadatos de guías, formato de OC en móvil/impresión y objetivos táctiles. Integrada a `prebuild` como `test:ux`.

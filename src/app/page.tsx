@@ -40,11 +40,16 @@ const loadMaterialCatalog=async(supabase:any)=>{
  return{rows:[],sourceCount:0,error:lastError?.message||fallback.error?.message||"El maestro no está accesible para este perfil."};
 };
 
-const count=async(supabase:any,table:string,filter?:[string,string])=>{
+const count=async(supabase:any,table:string,filter?:[string,string]):Promise<number|null>=>{
  let query=supabase.from(table).select("id",{count:"exact",head:true});
  if(filter)query=query.eq(filter[0],filter[1]);
- const {count:value}=await query;
- return value||0;
+ const {count:value,error}=await query;
+ return error||value===null?null:value;
+};
+
+const countStatuses=async(supabase:any,table:string,states:string[]):Promise<number|null>=>{
+ const {count:value,error}=await supabase.from(table).select("id",{count:"exact",head:true}).in("status",states);
+ return error||value===null?null:value;
 };
 
 const loadConfirmedSurveys=(supabase:any)=>supabase.from("surveys")
@@ -107,7 +112,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{vista?:
    count(supabase,"clients",["active","true"]),count(supabase,"installations",["active","true"]),count(supabase,"materials",["active","true"]),
    count(supabase,"campaigns",["status","Abierta"]),count(supabase,"campaign_installations",["status","Pendiente"]),
    count(supabase,"purchase_orders",["status","Emitida"]),count(supabase,"receipts",["status","Parcial"]),
-   count(supabase,"dispatches",["status","Pendiente"]),count(supabase,"finance_movements",["status","Pendiente"]),count(supabase,"email_queue",["status","Pendiente"])
+   countStatuses(supabase,"dispatches",["Borrador","Pendiente","En preparación","Listo para despacho","En tránsito"]),count(supabase,"finance_movements",["status","Pendiente"]),count(supabase,"email_queue",["status","Pendiente"])
   ]);
   summary={clients:values[0],installations:values[1],materials:values[2],openCampaigns:values[3],pendingSurveys:values[4],openPOs:values[5],partialReceipts:values[6],openDispatches:values[7],financePending:values[8],emailPending:values[9]};
  }
