@@ -1,5 +1,12 @@
 # STATE — ALEMSI Materiales
 
+## Redacción profesional de despachos — 2026-11-26
+- Eliminada la secuencia instructiva extensa del encabezado.
+- Textos de etapas y ayudas más breves y operativos, sin renombrar estados internos ni modificar botones y sus eventos.
+- Las validaciones funcionales y alertas de errores se preservan.
+- Sin cambios de datos, Production ni Supabase.
+
+
 ## Simplificación móvil operativa — 2026-11-26
 - Vista móvil independiente <=760 px: cuatro KPI, guías conformes e incidencias, presupuesto neto de materiales y accesos directos a nueve vistas.
 - Análisis completo disponible mediante expandir; no se eliminan gráficos, desglose de entregas ni presupuesto detallado.
