@@ -176,6 +176,19 @@ export default async function Page({searchParams}:{searchParams:Promise<{vista?:
   masterClientInstallations=clientsResult.data||[];campaigns=campaignResult.data||[];users=usersResult.data||[];
  }
 
+ if(view==="maestro"&&["Admin Total","Gerencia","Admin"].includes(profile.role)){
+  const [catalogResult,inactiveResult]=await Promise.all([
+   loadMaterialCatalog(supabase),
+   supabase.from("materials").select("id,family,name,presentation,unit,supplier_code,current_net_price,active").eq("active",false).order("family").order("name")
+  ]);
+  materialCatalog=catalogResult.rows;materialCatalogSourceCount=catalogResult.sourceCount;
+  materialCatalogError=catalogResult.error||inactiveResult.error?.message||null;
+  masterMaterialCatalog=[
+   ...catalogResult.rows.map((row:any)=>({...row,active:true})),
+   ...(inactiveResult.data||[]).map((row:any)=>({id:row.id,family:row.family,supplier:null,supplier_code:row.supplier_code,product:row.name,presentation:row.presentation,unit:row.unit,net_value:row.current_net_price,availability:0,duplicate_count:1,active:false}))
+  ];
+ }
+
  return <OperationalApp initialTab={view} profile={profile} summary={summary} homeInsights={homeInsights}
   campaigns={campaigns} activeCampaigns={activeCampaigns} consolidatedSurveys={consolidatedSurveys}
   orders={[]} dispatches={dispatches} audit={[]}

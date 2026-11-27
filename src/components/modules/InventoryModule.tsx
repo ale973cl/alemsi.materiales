@@ -6,7 +6,7 @@ const norm=(v:any)=>String(v||"").toLocaleLowerCase("es-CL");
 const qty=(n:number)=>new Intl.NumberFormat("es-CL",{maximumFractionDigits:2}).format(n||0);
 const dt=(v:string)=>v?new Intl.DateTimeFormat("es-CL",{dateStyle:"short",timeStyle:"short",timeZone:"America/Santiago"}).format(new Date(v)):"—";
 
-export default function InventoryModule({role}:{role:string}){
+export default function InventoryModule({role,onOpenMaterials}:{role:string;onOpenMaterials?:()=>void}){
  const [materials,setMaterials]=useState<any[]>([]);
  const [reserved,setReserved]=useState<Record<string,number>>({});
  const [movements,setMovements]=useState<any[]>([]);
@@ -76,7 +76,7 @@ export default function InventoryModule({role}:{role:string}){
  }
 
  return <section className="panel inventory">
-  <div className="inventoryHead"><div><h2>Inventario de bodega</h2><p>La lista carga solo saldos. El Kardex se solicita únicamente al abrir un material.</p></div><span className="catalogCount">{rows.filter(x=>x.stock>0).length} materiales con stock</span></div>
+  <div className="inventoryHead"><div><h2>Inventario de bodega</h2><p>Existencias, reservas y movimientos por material.</p>{onOpenMaterials&&<button type="button" className="inventoryMasterAccess" onClick={onOpenMaterials}>Administrar maestro de materiales →</button>}</div><span className="catalogCount">{rows.filter(x=>x.stock>0).length} materiales con stock</span></div>
   <div className="inventorySummary"><span><small>Stock físico</small><b>{qty(rows.reduce((a,x)=>a+x.stock,0))}</b></span><span><small>Reservado</small><b>{qty(rows.reduce((a,x)=>a+x.reserved,0))}</b></span><span><small>Disponible</small><b>{qty(rows.reduce((a,x)=>a+x.available,0))}</b></span></div>
   <input className="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar material, código, familia o presentación"/>
   {message&&<p className="note"><b>{message}</b></p>}

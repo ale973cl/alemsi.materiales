@@ -1,5 +1,14 @@
 # STATE — ALEMSI Materiales
 
+## Maestro de materiales desde Bodega — 2026-11-27
+- Bodega incorpora vista «Maestro de materiales» y botón visible desde Inventario para perfiles autorizados (Admin Total, Gerencia, Admin).
+- Reutiliza MaterialsCatalogModule sin duplicación: productos, familia, unidad, presentación, proveedores, valores netos y CSV.
+- Carga datos en `?vista=maestro` de forma independiente y conserva existencias, reservas, conteos y Kardex.
+- La navegación está restringida por rol; las operaciones de escritura siguen sujetas a autorizaciones del servidor.
+- No se modifican Production, Supabase ni reglas de stock; falta QA de navegador autenticado.
+
+
+
 ## Redacción profesional de despachos — 2026-11-26
 - Eliminada la secuencia instructiva extensa del encabezado.
 - Textos de etapas y ayudas más breves y operativos, sin renombrar estados internos ni modificar botones y sus eventos.
