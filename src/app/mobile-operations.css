@@ -1,0 +1,70 @@
+/* Mobile cockpit only; no backend or desktop behavior modified. */
+.operationsMobileStart,.operationsMobileDock{display:none}
+@media(max-width:760px){
+ .simpleApp{padding-bottom:calc(69px + env(safe-area-inset-bottom,0px))}
+ .simpleApp .simpleTop{min-height:60px!important;height:auto!important;padding:7px 10px!important;gap:7px!important;flex-wrap:nowrap!important}
+ .simpleApp .simpleLogoButton{flex:0 1 auto;min-width:0}
+ .simpleApp .simpleLogoButton img{width:104px!important;height:auto!important;max-height:42px!important}
+ .simpleApp .simpleTopRight{gap:5px!important;min-width:0}
+ .simpleApp .simpleTopRight>a{font-size:12px!important;max-width:100px;line-height:1.15;text-align:center}
+ .simpleApp .simpleTopRight .linkBtn{font-size:12px!important;min-height:44px}
+ .simpleApp .simpleWorkspace{padding:9px 10px 18px!important;min-width:0}
+ .simpleApp .simplePageHead{margin-bottom:8px!important}
+ .simpleApp .simplePageHead h1{font-size:21px!important;line-height:1.2}
+ .simpleApp .simpleBack{min-height:44px!important}
+ .simpleApp .simpleSubnav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px!important;overflow:visible!important;margin:0 0 10px!important;padding:0!important;border:0!important}
+ .simpleApp .simpleSubnav button{min-width:0;max-width:none!important;white-space:normal!important;min-height:44px!important;text-align:center;line-height:1.15!important;padding:8px 5px!important}
+ .simpleApp .simpleSubnav button:only-child{grid-column:1/-1}
+ .simpleApp .mobileMenuToggle{min-height:44px!important;padding:7px 9px!important}
+ .simpleApp .simpleSidebar.mobileMenuOpen{max-height:50dvh;overflow-y:auto!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;padding:9px!important;box-shadow:0 8px 16px #0b29421c!important}
+ .simpleApp .simpleSidebar.mobileMenuOpen .nav{min-height:44px!important;font-size:14px!important;padding:9px!important}
+ .operationsMobileDock{position:fixed;z-index:80;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;padding:5px 6px calc(5px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid #c7d9de;box-shadow:0 -4px 18px #0b294214}
+ .simpleApp .operationsMobileDock button{background:transparent;color:#385568;border:0;min-height:54px!important;min-width:0!important;padding:4px 2px!important;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;font-size:11px!important;font-weight:650;line-height:1.18;text-align:center}
+ .simpleApp .operationsMobileDock button.active{background:#e7f5f2;color:#086a66;border-radius:9px}
+ .operationsMobileDock .mobileDockSymbol{font-size:21px;line-height:1}
+ .operationsMobileDock button:focus-visible{outline:3px solid #087a73;outline-offset:-3px}
+ .operationsMobileStart{display:block}
+ .operationsDashboardIntro{align-items:start;gap:6px}
+ .operationsDashboardIntro h2{font-size:19px;margin:0 0 3px}
+ .operationsDashboardIntro p{font-size:12px;line-height:1.3}
+ .operationsDashboardIntro .operationsRefresh{font-size:12px!important;min-height:44px}
+ .operationsMobileHeading{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin:7px 0}
+ .operationsMobileHeading h3,.operationsMobileTaskTitle{font-size:16px;margin:0}
+ .operationsMobileHeading span{font-size:12px;color:#526578}
+ .operationsMobileMetrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .operationsMobileMetrics button{display:grid;gap:3px;justify-items:start;text-align:left;padding:10px 11px!important;background:#fff;border:1px solid #c8dce8;border-radius:10px;min-height:98px!important;min-width:0!important;color:#173650}
+ .operationsMobileMetrics button>span:first-child{font-size:12px}
+ .operationsMobileMetrics strong{font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+ .operationsMobileMetrics .mobileMetricGo{font-size:11px;color:#086a66;font-weight:700}
+ .operationsMobileProgress{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}
+ .operationsMobileProgress>div{display:flex;flex-direction:column;gap:4px;padding:10px 11px;border:1px solid #d7e6e9;background:#f2f8f9;border-radius:9px;min-width:0}
+ .operationsMobileProgress>div:last-child{grid-column:1/-1;background:#eef7f4}
+ .operationsMobileProgress span{font-size:12px;color:#395768;line-height:1.2}
+ .operationsMobileProgress strong{font-size:19px;color:#173650;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+ .operationsMobileTaskTitle{margin:15px 0 8px}
+ .operationsMobileTasks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .operationsMobileTasks button{display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:55px!important;border:1px solid #c8dce8;border-radius:10px;padding:9px!important;background:#fff;text-align:left;font-weight:650;color:#173650;font-size:13px!important}
+ .operationsMobileTasks button span:last-child{font-size:19px;flex-shrink:0;color:#087a73}
+ .operationsMobileTasks button:last-child{grid-column:1/-1}
+ .operationsMobileExpand{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:48px!important;padding:10px 12px!important;border:1px solid #9bcac5;background:#eaf7f4;border-radius:9px;color:#075f59;text-align:left;font-weight:700;font-size:12px!important;margin-top:12px}
+ .operationsMobileExpand>span{font-size:22px}
+ .operationsHomeDetail{display:none}
+ .operationsHomeDetail.mobileAnalysisExpanded{display:grid;gap:12px;min-width:0}
+ .operationsHomeDetail .operationsKpiGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .operationsHomeDetail .operationsKpi{min-height:94px}
+ .operationsHomeDetail .operationsKpi strong{font-size:24px}
+ .operationsHomeDetail .operationsMasterGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .operationsHomeDetail .operationsTracking,.operationsHomeDetail .operationsChart{min-width:0}
+ .operationsHomeDetail .operationsGroupControl select{min-width:130px}
+ .operationsDashboard{gap:10px}
+}
+@media(max-width:350px){
+ .simpleApp .simpleTopRight>a{display:none}
+ .operationsMobileTasks{grid-template-columns:1fr}
+ .operationsMobileTasks button:last-child{grid-column:auto}
+ .operationsMobileDock .mobileDockSymbol{font-size:19px}
+}
+@media(min-width:761px){
+ .operationsMobileDock,.operationsMobileStart{display:none!important}
+ .operationsHomeDetail{display:contents}
+}

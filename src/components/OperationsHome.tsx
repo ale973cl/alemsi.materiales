@@ -24,6 +24,7 @@ const display=(value:number|null)=>value===null?"—":new Intl.NumberFormat("es-
 export default function OperationsHome({summary,insights,navigate}:{summary:Summary;insights:HomeInsights;navigate:(next:string)=>void}){
  const [group,setGroup]=useState<GroupKey>("client");
  const [showAllContracts,setShowAllContracts]=useState(false);
+ const [showMobileAnalysis,setShowMobileAnalysis]=useState(false);
  const budgetTotals=insights.budgets===null?null:sumMaterialBudgets(insights.budgets);
  const rows=insights.deliveries?.groups[group]||[];
  const router=useRouter();
@@ -32,6 +33,19 @@ export default function OperationsHome({summary,insights,navigate}:{summary:Summ
  return <div className="operationsDashboard">
   <div className="operationsDashboardIntro"><div><h2>Panel de control operativo</h2><p>Estado de campañas, abastecimiento, bodega y distribución. Cifras consultadas de la base de datos para esta sesión.</p></div><button type="button" onClick={()=>router.refresh()} className="operationsRefresh">Actualizar indicadores</button></div>
   {incomplete&&<p className="operationsDataWarning" role="status">Algunos indicadores no pudieron consultarse o no están disponibles para tu perfil. Se muestran con «—» en vez de cero.</p>}
+ <section className="operationsMobileStart" aria-labelledby="operations-mobile-heading">
+  <div className="operationsMobileHeading"><h3 id="operations-mobile-heading">Lo importante hoy</h3><span>Operación rápida</span></div>
+  <div className="operationsMobileMetrics">
+   {([["openCampaigns","Campañas","campañas"],["pendingSurveys","Levantamientos","levantamientos"],["openPOs","OC emitidas","compras"],["openDispatches","Guías en proceso","entregas"]] as const).map(([key,label,destination])=><button key={key} type="button" onClick={()=>navigate(destination)}><span>{label}</span><strong>{display(summary[key])}</strong><span className="mobileMetricGo">Abrir →</span></button>)}
+  </div>
+  <div className="operationsMobileProgress"><div><span>Guías conformes</span><strong>{insights.deliveries===null?"—":display(insights.deliveries.delivered)}</strong></div><div><span>Con incidencias</span><strong>{insights.deliveries===null?"—":display(insights.deliveries.incident)}</strong></div><div><span>Presupuesto neto de materiales</span><strong>{budgetTotals===null?"—":money(budgetTotals.total)}</strong></div></div>
+  <h3 className="operationsMobileTaskTitle">¿Qué necesitas hacer?</h3>
+  <div className="operationsMobileTasks">
+   {([["campañas","Campañas"],["levantamientos","Levantamientos"],["consolidado","Ver necesidades"],["compras","Crear o revisar OC"],["recepcion","Registrar factura"],["inventario","Consultar stock"],["preparacion","Preparar materiales"],["entregas","Crear guía / Entregar"],["clientes","Clientes e instalaciones"]] as const).map(([id,label])=><button key={id} type="button" onClick={()=>navigate(id)}><span>{label}</span><span aria-hidden="true">→</span></button>)}
+  </div>
+  <button type="button" className="operationsMobileExpand" aria-expanded={showMobileAnalysis} aria-controls="operations-complete-analysis" onClick={()=>setShowMobileAnalysis(open=>!open)}>{showMobileAnalysis?"Ocultar análisis completo":"Ver análisis completo: gráficos, clientes y presupuesto"} <span aria-hidden="true">{showMobileAnalysis?"−":"+"}</span></button>
+ </section>
+ <div id="operations-complete-analysis" className={showMobileAnalysis?"operationsHomeDetail mobileAnalysisExpanded":"operationsHomeDetail"}>
   <section aria-label="Indicadores de operación" className="operationsKpiGrid">
    {workload.map(item=><button key={item.key} type="button" className="operationsKpi" onClick={()=>navigate(item.destination)} aria-label={item.title+": "+(summary[item.key]===null?"sin datos":display(summary[item.key]))+". Abrir módulo"}><span className="operationsKpiLabel">{item.title}</span><strong>{display(summary[item.key])}</strong><small>{item.hint}</small><span className="operationsKpiAction">Abrir sección →</span></button>)}
   </section>
@@ -66,5 +80,6 @@ export default function OperationsHome({summary,insights,navigate}:{summary:Summ
    </>}
   </section>
   <section className="operationsMasterSection" aria-label="Maestros activos"><h3>Base operacional</h3><div className="operationsMasterGrid">{catalog.map(item=><button type="button" key={item.key} onClick={()=>navigate(item.destination)}><span>{item.title}</span><strong>{display(summary[item.key])}</strong><small>{item.hint} →</small></button>)}</div></section>
+ </div>
  </div>;
 }

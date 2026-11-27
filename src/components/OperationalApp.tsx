@@ -47,7 +47,7 @@ export default function OperationalApp({initialTab,profile,summary,homeInsights,
  return <div className="portal simpleApp">
   <header className="portalTop simpleTop"><button type="button" className="mobileMenuToggle" aria-label={mobileMenuOpen?"Cerrar menú de navegación":"Abrir menú de navegación"} aria-expanded={mobileMenuOpen} aria-controls="alemsi-primary-nav" onClick={()=>setMobileMenuOpen(open=>!open)}>{mobileMenuOpen?"✕":"☰"}<span>Menú</span></button><button type="button" className="simpleLogoButton" onClick={()=>navigate("inicio")} aria-label="Ir al inicio"><Image src="/alemsi-logo.png" width={170} height={67} alt="ALEMSI" priority/></button><div className="simpleTopRight"><Link href="/terreno">Despacho en Terreno</Link><span>Control de materiales</span><form action={signOut}><button className="linkBtn">Salir</button></form></div></header>
   <div className="portalBody simpleBody"><aside id="alemsi-primary-nav" className={`simpleSidebar ${mobileMenuOpen?"mobileMenuOpen":""}`} aria-label="Navegación principal"><div className="productTitle">ALEMSI<small>Operación de materiales</small></div><button type="button" className={tab==="inicio"?"nav active":"nav"} onClick={()=>navigate("inicio")}>Inicio</button>{mainNav.map(([id,name],i)=><button type="button" key={id} className={parent===id?"nav active":"nav"} onClick={()=>navigate(id)}><span className="simpleNavNumber">0{i+1}</span>{name}</button>)}</aside>
-  <main className="workspace simpleWorkspace">
+  <main id="alemsi-workspace" className="workspace simpleWorkspace">
    {isNavigating&&<div className="navigationProgress" role="status" aria-live="polite"><span className="navigationProgressDot"/>Cargando vista…</div>}
    <div className="simplePageHead"><div><p className="eyebrow">ALEMSI · OPERACIÓN</p><h1>{navTitle}</h1></div>{tab!=="inicio"&&<button type="button" className="simpleBack" onClick={()=>navigate("inicio")}>← Inicio</button>}</div>
    {currentLinks.length>0&&<nav className="simpleSubnav" aria-label="Vistas de trabajo">{currentLinks.map(([id,name])=><button key={id} type="button" className={tab===id?"active":""} onClick={()=>navigate(id)}>{name}</button>)}</nav>}
@@ -61,7 +61,10 @@ export default function OperationalApp({initialTab,profile,summary,homeInsights,
    {tab==="recepcion"&&<ConnectedReceiptModule role={profile.role}/>}
    {tab==="preparacion"&&<CampaignPendingModule surveys={consolidatedSurveys} dispatches={dispatches}/>}
    {tab==="entregas"&&<DispatchDeliveryModule dispatches={dispatches} campaigns={campaigns} clients={clientInstallations} materials={materialCatalog} role={profile.role} users={users} currentUser={{id:profile.id,full_name:profile.full_name}}/>}
-  </main></div></div>
+  </main></div>
+<nav className="operationsMobileDock" aria-label="Accesos rápidos móviles">
+{([["inicio","Inicio","⌂"],["consolidado","Necesidades","▤"],["recepcion","Recepción","✓"],["entregas","Entregas","⇢"]] as const).map(([id,label,symbol])=><button key={id} type="button" className={tab===id?"active":""} onClick={()=>navigate(id)} aria-current={tab===id?"page":undefined} aria-label={label}><span aria-hidden="true" className="mobileDockSymbol">{symbol}</span><span>{label}</span></button>)}
+</nav></div>
 }
 function Empty(){return <div className="empty"><b>Sin registros disponibles</b><span>El módulo está conectado y respetará los permisos RLS del usuario.</span></div>}
 function SurveyCampaignSelector({campaigns,surveys,selectedCampaignId,selectedInstallationId,onOpen,onBack,onNextNeed}:{campaigns:any[];surveys:any[];selectedCampaignId:string;selectedInstallationId:string;onOpen:(campaignId:string,installationId?:string)=>void;onBack:()=>void;onNextNeed:()=>void}){

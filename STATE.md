@@ -1,5 +1,13 @@
 # STATE — ALEMSI Materiales
 
+## Simplificación móvil operativa — 2026-11-26
+- Vista móvil independiente <=760 px: cuatro KPI, guías conformes e incidencias, presupuesto neto de materiales y accesos directos a nueve vistas.
+- Análisis completo disponible mediante expandir; no se eliminan gráficos, desglose de entregas ni presupuesto detallado.
+- Barra inferior fija con Inicio, Necesidades, Recepción y Entregas; el menú original conserva Planificación, Bodega y Administración.
+- Se conservan los mismos módulos, permisos, estados, acciones, rutas y datos que en escritorio; CSS móvil en archivo independiente.
+- QA de navegador autenticado en 320/360 px pendiente; build no prueba interacción real.
+
+
 ## Seguimiento de entregas y presupuesto neto de materiales — 2026-11-26
 - La medición económica del producto es **solo presupuesto de materiales**: `contracts.net_budget`. No representa el monto mensual/anual del servicio ni se multiplica por períodos sin una periodicidad contractual registrada.
 - Inicio incorpora guías agrupadas por cliente, campaña o mes del movimiento, desglosadas en entregas conformes, en proceso e incidencias. Si hay más de 1.000 movimientos, informa el límite de los más recientes.
