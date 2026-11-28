@@ -25,7 +25,7 @@ test("búsqueda progresiva también en escritorio, sin cuadrícula duplicada",()
 });
 
 test("elimina el aviso redundante bajo etapas sin retirar su navegación",()=>{
- assert.doesNotMatch(ui,/Instalaciones pendientes de preparación\\\./);
+ assert.ok(!ui.includes("Instalaciones pendientes de preparación."));
  assert.match(ui,/className="dispatchBuckets"/);
  assert.match(ui,/Instalaciones por preparar/);
 });
