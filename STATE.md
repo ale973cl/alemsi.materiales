@@ -1,5 +1,14 @@
 # STATE — ALEMSI Materiales
 
+## UX móvil despachos: filtros progresivos — 2026-11-28
+- Los seis filtros en cuadrícula se mantienen intactos en escritorio; móvil muestra un selector principal Campaña/Cliente y un único desplegable.
+- Tras escoger campaña/cliente se habilita Refinar búsqueda (cliente vinculado, contrato, instalación, sector y texto), contra las mismas propiedades `filters` usadas por los circuitos operativos.
+- Cambiar entre Campaña/Cliente limpia filtros previamente ocultos para evitar resultados vacíos incoherentes; Limpiar reinicia filtros activos.
+- Las etapas pasan a una barra horizontal desplazable en móvil, sin retirar funciones, totales, rutas, guías ni preparación.
+- Bodega, permisos, backend, Production y datos Supabase no se alteran; pendiente QA visual autenticado.
+
+
+
 ## Corrección contador Levantamientos pendientes (2026-11-28)
 - `campaign_installations` no tiene `id`; en `src/app/page.tsx` el helper `count` seleccionaba `id` y devolvía `null` ante un error SQL. Ahora usa `select('*', {count:'exact',head:true})` para contar filas sin exigir columna inexistente.
 - Verificado con consulta SQL de solo lectura: cero filas `campaign_installations.status='Pendiente'` en el proyecto conectado. No se modificaron registros ni permisos.

@@ -1,0 +1,32 @@
+/* Navegación progresiva: únicamente móvil. Escritorio conserva el filtrado completo. */
+.dispatchMobileFilters{display:none}
+@media(max-width:760px){
+ .simpleApp .dispatchModule{padding:10px!important;min-width:0}
+ .simpleApp .dispatchModule .catalogIntro{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:7px}
+ .simpleApp .dispatchModule .catalogIntro h2{font-size:21px;line-height:1.2}
+ .simpleApp .dispatchModule .catalogIntro>button{width:auto!important;min-height:44px!important;padding:9px 12px!important;font-size:12px!important}
+ .simpleApp .dispatchBuckets{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden;scroll-snap-type:x proximity;gap:5px!important;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding:2px 0 8px!important;margin:5px 0 7px!important}
+ .simpleApp .dispatchBuckets button{flex:0 0 auto!important;white-space:nowrap!important;scroll-snap-align:start;min-height:44px!important;padding:9px 12px!important;font-size:13px!important;line-height:1.2;gap:5px;border-radius:9px}
+ .simpleApp .dispatchBuckets button b{font-size:12px}
+ .simpleApp .dispatchModule>div[style*="padding: 6px"]{display:none}
+ .simpleApp .dispatchFilters{display:none!important}
+ .simpleApp .dispatchMobileFilters{display:grid;gap:8px;padding:10px;background:#f5fafb;border:1px solid #cbdde2;border-radius:11px;margin:5px 0 10px;min-width:0}
+ .simpleApp .dispatchMobileFilterHeader{display:flex;align-items:center;justify-content:space-between;gap:8px}
+ .simpleApp .dispatchMobileFilterHeader strong{font-size:14px}
+ .simpleApp .dispatchMobileClear{background:none;border:0;color:#086a66;font-size:12px!important;font-weight:700;min-height:32px!important;padding:3px 4px!important}
+ .simpleApp .dispatchMobileMode{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+ .simpleApp .dispatchMobileMode button{min-height:44px!important;background:#fff;color:#173650;border:1px solid #bcd6dc;border-radius:8px;padding:7px!important;font-size:13px!important;font-weight:650}
+ .simpleApp .dispatchMobileMode button.selected{background:#0b4763;border-color:#0b4763;color:#fff}
+ .simpleApp .dispatchMobilePrimary,.simpleApp .dispatchMobileRefinements label{display:grid;gap:4px;min-width:0;color:#395768;font-size:12px;font-weight:650}
+ .simpleApp .dispatchMobilePrimary select,.simpleApp .dispatchMobileRefinements select,.simpleApp .dispatchMobileRefinements input{display:block;width:100%!important;min-width:0;max-width:100%;min-height:44px!important;box-sizing:border-box;background:white;border:1px solid #bdced7;border-radius:8px;padding:7px 31px 7px 10px;font-size:14px;color:#173650;text-overflow:ellipsis}
+ .simpleApp .dispatchMobileRefine{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:40px!important;padding:6px 0!important;background:transparent;border:0;color:#086a66;font-size:13px!important;font-weight:700;text-align:left}
+ .simpleApp .dispatchMobileRefine span{font-size:21px}
+ .simpleApp .dispatchMobileRefinements{display:none;grid-template-columns:minmax(0,1fr);gap:7px}
+ .simpleApp .dispatchMobileRefinements.open{display:grid}
+ .simpleApp .dispatchModule .dispatchSuggestionRow{font-size:13px!important}
+ .simpleApp .dispatchModule section[style*="margin: 12px 0 18px"]{margin:8px 0!important}
+ .simpleApp .dispatchModule section[style*="margin: 12px 0 18px"]>div:first-child{padding:9px 10px!important;gap:6px!important}
+ .simpleApp .dispatchModule section[style*="margin: 12px 0 18px"] h3{font-size:16px!important;line-height:1.25;margin:0}
+ .simpleApp .dispatchMobileFilters button:focus-visible,.simpleApp .dispatchMobileFilters select:focus-visible,.simpleApp .dispatchMobileFilters input:focus-visible{outline:2px solid #087a73;outline-offset:2px}
+}
+@media(min-width:761px){.dispatchMobileFilters{display:none!important}}
