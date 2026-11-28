@@ -9,14 +9,15 @@
     "test:circuits": "node --experimental-strip-types --test tests/qa-material-circuits.mjs",
     "test:import": "node --experimental-strip-types --test tests/qa-unified-import.mjs",
     "test:calendar": "node --experimental-strip-types --test tests/qa-central-calendar.mjs",
-    "prebuild": "npm run test:circuits && npm run test:import && npm run test:calendar && npm run test:receipts && npm run test:ux && npm run test:home && npm run test:mobile && npm run test:dispatch-copy && npm run test:inventory-master && npm run test:budget",
+    "prebuild": "npm run test:circuits && npm run test:import && npm run test:calendar && npm run test:receipts && npm run test:ux && npm run test:home && npm run test:mobile && npm run test:dispatch-copy && npm run test:inventory-master && npm run test:budget && npm run test:ac-engine",
     "test:receipts": "node --experimental-strip-types --test tests/qa-receipt-integrity.mjs",
     "test:ux": "node --test tests/qa-ux-contract.mjs",
     "test:home": "node --test tests/qa-home-insights.mjs",
     "test:mobile": "node --test tests/qa-mobile-operational.mjs",
     "test:dispatch-copy": "node --test tests/qa-dispatch-copy.mjs",
     "test:inventory-master": "node --test tests/qa-inventory-master.mjs",
-    "test:budget": "node --test tests/qa-material-budget.mjs"
+    "test:budget": "node --test tests/qa-material-budget.mjs",
+    "test:ac-engine": "node --experimental-strip-types --test tests/qa-ac-engine.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
