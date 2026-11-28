@@ -1,5 +1,16 @@
 # STATE — ALEMSI Materiales
 
+## Motor económico opcional — implementación inicial (2026-11-27)
+- Nueva migración `20261127220000_ac_motor_economico_opcional.sql`: presupuesto mensual, plantillas, período por campaña/contrato, congelamiento de precios de guía y desglose de devengo, retornos acreditados, crédito de facturas, pagos y vistas invocadoras con RLS.
+- Capa optativa por contrato `control_economico_activo=false` por defecto; no modifica operaciones activas ni migra datos.
+- Endpoint `/api/ac/overview` restringido a roles financieros, que devuelve desactivado si falta la migración y no inventa presupuestos; widget de 4 KPI con tabla y detalle de guías en Inicio.
+- El control toma como consumo las guías y no duplica el gasto al recibir facturas.
+- El CPP congelado usa el valor `materials.current_net_price` disponible al crear la línea; puede carecer de evidencia de costo si se cambió manualmente. La capa requiere validación documental antes de ser confiable.
+- Alertas de ciclo calculadas en lectura (no notificaciones autónomas ni fecha real de entrega).
+- No se ejecutó migración contra Supabase compartido. Falta pruebas PostgreSQL aisladas y QA de navegador autenticado.
+
+
+
 ## Control presupuestario de materiales — 2026-11-27
 - Vista dedicada `?vista=presupuesto` en Abastecimiento, visible a Admin Total, Gerencia y Admin. Filtra cliente, contrato y mes de documento.
 - Fuente de gasto: línea neta de recepción confirmada `receipts.inventory_posted=true`, relacionada con línea de OC → línea de suministro → consolidado con `contract_id`. Incluye solo registros con trazabilidad contractual completa.

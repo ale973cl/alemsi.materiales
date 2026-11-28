@@ -1,5 +1,6 @@
 "use client";
 import {useRouter} from "next/navigation";
+import AcOverviewWidget from "@/components/AcOverviewWidget";
 import {useState} from "react";
 import {sumMaterialBudgets,type GroupKey,type HomeInsights} from "@/lib/home-insights";
 type SummaryKey="clients"|"installations"|"materials"|"openCampaigns"|"pendingSurveys"|"openPOs"|"partialReceipts"|"openDispatches"|"financePending"|"emailPending";
@@ -32,6 +33,7 @@ export default function OperationsHome({summary,insights,navigate}:{summary:Summ
  const incomplete=Object.values(summary).some(value=>value===null);
  return <div className="operationsDashboard">
   <div className="operationsDashboardIntro"><div><h2>Panel de control operativo</h2><p>Estado de campañas, abastecimiento, bodega y distribución. Cifras consultadas de la base de datos para esta sesión.</p></div><button type="button" onClick={()=>router.refresh()} className="operationsRefresh">Actualizar indicadores</button></div>
+  <AcOverviewWidget/>
   {incomplete&&<p className="operationsDataWarning" role="status">Algunos indicadores no pudieron consultarse o no están disponibles para tu perfil. Se muestran con «—» en vez de cero.</p>}
  <section className="operationsMobileStart" aria-labelledby="operations-mobile-heading">
   <div className="operationsMobileHeading"><h3 id="operations-mobile-heading">Lo importante hoy</h3><span>Operación rápida</span></div>
