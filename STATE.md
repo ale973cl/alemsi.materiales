@@ -1,5 +1,12 @@
 # STATE — ALEMSI Materiales
 
+## Configuración económica por contrato
+- La ficha de contrato existente expone un panel opcional para perfiles autorizados. Permite valores fijos, curva variable por Excel, remanente, plantillas reutilizables, frecuencia y anticipación.
+- API de lectura y actualización requiere sesión y rol; solo habilita control después de guardar meses. Desactivación no destruye histórico ni bloquea los circuitos de compra y entregas.
+- La aplicación conserva sus formularios y datos existentes. No se aplicaron migraciones al proyecto conectado.
+
+
+
 ## Motor económico opcional — implementación inicial (2026-11-27)
 - Nueva migración `20261127220000_ac_motor_economico_opcional.sql`: presupuesto mensual, plantillas, período por campaña/contrato, congelamiento de precios de guía y desglose de devengo, retornos acreditados, crédito de facturas, pagos y vistas invocadoras con RLS.
 - Capa optativa por contrato `control_economico_activo=false` por defecto; no modifica operaciones activas ni migra datos.

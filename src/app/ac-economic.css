@@ -11,3 +11,20 @@
 .acCurve{display:grid;gap:12px}.acCurveRow{display:grid;grid-template-columns:55px 1fr;gap:5px 9px;align-items:center;font-size:12px}.acCurveRow>div{height:13px;border-radius:7px;background:#edf2f4;position:relative;overflow:hidden}.acCurveBudget{background:#c6e3de;height:100%}.acCurveSpent{position:absolute;inset:0 auto 0 0;background:#16766e}.acCurveRow b{grid-column:2}
 .acGuideRows{display:grid;gap:6px}.acGuideRows>div{padding:9px;border:1px solid #dbe7ec;border-radius:8px;display:grid;gap:4px}.acGuideRows span{font-size:12px;color:#526578}.acConfigureLink{display:inline-block;margin-top:18px}
 @media(max-width:760px){.acOverview{padding:10px}.acFourKpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.acFourKpis button{min-height:73px}.acDrawer{width:100vw}.acOverviewTable{max-height:65vh}.acOverviewTable table{min-width:1040px}}
+
+.acContractConfig{display:grid;gap:11px;padding:12px 0;color:#173650}
+.acContractConfig p{font-size:13px;margin:0;color:#526578}
+.acConfigGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.acConfigGrid label{display:grid;gap:5px;font-size:13px;font-weight:650;min-width:0}
+.acConfigGrid input,.acConfigGrid select,.acConfigGrid textarea,.acConfigActions input{width:100%;min-width:0;min-height:44px;padding:9px;border:1px solid #c8dce8;border-radius:8px;background:white;color:#173650}
+.acConfigGrid .acWide{grid-column:1/-1}
+.acConfigActions{display:flex;gap:8px;flex-wrap:wrap}
+.acConfigActions button{min-height:44px;border:1px solid #9bcac5;background:#e7f5f2;color:#075f59;border-radius:8px;padding:9px 12px;font-weight:750}
+.acConfigActions button:disabled{opacity:.55}
+.acExistingMonths{display:flex;flex-wrap:wrap;gap:5px}
+.acExistingMonths span{padding:6px 9px;background:#edf5f7;border-radius:6px;font-size:12px}
+.acContractConfig .acPreviewCurve{max-height:70px;overflow:auto;background:#f2f8fa;border:1px solid #d5e7e8;padding:9px;border-radius:8px}
+.acContractDetails{margin-top:12px;border:1px solid #c8dce8;padding:12px;border-radius:10px}
+.acContractDetails summary{cursor:pointer;font-weight:750}
+@media(max-width:760px){.acConfigGrid{grid-template-columns:1fr 1fr}.acConfigGrid .acWide{grid-column:1/-1}.acConfigActions button{flex:1 1 180px}}
+@media(max-width:430px){.acConfigGrid{grid-template-columns:1fr}}
