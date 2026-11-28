@@ -1,5 +1,12 @@
 # STATE — ALEMSI Materiales
 
+## Panel económico por campaña (2026-11-27)
+- En el detalle de Campañas: presupuesto base 100% según cobertura, máximo teórico, carencia y compra requerida.
+- Todo cálculo distingue contrato por instalación, no mezcla campañas multicontrato. El stock común no se reparte sin trazabilidad.
+- Si faltan precios, meses o activación, se presenta ausencia y no se impide la operación.
+
+
+
 ## Facturas de proveedores · crédito/vencimientos
 - Módulo opcional de factura proveedor `/api/ac/credits`, condiciones de pago, fecha de recepción SII, días de crédito, días de mora y pagos acreditados.
 - Disponible como sección de Finanzas y junto a Control presupuestario; Inicio indica cantidad por vencer y vencidas.
