@@ -1,5 +1,13 @@
 # STATE — ALEMSI Materiales
 
+## Facturas de proveedores · crédito/vencimientos
+- Módulo opcional de factura proveedor `/api/ac/credits`, condiciones de pago, fecha de recepción SII, días de crédito, días de mora y pagos acreditados.
+- Disponible como sección de Finanzas y junto a Control presupuestario; Inicio indica cantidad por vencer y vencidas.
+- El SII no se consulta automáticamente: la fecha debe ingresarse con evidencia; la recepción normal no se bloquea por ausencia de información de crédito.
+- Pagos reales no son simulados: se registran manualmente con referencia y fecha, bajo permisos de Finanzas/Admin.
+
+
+
 ## Configuración económica por contrato
 - La ficha de contrato existente expone un panel opcional para perfiles autorizados. Permite valores fijos, curva variable por Excel, remanente, plantillas reutilizables, frecuencia y anticipación.
 - API de lectura y actualización requiere sesión y rol; solo habilita control después de guardar meses. Desactivación no destruye histórico ni bloquea los circuitos de compra y entregas.

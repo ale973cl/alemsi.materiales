@@ -1,6 +1,7 @@
 "use client";
 import {useMemo,useState} from "react";
 import {totalsByContract,type BudgetReport} from "@/lib/material-budget-report";
+import AcSupplierCredits from "@/components/AcSupplierCredits";
 const clp=(n:number)=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n);
 export default function MaterialBudgetModule({report}:{report:BudgetReport|null}){
  const [client,setClient]=useState(""),[contract,setContract]=useState(""),[period,setPeriod]=useState("");
@@ -23,5 +24,6 @@ export default function MaterialBudgetModule({report}:{report:BudgetReport|null}
     {!report.movements.length&&<p role="status">No hay facturas cotejadas con imputación completa a contratos. No se estiman importes con precios actuales.</p>}
    </>}
   </>}
+  <AcSupplierCredits/>
  </section>
 }
