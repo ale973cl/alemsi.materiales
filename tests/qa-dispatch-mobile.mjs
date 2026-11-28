@@ -23,3 +23,9 @@ test("búsqueda progresiva también en escritorio, sin cuadrícula duplicada",()
  assert.match(css,/min-height:44px!important/);
  assert.match(layout,/import "\.\/dispatch-mobile-search\.css"/);
 });
+
+test("elimina el aviso redundante bajo etapas sin retirar su navegación",()=>{
+ assert.doesNotMatch(ui,/Instalaciones pendientes de preparación\\\./);
+ assert.match(ui,/className="dispatchBuckets"/);
+ assert.match(ui,/Instalaciones por preparar/);
+});

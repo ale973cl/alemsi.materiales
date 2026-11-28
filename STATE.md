@@ -1,5 +1,13 @@
 # STATE — ALEMSI Materiales
 
+## Principio UX operativo: cero sobreanálisis — 2026-11-28
+- Navegación directa por tarea; primero elegir Campaña o Cliente y luego mostrar refinamientos relacionados solo cuando se solicitan.
+- Evitar repetir etapas y textos instructivos en tarjetas: se eliminó el bloque descriptivo duplicado situado debajo de las pestañas de Despachos.
+- Conservar acciones contextualizadas y mensajes de proceso/éxito/error; controles táctiles >=44 px; no repetir menú con filtros adicionales.
+- Las operaciones siguen las mismas funciones y permisos; las mejoras de todas las secciones se aplicarán por módulo y se comprobarán con pruebas funcionales.
+
+
+
 ## UX despachos: filtros progresivos en móvil y escritorio — 2026-11-28
 - Eliminada la cuadrícula antigua de seis filtros también en escritorio; un solo buscador compartido comienza por Campaña o Cliente, con refinamientos contextuales expandibles.
 - Tras escoger campaña/cliente se habilita Refinar búsqueda (cliente vinculado, contrato, instalación, sector y texto), contra las mismas propiedades `filters` usadas por los circuitos operativos.
