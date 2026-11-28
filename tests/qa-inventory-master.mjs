@@ -17,7 +17,8 @@ test("Inventario muestra botón y conserva conteo y Kardex",()=>{
 });
 test("Acceso restringido por rol sin exponer editor",()=>{
  assert.match(ui,/\["Admin Total","Gerencia","Admin"\]\.includes\(profile\.role\)/);
- assert.match(ui,/id!=="maestro"\|\|canManageMaterials/);
+ assert.match(ui,/id!=="maestro"&&id!=="presupuesto"/);
+ assert.match(ui,/\|\|canManageMaterials/);
  assert.match(ui,/canManageMaterials\?<MaterialsCatalogModule/);
  assert.match(page,/view==="maestro"&&\["Admin Total","Gerencia","Admin"\]/);
 });
