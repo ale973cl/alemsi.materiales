@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
 type Guide={id:string;guide:string;month:string;net:number;kind:string;status:string};
-type Contract={id:string;clientName:string;name:string;active:boolean;cycle:string;nextCycle:string|null;budget:number|null;spent:number|null;percent:number|null;remaining:number|null;status:string;curve:{month:string;budget:number;spent:number;returns:number}[];guides:Guide[];campaignCost:number|null};
+type Contract={id:string;clientName:string;name:string;active:boolean;cycle:string;nextCycle:string|null;upcoming:boolean;budget:number|null;spent:number|null;percent:number|null;remaining:number|null;status:string;curve:{month:string;budget:number;spent:number;returns:number}[];guides:Guide[];campaignCost:number|null};
 type Overview={available:boolean;reason?:string;contracts:Contract[];kpi:{optimal:number;alert:number;excess:number;upcoming:number;withoutControl:number;invoicesDue:number;invoicesLate:number}};
 const clp=(n:number|null)=>n===null?"—":new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(n);
 const pct=(n:number|null)=>n===null?"—":new Intl.NumberFormat("es-CL",{maximumFractionDigits:1}).format(n)+"%";
@@ -10,7 +10,7 @@ export default function AcOverviewWidget(){
  useEffect(()=>{const controller=new AbortController();fetch("/api/ac/overview",{cache:"no-store",signal:controller.signal})
   .then(async r=>{if(!r.ok)throw new Error("No se pudo consultar el resumen económico");return r.json()})
   .then(setData).catch(e=>{if(e.name!=="AbortError")setError(e.message)});return()=>controller.abort()},[]);
- const contracts=useMemo(()=>data?.contracts.filter(c=>filter==="todos"||c.status===filter)||[],[data,filter]);
+ const contracts=useMemo(()=>data?.contracts.filter(c=>filter==="todos"||filter==="proximos"&&c.upcoming||c.status===filter)||[],[data,filter]);
  const selected=contracts.find(c=>c.id===open)||data?.contracts.find(c=>c.id===open);
  if(error)return <section className="acOverview" aria-label="Control económico"><h3>Control económico de materiales</h3><p role="status">{error}. La operación de materiales no se ve afectada.</p></section>;
  if(!data)return <section className="acOverview" aria-label="Control económico"><h3>Control económico de materiales</h3><p role="status">Cargando resumen…</p></section>;
@@ -18,7 +18,7 @@ export default function AcOverviewWidget(){
  const cards=[["optimo","Contratos óptimos",data.kpi.optimal],["alerta","En alerta >80%",data.kpi.alert],["exceso","En exceso >100%",data.kpi.excess],["proximos","Próximos ciclos",data.kpi.upcoming]] as const;
  return <section className="acOverview" aria-label="Control económico por contrato">
   <div className="acOverviewHead"><h3>Control económico de materiales</h3><a href="/?vista=presupuesto">Informe completo</a></div>
-  <div className="acFourKpis">{cards.map(([key,title,value])=><button type="button" key={key} className={filter===key?"selected":""} onClick={()=>{setFilter(old=>old===key?"todos":key==="proximos"?"todos":key);setShowRows(true)}}><span>{title}</span><strong>{value}</strong></button>)}</div>
+  <div className="acFourKpis">{cards.map(([key,title,value])=><button type="button" key={key} className={filter===key?"selected":""} onClick={()=>{setFilter(old=>old===key?"todos":key);setShowRows(true)}}><span>{title}</span><strong>{value}</strong></button>)}</div>
   <p className="acSmallNote">{data.kpi.withoutControl} contrato(s) sin control presupuestario · Facturas por vencer: {data.kpi.invoicesDue} · Vencidas: {data.kpi.invoicesLate}. Fechas de ciclos referenciales, no promesas de entrega.</p>
   <button className="acToggleRows" type="button" aria-expanded={showRows} onClick={()=>setShowRows(s=>!s)}>{showRows?"Ocultar contratos":"Ver contratos y guías"}</button>
   {showRows&&<div className="acOverviewTable"><table><thead><tr><th>Cliente / Contrato</th><th>Ciclo</th><th>Próximo ciclo</th><th>Base 100%</th><th>Costo campaña</th><th>Guías neto</th><th>% Ocupado</th><th>Saldo CLP</th><th>% Remanente</th><th>Estado</th></tr></thead><tbody>{contracts.map(c=><tr key={c.id}><td><button type="button" className="acContractOpen" onClick={()=>setOpen(c.id)}>{c.clientName}<small>{c.name}</small></button></td><td>{c.cycle}</td><td>{c.nextCycle||"Sin programar"}</td><td>{clp(c.budget)}</td><td>{clp(c.campaignCost)}</td><td>{clp(c.spent)}</td><td>{pct(c.percent)}</td><td>{clp(c.remaining)}</td><td>{pct(c.percent===null?null:100-c.percent)}</td><td>{c.status==="sin_control"?"Sin control presupuestario":c.status==="sin_base"?"Sin base 100%":c.status==="exceso"?"Exceso":c.status==="alerta"?"Alerta":"Óptimo"}</td></tr>)}</tbody></table></div>}

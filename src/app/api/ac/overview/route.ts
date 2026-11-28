@@ -49,7 +49,8 @@ export async function GET(){
    if(candidate>=currentMonth)nextCycle=candidate+"-01";
    if(nextCycle&&Math.round((Date.parse(nextCycle+"T00:00:00Z")-Date.parse(today+"T00:00:00Z"))/86400000)<=Number(c.dias_anticipacion_alerta??15)&&nextCycle>=today)upcoming++;
   }
-  return {id:c.id,clientId:c.client_id,clientName:first(c.clients)?.legal_name||"Cliente",name:c.name,
+  const cycleUpcoming=nextCycle!==null&&nextCycle>=today&&Math.round((Date.parse(nextCycle+"T00:00:00Z")-Date.parse(today+"T00:00:00Z"))/86400000)<=Number(c.dias_anticipacion_alerta??15);
+  return {id:c.id,clientId:c.client_id,clientName:first(c.clients)?.legal_name||"Cliente",name:c.name,upcoming:cycleUpcoming,
    active:Boolean(c.control_economico_activo),cycle:period?from+" a "+to:"Mes actual",nextCycle,
    budget,spent,percent,remaining:budget!==null&&spent!==null?budget-spent:null,
    status,curve:monthRows.map(m=>({month:m.mes,budget:number(m.techo_neto_clp),spent:number(m.gastado_neto),returns:number(m.retornos_neto)})),
