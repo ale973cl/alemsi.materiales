@@ -68,7 +68,7 @@ create table if not exists public.ac_devoluciones_materiales (
 
 -- Impedir registros económicos manuales que exceden una devolución física real.
 create or replace function public.ac_validar_devolucion()
-returns trigger language plpgsql security invoker set search_path='' as $
+returns trigger language plpgsql security invoker set search_path='' as $$
 declare v_stock record;v_line record;v_prev numeric;
 begin
  select material_id,signed_quantity,movement_type into v_stock from public.inventory_movements where id=new.movimiento_inventario_id;
@@ -178,7 +178,7 @@ create schema if not exists ac_private;
 revoke all on schema ac_private from public, anon, authenticated;
 
 create or replace function ac_private.ac_imputar_linea_guia()
-returns trigger language plpgsql security definer set search_path='' as $
+returns trigger language plpgsql security definer set search_path='' as $$
 declare v_contrato uuid; v_activo boolean; v_campana uuid; v_fecha date;
   v_base numeric; v_suma numeric; v_total numeric; v_resto numeric;
   v_mes record; v_n integer:=0; v_count integer; v_clase text;
