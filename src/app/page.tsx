@@ -43,7 +43,7 @@ const loadMaterialCatalog=async(supabase:any)=>{
 };
 
 const count=async(supabase:any,table:string,filter?:[string,string]):Promise<number|null>=>{
- let query=supabase.from(table).select("id",{count:"exact",head:true});
+ let query=supabase.from(table).select("*",{count:"exact",head:true});
  if(filter)query=query.eq(filter[0],filter[1]);
  const {count:value,error}=await query;
  return error||value===null?null:value;

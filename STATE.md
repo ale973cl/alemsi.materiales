@@ -1,5 +1,11 @@
 # STATE — ALEMSI Materiales
 
+## Corrección contador Levantamientos pendientes (2026-11-28)
+- `campaign_installations` no tiene `id`; en `src/app/page.tsx` el helper `count` seleccionaba `id` y devolvía `null` ante un error SQL. Ahora usa `select('*', {count:'exact',head:true})` para contar filas sin exigir columna inexistente.
+- Verificado con consulta SQL de solo lectura: cero filas `campaign_installations.status='Pendiente'` en el proyecto conectado. No se modificaron registros ni permisos.
+
+
+
 ## Documento de arquitectura económica
 - El alcance implementado, arquitectura, estructura SQL, UI y límites conocidos están documentados en `docs/AC_MOTOR_ECONOMICO_ARQUITECTURA.md`; habilitación segura pendiente de base test aislada.
 
