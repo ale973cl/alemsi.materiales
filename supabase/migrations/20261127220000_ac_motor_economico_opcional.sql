@@ -83,7 +83,7 @@ begin
   raise exception 'La devolución supera lo recibido por la instalación';
  end if;
  return new;
-end $;
+end $$;
 drop trigger if exists ac_validar_devolucion_trg on public.ac_devoluciones_materiales;
 create trigger ac_validar_devolucion_trg before insert or update on public.ac_devoluciones_materiales
 for each row execute function public.ac_validar_devolucion();
