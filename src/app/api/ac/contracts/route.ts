@@ -36,7 +36,7 @@ export async function POST(req:NextRequest){
    return NextResponse.json({ok:true,message:"Control económico desactivado. El histórico permanece."});
   }
   if(body.action==="template"){
-   const vals=Array.isArray(body.amounts)?body.amounts.map(Number):[];
+   const vals:number[]=Array.isArray(body.amounts)?body.amounts.map((v:unknown)=>Number(v)):[];
    if(!vals.length||vals.length>120||vals.some(v=>!Number.isFinite(v)||v<0))throw Error("Curva inválida");
    const {error}=await c.db.from("ac_plantillas_curva_presupuesto").insert({nombre:String(body.name||"").trim(),tipo:String(body.type||"variable"),montos_neto_clp:vals,creado_por:c.user?.id});
    if(error)throw error;return NextResponse.json({ok:true,message:"Plantilla de curva guardada"});
