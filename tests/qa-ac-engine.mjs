@@ -49,9 +49,10 @@ test("PostgreSQL aislado: migración, activación, guías, devoluciones y factur
  "create table public.clients(id uuid primary key,legal_name text)",
  "create table public.contracts(id uuid primary key,client_id uuid references clients(id),name text,active boolean default true,start_date date)",
  "create table public.campaigns(id uuid primary key,contract_id uuid references contracts(id))",
+ "create table public.campaign_installations(campaign_id uuid references campaigns(id),installation_id uuid)",
  "create table public.installations(id uuid primary key,contract_id uuid references contracts(id))",
  "create table public.materials(id uuid primary key,current_net_price numeric)",
- "create table public.dispatches(id uuid primary key,installation_id uuid references installations(id),contract_id uuid references contracts(id),campaign_id uuid references campaigns(id),created_at timestamptz default now(),dispatched_at timestamptz,status text)",
+ "create table public.dispatches(id uuid primary key,installation_id uuid references installations(id),contract_id uuid references contracts(id),campaign_id uuid references campaigns(id),observations text,created_at timestamptz default now(),dispatched_at timestamptz,status text)",
  "create table public.dispatch_lines(id uuid primary key default gen_random_uuid(),dispatch_id uuid references dispatches(id),material_id uuid references materials(id),required_qty numeric,delivered_qty numeric)",
  "create table public.inventory_movements(id uuid primary key,material_id uuid references materials(id),signed_quantity numeric,movement_type text)",
  "create table public.receipts(id uuid primary key,supplier_id uuid,document_folio text,document_type text,document_total numeric)"
@@ -64,8 +65,9 @@ test("PostgreSQL aislado: migración, activación, guías, devoluciones y factur
   await db.query("insert into contracts(id,client_id,name) values ($1,$2,'C1'),($3,$4,'C2')",[id(3),id(1),id(4),id(2)]);
   await db.query("insert into campaigns values ($1,null)",[id(5)]);
   await db.query("insert into installations values ($1,$2),($3,$4)",[id(6),id(3),id(7),id(4)]);
+  await db.query("insert into campaign_installations values ($1,$2),($1,$3)",[id(5),id(6),id(7)]);
   await db.query("insert into materials values ($1,1000)",[id(8)]);
-  await db.query("insert into dispatches(id,installation_id,campaign_id,status) values ($1,$2,$3,'En preparación')",[id(9),id(6),id(5)]);
+  await db.query("insert into dispatches(id,installation_id,campaign_id,observations,status) values ($1,$2,null,$3,'En preparación')",[id(9),id(6),"CAMPAÑA:"+id(5)]);
   await t.test("sin control no congela, no imputa y no bloquea",async()=>{
    await db.query("insert into dispatch_lines(dispatch_id,material_id,required_qty,delivered_qty) values ($1,$2,2,0)",[id(9),id(8)]);
    assert.equal(await count("ac_guia_imputacion_mensual"),0);
@@ -81,7 +83,7 @@ test("PostgreSQL aislado: migración, activación, guías, devoluciones y factur
    assert.equal(Number((await db.query("select max(costo_unitario_congelado_clp) n from dispatch_lines")).rows[0].n),1000);
   });
   await t.test("campaña multicontrato no mezcla presupuestos",async()=>{
-   await db.query("insert into dispatches(id,installation_id,campaign_id,status) values ($1,$2,$3,'En preparación')",[id(10),id(7),id(5)]);
+   await db.query("insert into dispatches(id,installation_id,campaign_id,observations,status) values ($1,$2,null,$3,'En preparación')",[id(10),id(7),"CAMPAÑA:"+id(5)]);
    await db.query("insert into dispatch_lines(dispatch_id,material_id,required_qty,delivered_qty) values ($1,$2,2,2)",[id(10),id(8)]);
    const v=(await db.query("select contrato_id,mes,importe_neto_clp from ac_guia_imputacion_mensual where guia_id=$1 order by mes",[id(10)])).rows;
    assert.equal(v.length,2);assert.equal(Number(v[0].importe_neto_clp),1200);assert.equal(Number(v[1].importe_neto_clp),800);
@@ -98,6 +100,8 @@ test("PostgreSQL aislado: migración, activación, guías, devoluciones y factur
    await db.query("insert into ac_factura_credito(factura_id,fecha_recepcion_sii) values ($1,'2026-11-27')",[id(12)]);
    const p=(await db.query("select fecha_vencimiento,fecha_limite_reclamo from ac_factura_credito where factura_id=$1",[id(12)])).rows[0];
    assert.equal(new Date(p.fecha_vencimiento).toISOString().slice(0,10),"2026-12-27");assert.equal(new Date(p.fecha_limite_reclamo).toISOString().slice(0,10),"2026-12-05");
+   await db.query("insert into ac_factura_pagos(factura_id,monto_clp,fecha_pago,referencia,acreditado) values ($1,119000,'2026-12-05','TRANSFERENCIA',true)",[id(12)]);
+   await assert.rejects(db.query("insert into ac_factura_pagos(factura_id,monto_clp,fecha_pago,referencia,acreditado) values ($1,1,'2026-12-05','EXCESO',true)",[id(12)]),/excede/);
   });
  }finally{await db.close()}
 });

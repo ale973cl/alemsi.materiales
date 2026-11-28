@@ -113,6 +113,25 @@ create table if not exists public.ac_factura_pagos (
 );
 create index if not exists ac_pagos_factura_idx on public.ac_factura_pagos(factura_id) where acreditado=true;
 
+-- Los abonos acreditados no pueden superar el total bruto del documento.
+create or replace function public.ac_validar_pago()
+returns trigger language plpgsql security invoker set search_path='' as $$
+declare v_total numeric;v_acreditado numeric;
+begin
+ select document_total into v_total from public.receipts where id=new.factura_id for update;
+ if v_total is null or v_total<0 then raise exception 'Factura sin total válido'; end if;
+ select coalesce(sum(monto_clp),0) into v_acreditado from public.ac_factura_pagos
+  where factura_id=new.factura_id and acreditado=true and id is distinct from new.id;
+ if new.acreditado and v_acreditado+new.monto_clp>v_total then
+  raise exception 'Pago acreditado excede el total de la factura';
+ end if;
+ return new;
+end $$;
+drop trigger if exists ac_validar_pago_trg on public.ac_factura_pagos;
+create trigger ac_validar_pago_trg before insert or update on public.ac_factura_pagos
+for each row execute function public.ac_validar_pago();
+revoke all on function public.ac_validar_pago() from public, anon, authenticated;
+
 -- Funciones invocador y control explícito de acceso; las políticas no permiten acceso anónimo.
 create or replace function public.ac_perfil_habilitado(p_escritura boolean default false)
 returns boolean language sql stable security invoker set search_path='' as $$
@@ -181,16 +200,25 @@ create or replace function ac_private.ac_imputar_linea_guia()
 returns trigger language plpgsql security definer set search_path='' as $$
 declare v_contrato uuid; v_activo boolean; v_campana uuid; v_fecha date;
   v_base numeric; v_suma numeric; v_total numeric; v_resto numeric;
-  v_mes record; v_n integer:=0; v_count integer; v_clase text;
+  v_mes record; v_n integer:=0; v_count integer; v_observations text; v_installation uuid; v_marker text;
 begin
  select i.contract_id,c.control_economico_activo,d.campaign_id,
-   coalesce(d.dispatched_at::date,d.created_at::date)
- into v_contrato,v_activo,v_campana,v_fecha
+   coalesce(d.dispatched_at::date,d.created_at::date),d.observations,d.installation_id
+ into v_contrato,v_activo,v_campana,v_fecha,v_observations,v_installation
  from public.dispatches d
  join public.installations i on i.id=d.installation_id
  join public.contracts c on c.id=i.contract_id where d.id=new.dispatch_id;
  if not coalesce(v_activo,false) or new.costo_unitario_congelado_clp is null
    or v_fecha is null then return new; end if;
+ -- La RPC existente crea guías con CAMPAÑA:<uuid> dentro de observations.
+ -- Validar la relación con campaign_installations: nunca inferir un contrato global.
+ if v_campana is null and coalesce(v_observations,'') like '%CAMPAÑA:%' then
+  v_marker:=substring(v_observations from 'CAMPAÑA:([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})');
+  if v_marker is null then return new; end if;
+  select ci.campaign_id into v_campana from public.campaign_installations ci
+   where ci.campaign_id=v_marker::uuid and ci.installation_id=v_installation limit 1;
+  if v_campana is null then return new; end if;
+ end if;
  v_base:=round(coalesce(new.required_qty,0)*new.costo_unitario_congelado_clp,4);
  if v_base<=0 then return new; end if;
  if v_campana is null then
@@ -236,7 +264,7 @@ revoke all on function ac_private.ac_imputar_linea_guia() from public, anon, aut
 create or replace view public.ac_v_resumen_mensual with (security_invoker=true) as
 with gastado as (
  select a.contrato_id,a.mes,
-  sum(case when d.status='Anulado' then 0 else a.importe_neto_clp end) as guias_neto
+  sum(case when d.status in ('Anulado','Borrador','Pendiente') then 0 else a.importe_neto_clp end) as guias_neto
  from public.ac_guia_imputacion_mensual a
  join public.dispatches d on d.id=a.guia_id
  group by a.contrato_id,a.mes
