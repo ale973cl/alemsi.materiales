@@ -24,7 +24,7 @@ export async function GET(){
  const errors=queries.map((q,i)=>q.error?"Consulta "+(i+1)+": "+q.error.message:null).filter(Boolean);
  if(errors.length)return NextResponse.json({available:false,reason:"No se pudo cargar el control económico",errors},{status:503});
  if(queries.some(q=>(q.data||[]).length>1000))return NextResponse.json({available:false,reason:"Registros superiores a 1.000; informe incompleto"},{status:503});
- const [contractRows,months,allocations,periods,credits]=queries.map(q=>q.data||[]);
+ const [contractRows,months,allocations,periods,credits]:any[][]=queries.map(q=>(q.data||[]) as any[]);
  const today=santiagoDate(),currentMonth=today.slice(0,7);
  const detailByContract=new Map<string,any[]>();
  for(const g of allocations){const id=String(g.contrato_id);const entry=detailByContract.get(id)||[];entry.push({
