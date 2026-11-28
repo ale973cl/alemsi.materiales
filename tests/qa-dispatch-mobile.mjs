@@ -13,10 +13,12 @@ test("los filtros refinados operan sobre el mismo estado y resetean filtros ocul
 test("no altera selección de preparación, creación de guías ni ruta",()=>{
  for(const token of ['generateBatch=async','generateSuggestion=async','setRouteOpen(true)','DeliveryRoutesModule','setBatchSelected','CreateDispatchModal'])assert.ok(ui.includes(token),token);
 });
-test("mantiene controles completos escritorio, diseño móvil y objetivos táctiles",()=>{
- assert.match(ui,/className="dispatchFilters"/);assert.match(ui,/className="dispatchMobileFilters"/);
+test("búsqueda progresiva también en escritorio, sin cuadrícula duplicada",()=>{
+ assert.doesNotMatch(ui,/className="dispatchFilters"/);assert.match(ui,/className="dispatchMobileFilters"/);
  assert.match(css,/@media\(max-width:760px\)/);
  assert.match(css,/\.dispatchFilters\{display:none!important\}/);
+ assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+ assert.match(css,/\.dispatchMobileRefinements\.open\{display:grid\}/);
  assert.match(css,/scroll-snap-type:x proximity/);
  assert.match(css,/min-height:44px!important/);
  assert.match(layout,/import "\.\/dispatch-mobile-search\.css"/);

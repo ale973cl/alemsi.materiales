@@ -1,10 +1,10 @@
 # STATE — ALEMSI Materiales
 
-## UX móvil despachos: filtros progresivos — 2026-11-28
-- Los seis filtros en cuadrícula se mantienen intactos en escritorio; móvil muestra un selector principal Campaña/Cliente y un único desplegable.
+## UX despachos: filtros progresivos en móvil y escritorio — 2026-11-28
+- Eliminada la cuadrícula antigua de seis filtros también en escritorio; un solo buscador compartido comienza por Campaña o Cliente, con refinamientos contextuales expandibles.
 - Tras escoger campaña/cliente se habilita Refinar búsqueda (cliente vinculado, contrato, instalación, sector y texto), contra las mismas propiedades `filters` usadas por los circuitos operativos.
 - Cambiar entre Campaña/Cliente limpia filtros previamente ocultos para evitar resultados vacíos incoherentes; Limpiar reinicia filtros activos.
-- Las etapas pasan a una barra horizontal desplazable en móvil, sin retirar funciones, totales, rutas, guías ni preparación.
+- Las etapas pasan a una barra horizontal desplazable en móvil; en escritorio mantienen distribución amplia. No se retiran funciones, totales, rutas, guías ni preparación.
 - Bodega, permisos, backend, Production y datos Supabase no se alteran; pendiente QA visual autenticado.
 
 
