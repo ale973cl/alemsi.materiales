@@ -1,5 +1,15 @@
 # STATE — ALEMSI Materiales
 
+## Control presupuestario de materiales — 2026-11-27
+- Vista dedicada `?vista=presupuesto` en Abastecimiento, visible a Admin Total, Gerencia y Admin. Filtra cliente, contrato y mes de documento.
+- Fuente de gasto: línea neta de recepción confirmada `receipts.inventory_posted=true`, relacionada con línea de OC → línea de suministro → consolidado con `contract_id`. Incluye solo registros con trazabilidad contractual completa.
+- Compras sin asignación contractual se reportan separadamente como `sin atribución`, nunca se distribuyen proporcionalmente.
+- `contracts.net_budget` sigue siendo presupuesto de materiales configurado, sin periodicidad especificada. No se comparan automáticamente gastos mensuales con presupuesto anual/contractual ni se calcula saldo ficticio.
+- Si falla cualquier consulta o hay más de 1000 registros por tabla, bloquea importes parciales e informa error.
+- Solo lectura; permisos RLS y validación de rol; sin mutaciones de Supabase ni Production. Falta QA autenticado del circuito y auditoría contra documentos reales.
+
+
+
 ## Maestro de materiales desde Bodega — 2026-11-27
 - Bodega incorpora vista «Maestro de materiales» y botón visible desde Inventario para perfiles autorizados (Admin Total, Gerencia, Admin).
 - Reutiliza MaterialsCatalogModule sin duplicación: productos, familia, unidad, presentación, proveedores, valores netos y CSV.

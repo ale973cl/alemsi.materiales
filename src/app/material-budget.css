@@ -1,0 +1,15 @@
+/* Presupuesto de materiales: solo importes netos documentados */
+.materialBudget{min-width:0;display:grid;gap:13px}
+.materialBudgetHeading h2{margin:0 0 4px;font-size:23px}
+.materialBudgetHeading p{margin:0;color:#526578;font-size:14px}
+.materialBudgetFilters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.materialBudgetFilters label{display:grid;gap:5px;font-weight:650;font-size:13px;min-width:0}
+.materialBudgetFilters select{width:100%;min-height:44px;padding:9px;border:1px solid #c8dce8;border-radius:9px;background:white;color:#173650}
+.materialBudgetTotals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.materialBudgetTotals>div{display:grid;gap:4px;padding:13px;background:#f2f8fa;border:1px solid #d6e7e9;border-radius:10px}
+.materialBudgetTotals span{font-size:13px}.materialBudgetTotals strong{font-size:clamp(19px,3vw,29px);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.materialBudgetTotals small{font-size:12px;color:#526578}
+.materialBudgetClarification{font-size:13px;line-height:1.45;color:#526578;margin:0}
+.materialBudgetRows{display:grid;gap:7px}.materialBudgetRow{display:grid;grid-template-columns:minmax(0,1.2fr) repeat(2,minmax(0,1fr));align-items:center;gap:11px;border:1px solid #d6e5e8;border-radius:9px;padding:13px;background:white}
+.materialBudgetRow>div{display:grid;gap:4px;min-width:0}.materialBudgetRow b{font-size:14px}.materialBudgetRow span,.materialBudgetRow small{font-size:12px;color:#526578}.materialBudgetRow strong{font-size:15px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.materialBudgetFilters{grid-template-columns:1fr}.materialBudgetTotals{grid-template-columns:1fr}.materialBudgetRow{grid-template-columns:1fr 1fr}.materialBudgetRow>div:first-child{grid-column:1/-1}.materialBudgetHeading h2{font-size:20px}}

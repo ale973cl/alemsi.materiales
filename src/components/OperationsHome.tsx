@@ -18,7 +18,7 @@ const catalog:Metric[]=[
  {key:"installations",title:"Instalaciones activas",hint:"Sedes registradas",destination:"clientes"},
  {key:"materials",title:"Materiales activos",hint:"Productos del maestro",destination:"inventario"},
 ];
-const actions=[["campañas","Planificar campaña","Abrir planificación"],["consolidado","Revisar necesidades","Ver consolidado"],["compras","Órdenes de compra","Ver documentos"],["recepcion","Registrar recepción","Abrir recepción"],["entregas","Preparar y entregar","Abrir guías"],["inventario","Consultar existencias","Abrir inventario"]] as const;
+const actions=[["campañas","Planificar campaña","Abrir planificación"],["consolidado","Revisar necesidades","Ver consolidado"],["compras","Órdenes de compra","Ver documentos"],["recepcion","Registrar recepción","Abrir recepción"],["entregas","Preparar y entregar","Abrir guías"],["inventario","Consultar existencias","Abrir inventario"],["presupuesto","Control presupuestario","Ver gasto neto"]] as const;
 const money=(value:number)=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(value);
 const display=(value:number|null)=>value===null?"—":new Intl.NumberFormat("es-CL").format(value);
 export default function OperationsHome({summary,insights,navigate}:{summary:Summary;insights:HomeInsights;navigate:(next:string)=>void}){
@@ -41,7 +41,7 @@ export default function OperationsHome({summary,insights,navigate}:{summary:Summ
   <div className="operationsMobileProgress"><div><span>Guías conformes</span><strong>{insights.deliveries===null?"—":display(insights.deliveries.delivered)}</strong></div><div><span>Con incidencias</span><strong>{insights.deliveries===null?"—":display(insights.deliveries.incident)}</strong></div><div><span>Presupuesto neto de materiales</span><strong>{budgetTotals===null?"—":money(budgetTotals.total)}</strong></div></div>
   <h3 className="operationsMobileTaskTitle">¿Qué necesitas hacer?</h3>
   <div className="operationsMobileTasks">
-   {([["campañas","Campañas"],["levantamientos","Levantamientos"],["consolidado","Ver necesidades"],["compras","Crear o revisar OC"],["recepcion","Registrar factura"],["inventario","Consultar stock"],["preparacion","Preparar materiales"],["entregas","Crear guía / Entregar"],["clientes","Clientes e instalaciones"]] as const).map(([id,label])=><button key={id} type="button" onClick={()=>navigate(id)}><span>{label}</span><span aria-hidden="true">→</span></button>)}
+   {([["campañas","Campañas"],["levantamientos","Levantamientos"],["consolidado","Ver necesidades"],["compras","Crear o revisar OC"],["recepcion","Registrar factura"],["inventario","Consultar stock"],["preparacion","Preparar materiales"],["entregas","Crear guía / Entregar"],["clientes","Clientes e instalaciones"],["presupuesto","Control presupuestario"]] as const).map(([id,label])=><button key={id} type="button" onClick={()=>navigate(id)}><span>{label}</span><span aria-hidden="true">→</span></button>)}
   </div>
   <button type="button" className="operationsMobileExpand" aria-expanded={showMobileAnalysis} aria-controls="operations-complete-analysis" onClick={()=>setShowMobileAnalysis(open=>!open)}>{showMobileAnalysis?"Ocultar análisis completo":"Ver análisis completo: gráficos, clientes y presupuesto"} <span aria-hidden="true">{showMobileAnalysis?"−":"+"}</span></button>
  </section>

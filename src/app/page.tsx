@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import OperationalApp from "@/components/OperationalApp";
 import {summarizeDeliveries,type HomeInsights} from "@/lib/home-insights";
+import {buildBudgetReport,type BudgetReport} from "@/lib/material-budget-report";
 
 const MATERIAL_CATALOG_VIEWS=["material_master_catalog"] as const;
 const first=(row:any,keys:string[])=>keys.map(key=>row?.[key]).find(value=>value!==undefined&&value!==null);
@@ -95,6 +96,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{vista?:
  }
  if(!profile?.active)return <main className="blocked"><h1>Acceso pendiente</h1><p>Tu usuario existe, pero todavía no está habilitado por Administración.</p></main>;
 
+ let budgetReport:BudgetReport|null=null;
  let homeInsights:HomeInsights={deliveries:null,budgets:null};
  let summary:Record<"clients"|"installations"|"materials"|"openCampaigns"|"pendingSurveys"|"openPOs"|"partialReceipts"|"openDispatches"|"financePending"|"emailPending",number|null>={clients:0,installations:0,materials:0,openCampaigns:0,pendingSurveys:0,openPOs:0,partialReceipts:0,openDispatches:0,financePending:0,emailPending:0};
  let campaigns:any[]=[];
@@ -189,7 +191,23 @@ export default async function Page({searchParams}:{searchParams:Promise<{vista?:
   ];
  }
 
- return <OperationalApp initialTab={view} profile={profile} summary={summary} homeInsights={homeInsights}
+ if(view==="presupuesto"&&["Admin Total","Gerencia","Admin"].includes(profile.role)){
+  const [contracts,receipts,lines,purchaseLines,supplyLines,runs]=await Promise.all([
+   supabase.from("contracts").select("id,client_id,name,net_budget,clients(legal_name)").order("name").limit(1001),
+   supabase.from("receipts").select("id,inventory_posted,invoice_number,document_folio,invoice_date,document_date,received_at,created_at").eq("inventory_posted",true).limit(1001),
+   supabase.from("receipt_lines").select("id,receipt_id,purchase_order_line_id,line_net").limit(1001),
+   supabase.from("purchase_order_lines").select("id,supply_line_id").limit(1001),
+   supabase.from("supply_lines").select("id,supply_run_id").limit(1001),
+   supabase.from("supply_runs").select("id,contract_id").limit(1001)
+  ]);
+  const sources=[contracts,receipts,lines,purchaseLines,supplyLines,runs];
+  const failures=sources.flatMap((r,i)=>r.error?["Error de acceso a "+["contratos","recepciones","líneas de factura","líneas de OC","líneas de abastecimiento","consolidados"][i]]:[]);
+  if(sources.some(r=>(r.data||[]).length>1000))failures.push("El informe supera 1.000 registros por origen");
+  if(failures.length)budgetReport={contracts:[],movements:[],unattributedNet:0,unattributedLines:0,errors:failures,loadedCount:0};
+  else budgetReport=buildBudgetReport({contracts:contracts.data||[],receipts:receipts.data||[],lines:lines.data||[],purchaseLines:purchaseLines.data||[],supplyLines:supplyLines.data||[],runs:runs.data||[]});
+ }
+
+ return <OperationalApp initialTab={view} profile={profile} summary={summary} homeInsights={homeInsights} budgetReport={budgetReport}
   campaigns={campaigns} activeCampaigns={activeCampaigns} consolidatedSurveys={consolidatedSurveys}
   orders={[]} dispatches={dispatches} audit={[]}
   materialCatalog={materialCatalog} materialCatalogSourceCount={materialCatalogSourceCount} materialCatalogError={materialCatalogError}

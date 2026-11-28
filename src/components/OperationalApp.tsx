@@ -2,6 +2,8 @@
 import Image from "next/image";
 import OperationsHome from "@/components/OperationsHome";
 import type {HomeInsights} from "@/lib/home-insights";
+import type {BudgetReport} from "@/lib/material-budget-report";
+import MaterialBudgetModule from "@/components/modules/MaterialBudgetModule";
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -20,18 +22,18 @@ import SurveyLinkControl from "@/components/modules/SurveyLinkControl";
 import InventoryModule from "@/components/modules/InventoryModule";
 import MaterialsCatalogModule from "@/components/modules/MaterialsCatalogModule";
 type MasterMaterialRow=MaterialCatalogRow&{active?:boolean};type MasterClientGroup=ClientInstallationGroup&{active?:boolean};
-type Props={initialTab?:string;profile:any;homeInsights:HomeInsights;summary:Record<"clients"|"installations"|"materials"|"openCampaigns"|"pendingSurveys"|"openPOs"|"partialReceipts"|"openDispatches"|"financePending"|"emailPending",number|null>;campaigns:any[];activeCampaigns:any[];consolidatedSurveys:any[];orders:any[];dispatches:any[];audit:any[];materialCatalog:MaterialCatalogRow[];materialCatalogSourceCount:number;materialCatalogError?:string|null;masterMaterialCatalog:MasterMaterialRow[];clientInstallations:ClientInstallationGroup[];masterClientInstallations:MasterClientGroup[];users:UserProfileRow[]};
-const titles:Record<string,string>={inicio:"Inicio",clientes:"Administración",campañas:"Planificación",levantamientos:"Levantamientos",consolidado:"Abastecimiento y compras",preparacion:"Preparación",inventario:"Bodega e inventario",maestro:"Maestro de materiales",compras:"Documentos de compra",recepcion:"Recepción de mercadería",entregas:"Despachos y entregas"};
+type Props={initialTab?:string;profile:any;homeInsights:HomeInsights;budgetReport:BudgetReport|null;summary:Record<"clients"|"installations"|"materials"|"openCampaigns"|"pendingSurveys"|"openPOs"|"partialReceipts"|"openDispatches"|"financePending"|"emailPending",number|null>;campaigns:any[];activeCampaigns:any[];consolidatedSurveys:any[];orders:any[];dispatches:any[];audit:any[];materialCatalog:MaterialCatalogRow[];materialCatalogSourceCount:number;materialCatalogError?:string|null;masterMaterialCatalog:MasterMaterialRow[];clientInstallations:ClientInstallationGroup[];masterClientInstallations:MasterClientGroup[];users:UserProfileRow[]};
+const titles:Record<string,string>={inicio:"Inicio",clientes:"Administración",campañas:"Planificación",levantamientos:"Levantamientos",consolidado:"Abastecimiento y compras",preparacion:"Preparación",inventario:"Bodega e inventario",presupuesto:"Control presupuestario",maestro:"Maestro de materiales",compras:"Documentos de compra",recepcion:"Recepción de mercadería",entregas:"Despachos y entregas"};
 const mainNav=[["campañas","Planificación"],["consolidado","Abastecimiento"],["inventario","Bodega"],["entregas","Entregas"],["clientes","Administración"]] as const;
 const quickLinks:Record<string,[string,string][]>={
  campañas:[["campañas","Campañas"],["levantamientos","Levantamientos"]],
- consolidado:[["consolidado","Necesidades / comprar"],["compras","Cotizaciones y OC"],["recepcion","Recepción"]],
+ consolidado:[["consolidado","Necesidades / comprar"],["compras","Cotizaciones y OC"],["recepcion","Recepción"],["presupuesto","Presupuesto"]],
  inventario:[["inventario","Existencias"],["maestro","Maestro de materiales"],["preparacion","Preparación"]],
  entregas:[["entregas","Guías y entregas"]],
  clientes:[["clientes","Maestros y configuración"]]
 };
-const parentOf=(tab:string)=>tab==="levantamientos"?"campañas":tab==="compras"||tab==="recepcion"?"consolidado":tab==="preparacion"||tab==="maestro"?"inventario":tab;
-export default function OperationalApp({initialTab,profile,summary,homeInsights,campaigns,activeCampaigns,consolidatedSurveys,orders,dispatches,materialCatalog,materialCatalogSourceCount,materialCatalogError,masterMaterialCatalog,clientInstallations,masterClientInstallations,users}:Props){
+const parentOf=(tab:string)=>tab==="levantamientos"?"campañas":tab==="compras"||tab==="recepcion"||tab==="presupuesto"?"consolidado":tab==="preparacion"||tab==="maestro"?"inventario":tab;
+export default function OperationalApp({initialTab,profile,summary,homeInsights,budgetReport,campaigns,activeCampaigns,consolidatedSurveys,orders,dispatches,materialCatalog,materialCatalogSourceCount,materialCatalogError,masterMaterialCatalog,clientInstallations,masterClientInstallations,users}:Props){
  const router=useRouter();
  const [isNavigating,startTransition]=useTransition();
  const allowed=Object.keys(titles);
@@ -44,7 +46,7 @@ export default function OperationalApp({initialTab,profile,summary,homeInsights,
  const openSurveyScreen=(campaignId:string,installationId="")=>{const q=new URLSearchParams({vista:"levantamientos"});if(campaignId)q.set("campana",campaignId);if(installationId)q.set("instalacion",installationId);if(tab==="levantamientos"){setSelectedCampaignId(campaignId);setSelectedSurveyInstallationId(installationId);window.history.pushState({view:"levantamientos",campaignId,installationId},"",`/?${q.toString()}`);window.scrollTo({top:0,behavior:"instant"});return}startTransition(()=>router.push(`/?${q.toString()}`,{scroll:true}))};
  const parent=parentOf(tab);
  const canManageMaterials=["Admin Total","Gerencia","Admin"].includes(profile.role);
- const currentLinks=(quickLinks[parent]||[]).filter(([id])=>id!=="maestro"||canManageMaterials);
+ const currentLinks=(quickLinks[parent]||[]).filter(([id])=>(id!=="maestro"&&id!=="presupuesto")||canManageMaterials);
  const navTitle=titles[tab]||"Inicio";
  return <div className="portal simpleApp">
   <header className="portalTop simpleTop"><button type="button" className="mobileMenuToggle" aria-label={mobileMenuOpen?"Cerrar menú de navegación":"Abrir menú de navegación"} aria-expanded={mobileMenuOpen} aria-controls="alemsi-primary-nav" onClick={()=>setMobileMenuOpen(open=>!open)}>{mobileMenuOpen?"✕":"☰"}<span>Menú</span></button><button type="button" className="simpleLogoButton" onClick={()=>navigate("inicio")} aria-label="Ir al inicio"><Image src="/alemsi-logo.png" width={170} height={67} alt="ALEMSI" priority/></button><div className="simpleTopRight"><Link href="/terreno">Despacho en Terreno</Link><span>Control de materiales</span><form action={signOut}><button className="linkBtn">Salir</button></form></div></header>
@@ -62,6 +64,7 @@ export default function OperationalApp({initialTab,profile,summary,homeInsights,
    {tab==="maestro"&&(canManageMaterials?<MaterialsCatalogModule rows={masterMaterialCatalog.filter(m=>m.active!==false)} sourceCount={materialCatalogSourceCount} error={materialCatalogError}/>:<section className="panel"><h2>Acceso restringido</h2><p>La administración del maestro de materiales requiere un perfil autorizado.</p></section>)}
    {tab==="compras"&&<ConsolidatedSupplyModule surveys={consolidatedSurveys} initialView="documents"/>}
    {tab==="recepcion"&&<ConnectedReceiptModule role={profile.role}/>}
+   {tab==="presupuesto"&&(canManageMaterials?<MaterialBudgetModule report={budgetReport}/>:<section className="panel"><h2>Acceso restringido</h2><p>El control presupuestario requiere un perfil autorizado.</p></section>)}
    {tab==="preparacion"&&<CampaignPendingModule surveys={consolidatedSurveys} dispatches={dispatches}/>}
    {tab==="entregas"&&<DispatchDeliveryModule dispatches={dispatches} campaigns={campaigns} clients={clientInstallations} materials={materialCatalog} role={profile.role} users={users} currentUser={{id:profile.id,full_name:profile.full_name}}/>}
   </main></div>
