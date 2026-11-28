@@ -25,7 +25,7 @@ export async function GET(){
  for(const p of pa.data||[])if(p.acreditado)payments.set(p.factura_id,(payments.get(p.factura_id)||0)+Number(p.monto_clp||0));
  const rows=(rr.data||[]).filter(r=>String(r.document_type||"Factura").toLowerCase().includes("factura")).map(r=>{
   const c:any=settings.get(r.id),paid=payments.get(r.id)||0;
-  const payable=calculatePayable({paymentTerms:c?.condicion_pago||"Crédito",creditDays:c?.dias_credito||30,
+  const payable=calculatePayable({paymentTerms:c?.condicion_pago||"Crédito",creditDays:c?.dias_credito??30,
    siiReceiptDate:c?.fecha_recepcion_sii||null,today,totalCLP:Number(r.document_total||0),accreditedCLP:paid});
   const supplier:any=Array.isArray(r.suppliers)?r.suppliers[0]:r.suppliers;
   return {id:r.id,folio:r.document_folio||r.invoice_number||r.id,supplier:supplier?.legal_name||"Proveedor",supplierTerms:supplier?.payment_terms||"",
@@ -59,7 +59,7 @@ export async function POST(req:NextRequest){
   if(b.action==="payment"){
    const amount=Number(b.amount),reference=String(b.reference||"").trim(),date=validDate(b.date);
    if(!Number.isFinite(amount)||amount<=0||!reference||!date)throw Error("Completa monto, fecha y comprobante");
-   const {error}=await c.db.from("ac_factura_pagos").insert({factura_id:receiptId,monto_clp:amount,fecha_pago:date,referencia,acreditado:true});
+   const {error}=await c.db.from("ac_factura_pagos").insert({factura_id:receiptId,monto_clp:amount,fecha_pago:date,referencia:reference,acreditado:true});
    if(error)throw error;
    return NextResponse.json({ok:true,message:"Pago acreditado registrado"});
   }
