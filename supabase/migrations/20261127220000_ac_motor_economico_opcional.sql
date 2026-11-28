@@ -66,6 +66,28 @@ create table if not exists public.ac_devoluciones_materiales (
   creado_en timestamptz not null default now()
 );
 
+-- Impedir registros económicos manuales que exceden una devolución física real.
+create or replace function public.ac_validar_devolucion()
+returns trigger language plpgsql security invoker set search_path='' as $
+declare v_stock record;v_line record;v_prev numeric;
+begin
+ select material_id,signed_quantity,movement_type into v_stock from public.inventory_movements where id=new.movimiento_inventario_id;
+ select material_id,delivered_qty into v_line from public.dispatch_lines where id=new.linea_guia_id;
+ if v_stock.material_id is distinct from v_line.material_id or coalesce(v_stock.signed_quantity,0)<=0
+   or v_stock.movement_type not in ('return','receipt','adjustment') or new.cantidad_reingresada>v_stock.signed_quantity then
+  raise exception 'La devolución debe corresponder a un reingreso físico acreditado del mismo material';
+ end if;
+ select coalesce(sum(cantidad_reingresada),0) into v_prev from public.ac_devoluciones_materiales
+  where linea_guia_id=new.linea_guia_id and id is distinct from new.id;
+ if v_prev+new.cantidad_reingresada>coalesce(v_line.delivered_qty,0) then
+  raise exception 'La devolución supera lo recibido por la instalación';
+ end if;
+ return new;
+end $;
+drop trigger if exists ac_validar_devolucion_trg on public.ac_devoluciones_materiales;
+create trigger ac_validar_devolucion_trg before insert or update on public.ac_devoluciones_materiales
+for each row execute function public.ac_validar_devolucion();
+
 -- Facturas de proveedores: solo metadatos optativos de crédito, nunca bloquean la recepción.
 create table if not exists public.ac_factura_credito (
   factura_id uuid primary key references public.receipts(id) on delete cascade,
@@ -152,8 +174,11 @@ on public.dispatch_lines for each row execute function public.ac_congelar_precio
 
 -- Ledger auxiliar: no modifica estados/stock/OC. El faltante de configuración se omite.
 -- Convención: el consumo ocurre al emitirse una guía, no cuando se compra su material.
-create or replace function public.ac_imputar_linea_guia()
-returns trigger language plpgsql security invoker set search_path='' as $$
+create schema if not exists ac_private;
+revoke all on schema ac_private from public, anon, authenticated;
+
+create or replace function ac_private.ac_imputar_linea_guia()
+returns trigger language plpgsql security definer set search_path='' as $
 declare v_contrato uuid; v_activo boolean; v_campana uuid; v_fecha date;
   v_base numeric; v_suma numeric; v_total numeric; v_resto numeric;
   v_mes record; v_n integer:=0; v_count integer; v_clase text;
@@ -179,6 +204,8 @@ begin
   on p.contrato_id=cp.contrato_id and p.mes between cp.mes_inicio and cp.mes_fin
  where cp.campana_id=v_campana and cp.contrato_id=v_contrato;
  if coalesce(v_suma,0)<=0 or v_count=0 then return new; end if;
+ -- Sin todos los meses configurados no se prorratea una curva parcial.
+ if v_count <> ((substring((select mes_fin from public.ac_campana_periodo where campana_id=v_campana and contrato_id=v_contrato),1,4)::int - substring((select mes_inicio from public.ac_campana_periodo where campana_id=v_campana and contrato_id=v_contrato),1,4)::int)*12 + (substring((select mes_fin from public.ac_campana_periodo where campana_id=v_campana and contrato_id=v_contrato),6,2)::int - substring((select mes_inicio from public.ac_campana_periodo where campana_id=v_campana and contrato_id=v_contrato),6,2)::int)+1) then return new; end if;
  v_resto:=v_base;
  for v_mes in
   select p.mes,p.techo_neto_clp from public.ac_campana_periodo cp
@@ -202,7 +229,8 @@ exception when others then
 end $$;
 drop trigger if exists ac_imputar_linea_guia_trg on public.dispatch_lines;
 create trigger ac_imputar_linea_guia_trg after insert on public.dispatch_lines
-for each row execute function public.ac_imputar_linea_guia();
+for each row execute function ac_private.ac_imputar_linea_guia();
+revoke all on function ac_private.ac_imputar_linea_guia() from public, anon, authenticated;
 
 -- Vistas con privilegios de invocador (PostgreSQL 15+): RLS de las tablas base.
 create or replace view public.ac_v_resumen_mensual with (security_invoker=true) as
@@ -250,4 +278,5 @@ grant select,insert,update,delete on public.ac_contrato_presupuesto_mensual,
  public.ac_factura_credito,public.ac_factura_pagos to authenticated;
 grant select on public.ac_v_resumen_mensual,public.ac_v_facturas_vencimiento to authenticated;
 grant execute on function public.ac_perfil_habilitado(boolean) to authenticated;
+revoke all on function public.ac_validar_devolucion() from public, anon, authenticated;
 commit;
