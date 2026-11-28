@@ -1,5 +1,9 @@
 # STATE — ALEMSI Materiales
 
+## Documento de arquitectura económica
+- El alcance implementado, arquitectura, estructura SQL, UI y límites conocidos están documentados en `docs/AC_MOTOR_ECONOMICO_ARQUITECTURA.md`; habilitación segura pendiente de base test aislada.
+
+
 ## Panel económico por campaña (2026-11-27)
 - En el detalle de Campañas: presupuesto base 100% según cobertura, máximo teórico, carencia y compra requerida.
 - Todo cálculo distingue contrato por instalación, no mezcla campañas multicontrato. El stock común no se reparte sin trazabilidad.
