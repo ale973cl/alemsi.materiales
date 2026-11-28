@@ -97,7 +97,7 @@ test("PostgreSQL aislado: migración, activación, guías, devoluciones y factur
    await db.query("insert into receipts values ($1,null,'F-1','Factura',119000)",[id(12)]);
    await db.query("insert into ac_factura_credito(factura_id,fecha_recepcion_sii) values ($1,'2026-11-27')",[id(12)]);
    const p=(await db.query("select fecha_vencimiento,fecha_limite_reclamo from ac_factura_credito where factura_id=$1",[id(12)])).rows[0];
-   assert.equal(p.fecha_vencimiento,"2026-12-27");assert.equal(p.fecha_limite_reclamo,"2026-12-05");
+   assert.equal(new Date(p.fecha_vencimiento).toISOString().slice(0,10),"2026-12-27");assert.equal(new Date(p.fecha_limite_reclamo).toISOString().slice(0,10),"2026-12-05");
   });
  }finally{await db.close()}
 });
